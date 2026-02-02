@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import AuthSection from './AuthSection'
 import ThemeSelector from './ThemeSelector'
+import Logo from './Logo'
 
 const nav = [
   { to: '/', label: '🏠 Home' },
@@ -14,12 +15,8 @@ export default function Layout() {
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg-base)]/95 backdrop-blur-sm shadow-[0_1px_0_0_var(--border)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
-            <NavLink to="/" className="font-serif text-xl text-[var(--text)] hover:text-[var(--brand)] transition-colors flex items-center gap-2.5">
-              <img
-                src="https://seamuns.site/assets/logo.png"
-                alt="SEAMUNs"
-                className="h-8 w-auto object-contain"
-              />
+            <NavLink to="/" className="font-serif text-xl text-[var(--text)] hover:text-[var(--brand)] transition-colors flex items-center gap-2.5 whitespace-nowrap min-w-0">
+              <Logo className="h-8 w-auto flex-shrink-0" />
               <span>SEAMUNs Dashboard</span>
               <span className="text-[var(--brand)]/80 text-base">◆</span>
             </NavLink>
@@ -34,13 +31,13 @@ export default function Layout() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeSelector />
-            <nav className="flex items-center gap-1.5 p-1 rounded-[var(--radius-pill)] bg-[var(--bg-elevated)] border border-[var(--border)]">
+            <nav className="flex items-center gap-1.5 p-1 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex-nowrap">
               {nav.map(({ to, label }) => (
                 <NavLink
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `px-4 py-2 rounded-[var(--radius-pill)] text-sm font-medium transition-colors ${
+                    `px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                       isActive
                         ? 'bg-[var(--brand)] text-white shadow-sm'
                         : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)]'

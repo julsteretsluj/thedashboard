@@ -28,7 +28,7 @@ export default function DelegateSources() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🔗 Trusted & nation sources</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🔗 Trusted & Nation Sources</h2>
         <p className="text-[var(--text-muted)] text-sm">Trusted sources and nation-specific sources for research.</p>
       </div>
 

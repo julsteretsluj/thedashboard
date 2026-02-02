@@ -17,7 +17,7 @@ export default function DelegateResources() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📚 Chair report & delegate resources</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📚 Chair Report & Delegate Resources</h2>
         <p className="text-[var(--text-muted)] text-sm">Handbook, position paper guidelines, chair report — upload or link.</p>
       </div>
       <div className="card-block p-4 space-y-4">

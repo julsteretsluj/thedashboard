@@ -19,7 +19,7 @@ export default function DelegateMatrix() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📊 Committee matrix</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📊 Committee Matrix</h2>
         <p className="text-[var(--text-muted)] text-sm">First names only — who is in which committee.</p>
       </div>
       <div className="card-block p-4 space-y-3">

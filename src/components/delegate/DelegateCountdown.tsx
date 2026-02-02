@@ -34,7 +34,7 @@ export default function DelegateCountdown() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">⏱️ Conference countdown</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">⏱️ Conference Countdown</h2>
         <p className="text-[var(--text-muted)] text-sm">Set the conference start date and see time remaining.</p>
       </div>
       <div className="card-block p-4 space-y-4">

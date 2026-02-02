@@ -176,7 +176,7 @@ export default function ChairDelegates() {
                     {Object.entries(counts).map(([type, count]) => (
                       <span
                         key={type}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${
                           count >= STRIKE_THRESHOLD
                             ? 'bg-[var(--danger)]/20 text-[var(--danger)]'
                             : 'bg-[var(--gold-soft)] text-[var(--gold)]'

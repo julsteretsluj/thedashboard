@@ -52,19 +52,19 @@ function ChairRoomContent() {
             <button
               key={id}
               onClick={() => setActive(id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-[var(--radius-pill)] text-sm font-medium transition-colors w-full text-left ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left whitespace-nowrap min-w-0 ${
                 active === id
                   ? 'bg-[var(--accent)] text-white shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)]'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
+              <span className="truncate">{label}</span>
             </button>
           ))}
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-pill)] text-sm text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] mt-auto"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] mt-auto"
           >
             <Settings className="w-4 h-4" />
             ⚙️ Settings
@@ -101,8 +101,8 @@ export default function ChairRoom() {
           <Gavel className="w-5 h-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h1 className="font-serif text-xl text-[var(--text)]">⚖️ Chair Room</h1>
-          <p className="text-sm text-[var(--text-muted)]">🖥️ Digital room · 📜 motions · 🗳️ voting · 🎤 speakers</p>
+          <h1 className="font-serif text-xl text-[var(--text)] whitespace-nowrap">⚖️ Chair Room</h1>
+          <p className="text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
         </div>
       </div>
       <ChairRoomContent />

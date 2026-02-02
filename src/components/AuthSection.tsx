@@ -18,10 +18,10 @@ export default function AuthSection() {
             <img
               src={user.picture}
               alt={user.name ?? 'User'}
-              className="w-7 h-7 rounded-full object-cover border border-[var(--border)]"
+              className="w-7 h-7 rounded-lg object-cover border border-[var(--border)]"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-[var(--brand-soft)] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[var(--brand-soft)] flex items-center justify-center">
               <User className="w-3.5 h-3.5 text-[var(--brand)]" />
             </div>
           )}
@@ -30,7 +30,7 @@ export default function AuthSection() {
         <button
           type="button"
           onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-pill)] text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
           Log out
@@ -43,7 +43,7 @@ export default function AuthSection() {
     <button
       type="button"
       onClick={() => loginWithRedirect()}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-pill)] text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity"
     >
       <LogIn className="w-3.5 h-3.5" />
       Log in

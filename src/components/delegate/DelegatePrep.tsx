@@ -6,7 +6,7 @@ export default function DelegatePrep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📝 Prep template</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📝 Prep Template</h2>
         <p className="text-[var(--text-muted)] text-sm">Use this template to structure your research and speaking prep.</p>
       </div>
       <div className="card-block p-6 space-y-4">

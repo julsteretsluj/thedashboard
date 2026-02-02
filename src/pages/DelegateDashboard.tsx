@@ -19,13 +19,13 @@ import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import { User } from 'lucide-react'
 
 const sections = [
-  { id: 'country', label: '🌍 Country & stance', icon: Globe },
-  { id: 'matrix', label: '📊 Committee matrix', icon: Users },
-  { id: 'prep', label: '📝 Prep template', icon: FileText },
-  { id: 'sources', label: '🔗 Trusted & nation sources', icon: LinkIcon },
-  { id: 'resources', label: '📚 Chair report & resources', icon: BookOpen },
+  { id: 'country', label: '🌍 Country & Stance', icon: Globe },
+  { id: 'matrix', label: '📊 Committee Matrix', icon: Users },
+  { id: 'prep', label: '📝 Prep Template', icon: FileText },
+  { id: 'sources', label: '🔗 Trusted & Nation Sources', icon: LinkIcon },
+  { id: 'resources', label: '📚 Chair Report & Resources', icon: BookOpen },
   { id: 'checklist', label: '✅ Checklist', icon: CheckSquare },
-  { id: 'countdown', label: '⏱️ Conference countdown', icon: Clock },
+  { id: 'countdown', label: '⏱️ Conference Countdown', icon: Clock },
 ]
 
 function DelegateDashboardContent() {
@@ -39,14 +39,14 @@ function DelegateDashboardContent() {
             <button
               key={id}
               onClick={() => setActive(id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-[var(--radius-pill)] text-sm font-medium transition-colors w-full text-left ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left whitespace-nowrap min-w-0 ${
                 active === id
                   ? 'bg-[var(--gold)] text-[var(--bg-base)] shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)]'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
+              <span className="truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -72,8 +72,8 @@ export default function DelegateDashboard() {
           <User className="w-5 h-5 text-[var(--gold)]" />
         </div>
         <div>
-          <h1 className="font-serif text-xl text-[var(--text)]">📄 Delegate Dashboard</h1>
-          <p className="text-sm text-[var(--text-muted)]">🌍 Country · 📊 matrix · 📝 prep · ✅ checklist · ⏱️ countdown</p>
+          <h1 className="font-serif text-xl text-[var(--text)] whitespace-nowrap">📄 Delegate Dashboard</h1>
+          <p className="text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🌍 Country · 📊 Matrix · 📝 Prep · ✅ Checklist · ⏱️ Countdown</p>
         </div>
       </div>
       <DelegateDashboardContent />

@@ -7,16 +7,21 @@
     <title>SEAMUNs Dashboard — Chairs & Delegates</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet" />
   </head>
   <body>
     <script>
       (function () {
-        var key = 'seamuns-dashboard-theme';
-        var valid = ['default','health','war','women','nature','peace','economy','education','rights'];
+        var themeKey = 'seamuns-dashboard-theme';
+        var modeKey = 'seamuns-dashboard-color-mode';
+        var validTheme = ['default','health','war','women','nature','peace','economy','education','rights'];
+        var validMode = ['light','dark'];
         try {
-          var s = localStorage.getItem(key);
-          if (s && valid.indexOf(s) !== -1) document.documentElement.setAttribute('data-theme', s);
+          var t = localStorage.getItem(themeKey);
+          if (t && validTheme.indexOf(t) !== -1) document.documentElement.setAttribute('data-theme', t);
+          var m = localStorage.getItem(modeKey);
+          if (m && validMode.indexOf(m) !== -1) document.documentElement.setAttribute('data-color-mode', m);
+          else document.documentElement.setAttribute('data-color-mode', 'light');
         } catch (e) {}
       })();
     </script>

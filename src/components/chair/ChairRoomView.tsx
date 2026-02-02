@@ -46,7 +46,7 @@ export default function ChairRoomView() {
                   <div className="mt-2 flex items-center justify-center gap-2">
                     {d.present !== undefined && (
                       <span
-                        className={`inline-block w-2 h-2 rounded-full ${
+                        className={`inline-block w-2 h-2 rounded-sm ${
                           d.present ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
                         }`}
                         title={d.present ? 'Present' : 'Absent'}

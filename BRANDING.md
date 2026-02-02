@@ -14,10 +14,10 @@ This dashboard is styled to match **seamuns.site** (South East Asia Model United
 
 Defined in `src/index.css` as CSS variables (`--brand`, `--brand-soft`, `--accent`, `--gold`, etc.). To tweak for seamuns.site, change the `:root` values there.
 
-## Typography
+## Typography (aligned with seamuns.site)
 
-- **Sans:** DM Sans (body, UI)
-- **Serif:** Instrument Serif (headings, logo feel)
+- **Sans:** Inter (body, UI)
+- **Serif:** Source Serif 4 (headings, logo feel)
 
 ## Links to seamuns.site
 
@@ -27,10 +27,15 @@ Defined in `src/index.css` as CSS variables (`--brand`, `--brand-soft`, `--accen
 
 Keeping these and the palette in sync with seamuns.site maintains consistent branding across the main site and this dashboard.
 
+## Light / dark and color themes
+
+- **Default:** Light mode (seamuns.site-style) — light gray background (`#f1f5f9`), white cards, dark text.
+- **Theme selector:** Appearance (Light / Dark) + Color theme (Default, Health, War, Women, Nature, Peace, Economy, Education, Human rights). Both persisted in localStorage.
+
 ## UI patterns (seamuns-style)
 
 - **Header:** Taller bar (h-16), nav in a pill strip (rounded container with pill-style active tab).
 - **Cards:** `.card-block` — `--radius-card` (1rem), border, `--bg-card`, light shadow.
-- **Pills / filters:** `--radius-pill` (9999px) for nav items and sidebar section buttons; active = filled brand/gold.
+- **Buttons / nav:** Rounded rectangles (`rounded-lg`, `--radius-btn`) for nav items and sidebar section buttons; active = filled brand/gold.
 - **Section headings:** `.section-heading` (serif, 1.5rem) + optional `.section-subtitle` (muted, 0.875rem).
 - **Page bars:** Chair/Delegate page title bars use a thin bottom shadow for separation.

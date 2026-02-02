@@ -6,7 +6,7 @@ export default function DelegateCountry() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🌍 Country assignment</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🌍 Country Assignment</h2>
         <p className="text-[var(--text-muted)] text-sm">Your country and brief stance overview for this conference.</p>
       </div>
       <div className="card-block p-4 space-y-4">

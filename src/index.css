@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-/* SEAMUNs UI — aligned with seamuns.site (conference-style layout, pills, cards) */
+/* SEAMUNs UI — aligned with seamuns.site (lighter theme, fonts, topic colors) */
 :root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --radius-card: 1rem;
+  --radius-btn: 0.5rem;
+}
+
+/* Light mode (default — seamuns.site-style, high contrast) */
+:root,
+[data-color-mode="light"] {
+  --bg-base: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --border: #cbd5e1;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --icon: #475569;
+  --brand: #1d4ed8;
+  --brand-soft: rgba(29, 78, 216, 0.14);
+  --accent: #1d4ed8;
+  --accent-soft: rgba(29, 78, 216, 0.14);
+  --gold: #92400e;
+  --gold-soft: rgba(146, 64, 14, 0.14);
+  --success: #166534;
+  --danger: #991b1b;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark mode (high contrast for text and icons) */
+[data-color-mode="dark"] {
   --bg-base: #0f1117;
   --bg-elevated: #181b24;
   --bg-card: #1c1f2a;
-  --border: #2d3340;
-  --text: #eaecef;
-  --text-muted: #8b92a4;
-  --brand: #2563eb;
-  --brand-soft: rgba(37, 99, 235, 0.18);
-  --accent: #2563eb;
-  --accent-soft: rgba(37, 99, 235, 0.18);
-  --gold: #d4a853;
-  --gold-soft: rgba(212, 168, 83, 0.18);
+  --border: #374151;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --icon: #94a3b8;
+  --brand: #3b82f6;
+  --brand-soft: rgba(59, 130, 246, 0.2);
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.2);
+  --gold: #eab308;
+  --gold-soft: rgba(234, 179, 8, 0.2);
   --success: #22c55e;
   --danger: #ef4444;
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-serif: "Instrument Serif", Georgia, serif;
-  /* seamuns-style radii and spacing */
-  --radius-card: 1rem;
-  --radius-pill: 9999px;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -87,6 +112,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Icons and symbols inherit text color for consistent contrast */
+svg[class*="lucide"],
+[class*="lucide"] {
+  color: inherit;
+}
+
+/* Ensure focus rings are clearly visible */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -116,12 +153,12 @@ body {
   box-shadow: var(--shadow-card);
 }
 
-/* Pill / filter style (seamuns-style nav and filters) */
+/* Button / nav style (rounded rectangles) */
 .pill {
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-btn);
 }
 
-/* Scrollbar */
+/* Scrollbar (uses theme vars so light/dark adapt) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -134,5 +171,5 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a4150;
+  background: var(--text-muted);
 }

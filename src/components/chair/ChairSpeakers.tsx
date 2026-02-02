@@ -37,7 +37,7 @@ export default function ChairSpeakers() {
     <div className="space-y-6">
       <div>
         <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🎤 Speakers</h2>
-        <p className="text-[var(--text-muted)] text-sm">Mod speakers list, active speaker (timed), consultation speakers.</p>
+        <p className="text-[var(--text-muted)] text-sm">Mod Speakers List, Active Speaker (Timed), Consultation Speakers.</p>
       </div>
 
       <div className="rounded-xl border-2 border-[var(--accent)]/50 bg-[var(--accent-soft)]/30 p-4">

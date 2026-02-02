@@ -11,7 +11,7 @@ export default function ChairRollCall() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">✅ Roll call tracker</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">✅ Roll Call Tracker</h2>
         <p className="text-[var(--text-muted)] text-sm">Track presence. Mark roll call complete when done.</p>
       </div>
       <div className="flex items-center gap-3">

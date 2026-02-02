@@ -20,7 +20,7 @@ export default function Home() {
           </div>
           <h2 className="font-serif text-xl text-[var(--text)] mb-2">⚖️ Chair Room</h2>
           <p className="text-[var(--text-muted)] text-sm">
-            🖥️ Digital room · 👥 Delegates · 📜 Motions & points · 🗳️ Voting · 🎤 Speakers · ⚠️ Crisis · 📁 Archive
+            🖥️ Digital Room · 👥 Delegates · 📜 Motions & Points · 🗳️ Voting · 🎤 Speakers · ⚠️ Crisis · 📁 Archive
           </p>
         </Link>
         <Link

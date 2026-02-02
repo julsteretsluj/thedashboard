@@ -33,7 +33,7 @@ export default function ChairVoting() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🗳️ Active voting</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🗳️ Active Voting</h2>
         <p className="text-[var(--text-muted)] text-sm">Record each delegate&apos;s vote.</p>
       </div>
 
