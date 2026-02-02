@@ -11,6 +11,8 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
+**Important:** Use `npm run dev` to run the app locally. Do not open `index.html` in the browser directly (e.g. via `file://`) or serve the project root with a plain static server — that causes a “MIME type text/plain” error because `.tsx` files are served incorrectly. For deployment, build with `npm run build` and serve the **contents of `dist/`** so the server sends JavaScript with the correct `Content-Type`.
+
 ## Chair Room
 
 - **Digital Room View** — See all delegates in the room
