@@ -9,10 +9,10 @@ permissions:
   pages: write
   id-token: write
 
-# Unique group so this workflow doesn't conflict with other Pages workflows
+# One deploy at a time; don't cancel in-progress (so deploys finish)
 concurrency:
   group: pages-mun-dashboard
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:

@@ -1,0 +1,16 @@
+# MIME types for JavaScript and WASM (fixes "text/plain" module script error)
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+  AddType application/wasm .wasm
+</IfModule>
+
+# Optional: SPA fallback (serve index.html for client-side routes)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
