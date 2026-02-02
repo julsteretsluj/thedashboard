@@ -25,5 +25,8 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Local clone (avoid duplicate repo inside repo)
+thedashboard.seamuns.site-clone/
+
 # TypeScript
 *.tsbuildinfo
