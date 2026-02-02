@@ -11,6 +11,8 @@ The **"Failed to load module script" (MIME type text/plain)** and **favicon 404*
 
 **Fix:** Run `npm run build` and deploy the **contents of `dist/`** as the site root. The built `index.html` loads compiled JS from `/assets/...` with correct MIME type, and `favicon.svg` is at the root of `dist/`.
 
+**If you still see both errors:** The server is serving the **repo root** (source), not `dist/`. Point the server’s **document root** to the **`dist/`** folder (or copy `dist/` contents into the web root). Do not use the project root as the document root.
+
 ---
 
 ## 1. Build locally (to test)
@@ -125,7 +127,67 @@ Always use **Build command: `npm run build`** and **Publish directory: `dist`**.
 
 ---
 
-## 4. Workflow failed – how to find the error
+## 4. How to set document root
+
+### GitHub Pages (Source: GitHub Actions)
+
+There is **no document root setting**. The workflow uploads the **`dist/`** folder as the artifact; GitHub Pages serves that artifact as the site root. You don’t set a path—the deployed site **is** the contents of `dist/`.
+
+If you still see MIME or favicon errors:
+
+1. **Actions** tab → open the latest **“Deploy to GitHub Pages”** run → confirm both **build** and **deploy** jobs are green.
+2. Hard refresh the site (Ctrl+Shift+R or Cmd+Shift+R) or try an incognito window (cache may be serving the old page).
+
+### Apache (your own server or shared hosting)
+
+Point the **document root** to the folder that contains the **built** site (the contents of **`dist/`**), not the repo root.
+
+**Option A – Document root = `dist/` folder**
+
+1. Run `npm run build` locally (or on the server).
+2. In Apache config, set **DocumentRoot** to the full path of the **`dist`** directory.
+
+Minimal snippet (e.g. in an include or when the VirtualHost is defined elsewhere):
+
+```apache
+DocumentRoot "/var/www/thedashboard.seamuns.site/dist"
+<Directory "/var/www/thedashboard.seamuns.site/dist">
+    AllowOverride All
+    Require all granted
+</Directory>
+```
+
+Full **VirtualHost** example (e.g. in `httpd.conf` or a file in `sites-enabled`):
+
+```apache
+<VirtualHost *:80>
+    ServerName thedashboard.seamuns.site
+    DocumentRoot "/var/www/thedashboard.seamuns.site/dist"
+    <Directory "/var/www/thedashboard.seamuns.site/dist">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+Replace `/var/www/thedashboard.seamuns.site` with the path where your repo (or built site) lives. After a build, the site root must be the **`dist`** folder. **AllowOverride All** lets `dist/.htaccess` (from `public/.htaccess`) apply MIME types and SPA fallback.
+
+**Option B – Copy `dist/` contents into the current web root**
+
+1. Run `npm run build` locally.
+2. Upload (or copy) **everything inside** `dist/` (e.g. `index.html`, `favicon.svg`, `assets/`) into your current document root (e.g. `public_html` or `htdocs`). The document root stays as-is; its contents become the built app.
+
+### cPanel (or similar)
+
+1. **Domains** or **Addon Domains** → select the domain (e.g. thedashboard.seamuns.site).
+2. Find **Document Root** (or **Root Directory**). It might show something like `public_html` or `thedashboard.seamuns.site`.
+3. Change it to the folder that contains **only** the built site—e.g. a subfolder that has the **contents** of `dist/` (e.g. `public_html/thedashboard` where you upload `index.html`, `favicon.svg`, `assets/`), or the path to your **`dist`** folder if the repo is on the server and you run `npm run build` there.
+
+Example: if the doc root is `public_html`, upload the **contents** of `dist/` into `public_html/` (so `public_html/index.html`, `public_html/favicon.svg`, `public_html/assets/` exist). Don’t upload the repo root.
+
+---
+
+## 5. Workflow failed – how to find the error
 
 1. Go to the repo → **Actions**.
 2. Click the **failed** run (red X).
@@ -140,7 +202,7 @@ Always use **Build command: `npm run build`** and **Publish directory: `dist`**.
 
 ---
 
-## 5. Two workflows (e.g. “Deploy Next.js site to Pages”)
+## 6. Two workflows (e.g. “Deploy Next.js site to Pages”)
 
 If you see **two** workflows running on each push (e.g. “Deploy to GitHub Pages” and “Deploy Next.js site to Pages”):
 
