@@ -19,11 +19,11 @@ export default function DelegateMatrix() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Committee matrix</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📊 Committee matrix</h2>
         <p className="text-[var(--text-muted)] text-sm">First names only — who is in which committee.</p>
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3">
-        <h3 className="text-sm font-medium text-[var(--text)]">Add entry</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">➕ Add entry</h3>
         <div className="flex flex-wrap gap-2 items-end">
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[var(--text-muted)]">Committee</span>
@@ -55,7 +55,7 @@ export default function DelegateMatrix() {
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">Matrix</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">▸ Matrix</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
           {entries.length === 0 ? (

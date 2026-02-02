@@ -14,11 +14,11 @@ export default function ChairVoting() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Voting</h2>
+          <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🗳️ Voting</h2>
           <p className="text-[var(--text-muted)] text-sm">Start a vote from a motion in Motions & Points.</p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-8 text-center text-[var(--text-muted)]">
-          No active vote. Go to Motions & Points and click &quot;Vote&quot; on a motion.
+          🗳️ No active vote. Go to Motions & Points and click &quot;Vote&quot; on a motion.
         </div>
       </div>
     )
@@ -33,12 +33,12 @@ export default function ChairVoting() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Active voting</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🗳️ Active voting</h2>
         <p className="text-[var(--text-muted)] text-sm">Record each delegate&apos;s vote.</p>
       </div>
 
       <div className="rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">
-        <p className="text-sm font-medium text-[var(--text)] mb-2">Motion:</p>
+        <p className="text-sm font-medium text-[var(--text)] mb-2">📜 Motion:</p>
         <p className="text-[var(--text)]">{voteInProgress.text}</p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <span className="text-[var(--success)]">Yes: {yes}</span>
@@ -56,7 +56,7 @@ export default function ChairVoting() {
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">Delegate votes</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">👥 Delegate votes</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {delegates.map((d) => {

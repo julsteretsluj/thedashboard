@@ -28,12 +28,12 @@ export default function DelegateSources() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Trusted & nation sources</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🔗 Trusted & nation sources</h2>
         <p className="text-[var(--text-muted)] text-sm">Trusted sources and nation-specific sources for research.</p>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-4">
-        <h3 className="text-sm font-medium text-[var(--text)]">Trusted sources</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">✓ Trusted sources</h3>
         <div className="flex gap-2">
           <input
             type="text"
@@ -63,7 +63,7 @@ export default function DelegateSources() {
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-4">
-        <h3 className="text-sm font-medium text-[var(--text)]">Nation-specific sources</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">🌍 Nation-specific sources</h3>
         <div className="flex gap-2">
           <input
             type="text"

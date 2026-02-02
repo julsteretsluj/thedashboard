@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import type { Delegate, Motion, Speaker } from '../types'
+import type { Delegate, DelegateStrike, Motion, Speaker } from '../types'
 
 interface ChairState {
   committee: string
@@ -7,6 +7,7 @@ interface ChairState {
   sessionStarted: boolean
   sessionStartTime: string | null
   delegates: Delegate[]
+  delegateStrikes: DelegateStrike[]
   motions: Motion[]
   speakers: Speaker[]
   activeSpeaker: Speaker | null
@@ -27,6 +28,7 @@ const defaultState: ChairState = {
   sessionStarted: false,
   sessionStartTime: null,
   delegates: [],
+  delegateStrikes: [],
   motions: [],
   speakers: [],
   activeSpeaker: null,
@@ -65,6 +67,10 @@ type ChairContextValue = ChairState & {
   addCrisisFact: (s: string) => void
   addCrisisPathway: (s: string) => void
   addToArchive: (type: string, name: string, content?: string) => void
+  addStrike: (delegateId: string, type: string) => void
+  removeStrike: (delegateId: string, type: string) => void
+  getStrikeCount: (delegateId: string, type: string) => number
+  getStrikeCountsByType: (delegateId: string) => Record<string, number>
 }
 
 const ChairContext = createContext<ChairContextValue | null>(null)
@@ -102,6 +108,7 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     setState((s) => ({
       ...s,
       delegates: s.delegates.filter((x) => x.id !== id),
+      delegateStrikes: s.delegateStrikes.filter((x) => x.delegateId !== id),
     }))
   }, [])
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
@@ -223,6 +230,29 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, archive: [...s.archive, { type, name, content }] }))
   }, [])
 
+  const addStrike = useCallback((delegateId: string, type: string) => {
+    setState((s) => ({
+      ...s,
+      delegateStrikes: [
+        ...s.delegateStrikes,
+        { delegateId, type, timestamp: new Date().toISOString() },
+      ],
+    }))
+  }, [])
+  const removeStrike = useCallback((delegateId: string, type: string) => {
+    setState((s) => {
+      const idx = [...s.delegateStrikes].reverse().findIndex(
+        (x) => x.delegateId === delegateId && x.type === type
+      )
+      if (idx === -1) return s
+      const actualIdx = s.delegateStrikes.length - 1 - idx
+      return {
+        ...s,
+        delegateStrikes: s.delegateStrikes.filter((_, i) => i !== actualIdx),
+      }
+    })
+  }, [])
+
   const value: ChairContextValue = {
     ...state,
     setCommittee,
@@ -248,6 +278,19 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     addCrisisFact,
     addCrisisPathway,
     addToArchive,
+    addStrike,
+    removeStrike,
+    getStrikeCount: (delegateId: string, type: string) =>
+      state.delegateStrikes.filter((s) => s.delegateId === delegateId && s.type === type).length,
+    getStrikeCountsByType: (delegateId: string) => {
+      const counts: Record<string, number> = {}
+      state.delegateStrikes
+        .filter((s) => s.delegateId === delegateId)
+        .forEach((s) => {
+          counts[s.type] = (counts[s.type] ?? 0) + 1
+        })
+      return counts
+    },
   }
 
   return <ChairContext.Provider value={value}>{children}</ChairContext.Provider>

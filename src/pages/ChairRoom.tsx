@@ -27,17 +27,17 @@ import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
 
 const sections = [
-  { id: 'room', label: 'Digital Room', icon: LayoutGrid },
-  { id: 'delegates', label: 'Delegates', icon: Users },
-  { id: 'motions', label: 'Motions & Points', icon: FileText },
-  { id: 'voting', label: 'Voting', icon: Vote },
-  { id: 'committee', label: 'Committee & Topic', icon: BookOpen },
-  { id: 'score', label: 'Score', icon: ListOrdered },
-  { id: 'rollcall', label: 'Roll Call', icon: ListOrdered },
-  { id: 'session', label: 'Session', icon: Play },
-  { id: 'speakers', label: 'Speakers', icon: Mic },
-  { id: 'crisis', label: 'Crisis', icon: AlertTriangle },
-  { id: 'archive', label: 'Archive', icon: Archive },
+  { id: 'room', label: '🖥️ Digital Room', icon: LayoutGrid },
+  { id: 'delegates', label: '👥 Delegates', icon: Users },
+  { id: 'motions', label: '📜 Motions & Points', icon: FileText },
+  { id: 'voting', label: '🗳️ Voting', icon: Vote },
+  { id: 'committee', label: '📌 Committee & Topic', icon: BookOpen },
+  { id: 'score', label: '📊 Score', icon: ListOrdered },
+  { id: 'rollcall', label: '✅ Roll Call', icon: ListOrdered },
+  { id: 'session', label: '▶️ Session', icon: Play },
+  { id: 'speakers', label: '🎤 Speakers', icon: Mic },
+  { id: 'crisis', label: '⚠️ Crisis', icon: AlertTriangle },
+  { id: 'archive', label: '📁 Archive', icon: Archive },
 ]
 
 function ChairRoomContent() {
@@ -67,7 +67,7 @@ function ChairRoomContent() {
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] mt-auto"
           >
             <Settings className="w-4 h-4" />
-            Settings
+            ⚙️ Settings
           </button>
         </div>
       </aside>
@@ -101,8 +101,8 @@ export default function ChairRoom() {
           <Gavel className="w-5 h-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h1 className="font-serif text-xl text-[var(--text)]">Chair Room</h1>
-          <p className="text-sm text-[var(--text-muted)]">Digital room view, motions, voting, speakers</p>
+          <h1 className="font-serif text-xl text-[var(--text)]">⚖️ Chair Room</h1>
+          <p className="text-sm text-[var(--text-muted)]">🖥️ Digital room · 📜 motions · 🗳️ voting · 🎤 speakers</p>
         </div>
       </div>
       <ChairRoomContent />

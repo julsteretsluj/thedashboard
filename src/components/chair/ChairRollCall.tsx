@@ -11,7 +11,7 @@ export default function ChairRollCall() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Roll call tracker</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">✅ Roll call tracker</h2>
         <p className="text-[var(--text-muted)] text-sm">Track presence. Mark roll call complete when done.</p>
       </div>
       <div className="flex items-center gap-3">
@@ -27,7 +27,7 @@ export default function ChairRollCall() {
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
-          <h3 className="text-sm font-medium text-[var(--text)]">Delegates</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">👥 Delegates</h3>
           <span className="text-xs text-[var(--text-muted)]">
             Present: {delegates.filter((d) => d.present).length} / {delegates.length}
           </span>

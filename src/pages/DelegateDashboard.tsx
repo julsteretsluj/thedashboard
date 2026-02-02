@@ -19,13 +19,13 @@ import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import { User } from 'lucide-react'
 
 const sections = [
-  { id: 'country', label: 'Country & stance', icon: Globe },
-  { id: 'matrix', label: 'Committee matrix', icon: Users },
-  { id: 'prep', label: 'Prep template', icon: FileText },
-  { id: 'sources', label: 'Trusted & nation sources', icon: LinkIcon },
-  { id: 'resources', label: 'Chair report & resources', icon: BookOpen },
-  { id: 'checklist', label: 'Checklist', icon: CheckSquare },
-  { id: 'countdown', label: 'Conference countdown', icon: Clock },
+  { id: 'country', label: '🌍 Country & stance', icon: Globe },
+  { id: 'matrix', label: '📊 Committee matrix', icon: Users },
+  { id: 'prep', label: '📝 Prep template', icon: FileText },
+  { id: 'sources', label: '🔗 Trusted & nation sources', icon: LinkIcon },
+  { id: 'resources', label: '📚 Chair report & resources', icon: BookOpen },
+  { id: 'checklist', label: '✅ Checklist', icon: CheckSquare },
+  { id: 'countdown', label: '⏱️ Conference countdown', icon: Clock },
 ]
 
 function DelegateDashboardContent() {
@@ -72,8 +72,8 @@ export default function DelegateDashboard() {
           <User className="w-5 h-5 text-[var(--gold)]" />
         </div>
         <div>
-          <h1 className="font-serif text-xl text-[var(--text)]">Delegate Dashboard</h1>
-          <p className="text-sm text-[var(--text-muted)]">Per conference: country, matrix, prep, checklist</p>
+          <h1 className="font-serif text-xl text-[var(--text)]">📄 Delegate Dashboard</h1>
+          <p className="text-sm text-[var(--text-muted)]">🌍 Country · 📊 matrix · 📝 prep · ✅ checklist · ⏱️ countdown</p>
         </div>
       </div>
       <DelegateDashboardContent />

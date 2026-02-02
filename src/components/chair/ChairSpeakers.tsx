@@ -36,13 +36,13 @@ export default function ChairSpeakers() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Speakers</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">🎤 Speakers</h2>
         <p className="text-[var(--text-muted)] text-sm">Mod speakers list, active speaker (timed), consultation speakers.</p>
       </div>
 
       <div className="rounded-xl border-2 border-[var(--accent)]/50 bg-[var(--accent-soft)]/30 p-4">
-        <h3 className="text-sm font-medium text-[var(--accent)] mb-2 flex items-center gap-2">
-          <Mic className="w-4 h-4" /> Active speaker
+          <h3 className="text-sm font-medium text-[var(--accent)] mb-2 flex items-center gap-2">
+          <Mic className="w-4 h-4" /> ● Active speaker
         </h3>
         {activeSpeaker ? (
           <div className="flex flex-wrap items-center gap-4">
@@ -68,7 +68,7 @@ export default function ChairSpeakers() {
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3">
-        <h3 className="text-sm font-medium text-[var(--text)]">Speaker duration (seconds)</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">⏱️ Speaker duration (seconds)</h3>
         <input
           type="number"
           min={30}
@@ -80,7 +80,7 @@ export default function ChairSpeakers() {
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3">
-        <h3 className="text-sm font-medium text-[var(--text)]">Add to speakers list</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">➕ Add to speakers list</h3>
         <div className="flex flex-wrap gap-2">
           <select
             value={selectedDelegate}
@@ -106,7 +106,7 @@ export default function ChairSpeakers() {
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">Mod speakers list</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">📋 Mod speakers list</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
           {speakers.map((s, i) => (

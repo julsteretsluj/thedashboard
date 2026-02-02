@@ -3,11 +3,11 @@ import { useChair } from '../../context/ChairContext'
 import { Plus, FileText, BookOpen, Image, Mic, FileCheck } from 'lucide-react'
 
 const archiveTypes = [
-  { id: 'position', label: 'Position papers', icon: FileText },
-  { id: 'chair-report', label: 'Chair reports', icon: BookOpen },
-  { id: 'slides', label: 'Slides (ceremony or crisis)', icon: Image },
-  { id: 'speeches', label: 'Speeches', icon: Mic },
-  { id: 'prep', label: 'Prep document', icon: FileCheck },
+  { id: 'position', label: '📄 Position papers', icon: FileText },
+  { id: 'chair-report', label: '📋 Chair reports', icon: BookOpen },
+  { id: 'slides', label: '🖼️ Slides (ceremony or crisis)', icon: Image },
+  { id: 'speeches', label: '🎤 Speeches', icon: Mic },
+  { id: 'prep', label: '📝 Prep document', icon: FileCheck },
 ] as const
 
 export default function ChairArchive() {
@@ -26,11 +26,11 @@ export default function ChairArchive() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Archive</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📁 Archive</h2>
         <p className="text-[var(--text-muted)] text-sm">Position papers, chair reports, slides, speeches, prep docs.</p>
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-4">
-        <h3 className="text-sm font-medium text-[var(--text)]">Add to archive</h3>
+        <h3 className="text-sm font-medium text-[var(--text)]">➕ Add to archive</h3>
         <div className="flex flex-wrap gap-2">
           {archiveTypes.map(({ id, label, icon: Icon }) => (
             <button
@@ -69,7 +69,7 @@ export default function ChairArchive() {
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">Archive</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">📁 Archive</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {archive.length === 0 ? (

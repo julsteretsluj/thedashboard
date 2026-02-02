@@ -7,6 +7,12 @@ export interface Delegate {
   vote?: 'yes' | 'no' | 'abstain' | null
 }
 
+export interface DelegateStrike {
+  delegateId: string
+  type: string
+  timestamp: string
+}
+
 export interface Motion {
   id: string
   text: string

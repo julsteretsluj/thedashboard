@@ -17,12 +17,12 @@ export default function DelegateResources() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Chair report & delegate resources</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📚 Chair report & delegate resources</h2>
         <p className="text-[var(--text-muted)] text-sm">Handbook, position paper guidelines, chair report — upload or link.</p>
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-4">
         <h3 className="text-sm font-medium text-[var(--text)] flex items-center gap-2">
-          <Upload className="w-4 h-4 text-[var(--gold)]" /> Add resource
+          <Upload className="w-4 h-4 text-[var(--gold)]" /> ➕ Add resource
         </h3>
         <div className="space-y-2">
           <input

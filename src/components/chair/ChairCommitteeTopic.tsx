@@ -10,7 +10,7 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-serif text-lg text-[var(--text)]">Committee & topic</h3>
+        <h3 className="font-serif text-lg text-[var(--text)]">📌 Committee & topic</h3>
         {onClose && (
           <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)] text-sm">
             Close

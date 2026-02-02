@@ -19,7 +19,7 @@ export default function ChairMotions() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">Motions & Points</h2>
+        <h2 className="font-serif text-2xl text-[var(--text)] mb-1">📜 Motions & Points</h2>
         <p className="text-[var(--text-muted)] text-sm">Record and star motions and points.</p>
       </div>
 
@@ -31,7 +31,7 @@ export default function ChairMotions() {
               type === 'motion' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
             }`}
           >
-            Motion
+            📜 Motion
           </button>
           <button
             onClick={() => setType('point')}
@@ -39,7 +39,7 @@ export default function ChairMotions() {
               type === 'point' ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
             }`}
           >
-            Point
+            • Point
           </button>
         </div>
         <div className="flex gap-2">
@@ -55,14 +55,14 @@ export default function ChairMotions() {
             onClick={submit}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
           >
-            <Plus className="w-4 h-4" /> Add
+            <Plus className="w-4 h-4" /> ➕ Add
           </button>
         </div>
       </div>
 
       {activeMotions.length > 0 && (
         <div className="rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/30 p-4">
-          <h3 className="text-sm font-medium text-[var(--accent)] mb-3">Active</h3>
+          <h3 className="text-sm font-medium text-[var(--accent)] mb-3">● Active</h3>
           <ul className="space-y-2">
             {activeMotions.map((m) => (
               <li key={m.id} className="flex items-center gap-2 flex-wrap">
@@ -112,7 +112,7 @@ export default function ChairMotions() {
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">Log</h3>
+          <h3 className="text-sm font-medium text-[var(--text)]">📋 Log</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {[...pastMotions].reverse().map((m) => (
