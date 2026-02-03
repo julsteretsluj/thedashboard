@@ -17,12 +17,17 @@ export const THEMES = [
 ] as const
 
 export const COLOR_THEMES = [
+  { id: 'gold-blue', label: 'Gold & Blue', emoji: '🏅' },
+  { id: 'red', label: 'Red', emoji: '🔴' },
+  { id: 'orange', label: 'Orange', emoji: '🟠' },
+  { id: 'yellow', label: 'Yellow', emoji: '🟡' },
+  { id: 'green', label: 'Green', emoji: '🟢' },
+  { id: 'light-blue', label: 'Light Blue', emoji: '🩵' },
   { id: 'blue', label: 'Blue', emoji: '🔵' },
-  { id: 'teal', label: 'Teal', emoji: '🩵' },
-  { id: 'violet', label: 'Violet', emoji: '💜' },
-  { id: 'rose', label: 'Rose', emoji: '🌹' },
-  { id: 'slate', label: 'Slate', emoji: '⬛' },
-  { id: 'amber', label: 'Amber', emoji: '🟠' },
+  { id: 'purple', label: 'Purple', emoji: '💜' },
+  { id: 'pink', label: 'Pink', emoji: '🩷' },
+  { id: 'brown', label: 'Brown', emoji: '🟤' },
+  { id: 'monochromatic', label: 'Monochromatic', emoji: '⬜' },
 ] as const
 
 export type ThemeId = (typeof THEMES)[number]['id']
@@ -59,9 +64,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   })
 
   const [colorThemeId, setColorThemeIdState] = useState<ColorThemeId>(() => {
-    if (typeof window === 'undefined') return 'blue'
+    if (typeof window === 'undefined') return 'gold-blue'
     const stored = localStorage.getItem(STORAGE_KEY_COLOR_THEME)
-    return stored && isValidColorThemeId(stored) ? stored : 'blue'
+    return stored && isValidColorThemeId(stored) ? stored : 'gold-blue'
   })
 
   const [colorMode, setColorModeState] = useState<ColorMode>(() => {

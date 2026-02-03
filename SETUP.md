@@ -60,7 +60,7 @@ Open **http://localhost:5173**.
 To show **Log in with Gmail** / **Log out** in the dashboard header:
 
 1. In [Firebase Console](https://console.firebase.google.com/), create a project (or use an existing one).
-2. Go to **Build** → **Authentication** → **Get started** → enable **Google** as a sign-in provider (no extra config needed for Google).
+2. Go to **Build** → **Authentication** → **Get started** → enable **Google** and **Email/Password** as sign-in providers (Email/Password allows sign up and log in with email).
 3. Go to **Project settings** (gear) → **General** → **Your apps** → **Add app** → **Web** (</>).
 4. Register the app with a nickname; copy the `firebaseConfig` object (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).
 5. In the project root, copy the env example and fill in:

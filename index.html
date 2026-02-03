@@ -16,14 +16,14 @@
         var colorThemeKey = 'seamuns-dashboard-color-theme';
         var modeKey = 'seamuns-dashboard-color-mode';
         var validTheme = ['default','health','war','women','nature','peace','economy','education','rights'];
-        var validColorTheme = ['blue','teal','violet','rose','slate','amber'];
+        var validColorTheme = ['gold-blue','red','orange','yellow','green','light-blue','blue','purple','pink','brown','monochromatic'];
         var validMode = ['light','dark'];
         try {
           var t = localStorage.getItem(themeKey);
           if (t && validTheme.indexOf(t) !== -1) document.documentElement.setAttribute('data-theme', t);
           var ct = localStorage.getItem(colorThemeKey);
           if (ct && validColorTheme.indexOf(ct) !== -1) document.documentElement.setAttribute('data-color-theme', ct);
-          else document.documentElement.setAttribute('data-color-theme', 'blue');
+          else document.documentElement.setAttribute('data-color-theme', 'gold-blue');
           var m = localStorage.getItem(modeKey);
           if (m && validMode.indexOf(m) !== -1) document.documentElement.setAttribute('data-color-mode', m);
           else document.documentElement.setAttribute('data-color-mode', 'light');

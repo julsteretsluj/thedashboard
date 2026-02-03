@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { DelegateProvider } from '../context/DelegateContext'
+import { DelegateProvider, useDelegate } from '../context/DelegateContext'
+import { useFirebaseAuth } from '../context/FirebaseAuthContext'
 import {
   Globe,
   FileText,
@@ -10,6 +11,9 @@ import {
   Link as LinkIcon,
   PanelLeftClose,
   PanelLeft,
+  Plus,
+  Save,
+  Trash2,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -31,6 +35,94 @@ import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import { User } from 'lucide-react'
+
+function DelegateDashboardHeader() {
+  const {
+    conferences,
+    activeConferenceId,
+    setActiveConference,
+    addConference,
+    removeConference,
+    saveToAccount,
+    isSaving,
+    lastSaved,
+    isLoaded,
+  } = useDelegate()
+  const { isAuthenticated } = useFirebaseAuth()
+  const canRemove = conferences.length > 1
+
+  const formatSaved = (d: Date) => {
+    const n = Date.now() - d.getTime()
+    if (n < 60_000) return 'Saved just now'
+    if (n < 3600_000) return `Saved ${Math.floor(n / 60_000)}m ago`
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  }
+
+  return (
+    <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center gap-2 sm:gap-3 shadow-[0_1px_0_0_var(--border)]">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0">
+        <User className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">📄 Delegate Dashboard</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🌍 Country · 📊 Matrix · 📝 Prep · ✅ Checklist · ⏱️ Countdown</p>
+      </div>
+      {isLoaded && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <span className="hidden sm:inline">Conference</span>
+            <select
+              value={activeConferenceId}
+              onChange={(e) => setActiveConference(e.target.value)}
+              className="min-w-[8rem] px-2.5 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Select conference"
+            >
+              {conferences.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name || 'Unnamed'}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={addConference}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add conference
+          </button>
+          {canRemove && (
+            <button
+              type="button"
+              onClick={() => removeConference(activeConferenceId)}
+              title="Remove this conference"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-card)] transition-colors"
+              aria-label="Remove conference"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {isAuthenticated && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => saveToAccount()}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? 'Saving…' : 'Save to account'}
+              </button>
+              {lastSaved && !isSaving && (
+                <span className="text-xs text-[var(--text-muted)]">{formatSaved(lastSaved)}</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const sections = [
   { id: 'country', label: '🌍 Country & Stance', icon: Globe },
@@ -112,17 +204,12 @@ function DelegateDashboardContent() {
 }
 
 export default function DelegateDashboard() {
+  const { user } = useFirebaseAuth()
+  const userId = user?.uid ?? null
+
   return (
-    <DelegateProvider>
-      <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-[0_1px_0_0_var(--border)]">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0">
-          <User className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">📄 Delegate Dashboard</h1>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🌍 Country · 📊 Matrix · 📝 Prep · ✅ Checklist · ⏱️ Countdown</p>
-        </div>
-      </div>
+    <DelegateProvider userId={userId}>
+      <DelegateDashboardHeader />
       <DelegateDashboardContent />
     </DelegateProvider>
   )
