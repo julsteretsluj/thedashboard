@@ -14,6 +14,7 @@ function migrateConference(c: DelegateConference): DelegateConference {
   const hasEntries = c.committeeMatrixEntries && c.committeeMatrixEntries.length > 0
   const base = {
     ...c,
+    delegateEmail: c.delegateEmail ?? '',
     committeeCount: c.committeeCount ?? 0,
     committees: c.committees ?? [],
     committeeMatrixEntries:
@@ -53,6 +54,7 @@ const defaultConference = (id: string): DelegateConference => ({
   id,
   name: 'New Conference',
   country: '',
+  delegateEmail: '',
   stanceOverview: '',
   committeeCount: 0,
   committees: [],
@@ -73,6 +75,7 @@ type DelegateContextValue = DelegateConference & {
   activeConferenceId: string
   setName: (n: string) => void
   setCountry: (c: string) => void
+  setDelegateEmail: (e: string) => void
   setStanceOverview: (s: string) => void
   setCommitteeCount: (n: number) => void
   setCommittees: (list: string[]) => void
@@ -166,6 +169,7 @@ export function DelegateProvider({
 
   const setName = useCallback((name: string) => updateActive((c) => ({ ...c, name })), [updateActive])
   const setCountry = useCallback((country: string) => updateActive((c) => ({ ...c, country })), [updateActive])
+  const setDelegateEmail = useCallback((delegateEmail: string) => updateActive((c) => ({ ...c, delegateEmail })), [updateActive])
   const setStanceOverview = useCallback((s: string) => updateActive((c) => ({ ...c, stanceOverview: s })), [updateActive])
   const setCommitteeCount = useCallback(
     (n: number) => updateActive((c) => ({ ...c, committeeCount: Math.max(0, Math.min(20, n)) })),
@@ -275,12 +279,22 @@ export function DelegateProvider({
     }
   }, [userId, conferences, activeId])
 
+  // Autosave: debounced save to account when data changes (only when signed in and after initial load)
+  useEffect(() => {
+    if (!userId || !isLoaded) return
+    const t = setTimeout(() => {
+      saveToAccount()
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [userId, isLoaded, conferences, activeId, saveToAccount])
+
   const value: DelegateContextValue = {
     ...current,
     conferences,
     activeConferenceId: activeId ?? '',
     setName,
     setCountry,
+    setDelegateEmail,
     setStanceOverview,
     setCommitteeCount,
     setCommittees,

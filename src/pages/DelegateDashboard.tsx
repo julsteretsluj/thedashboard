@@ -33,6 +33,7 @@ import DelegateSources from '../components/delegate/DelegateSources'
 import DelegateResources from '../components/delegate/DelegateResources'
 import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import DelegateCountdown from '../components/delegate/DelegateCountdown'
+import DelegateHowToGuide from '../components/DelegateHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import { User } from 'lucide-react'
 
@@ -66,6 +67,11 @@ function DelegateDashboardHeader() {
       <div className="min-w-0 flex-1">
         <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">📄 Delegate Dashboard</h1>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🌍 Country · 📊 Matrix · 📝 Prep · ✅ Checklist · ⏱️ Countdown</p>
+        {isLoaded && !isAuthenticated && (
+          <p className="text-xs text-[var(--accent)] mt-1">
+            Sign in and save to account so your data isn&apos;t lost on refresh or when switching devices.
+          </p>
+        )}
       </div>
       {isLoaded && (
         <div className="flex flex-wrap items-center gap-2">
@@ -114,7 +120,9 @@ function DelegateDashboardHeader() {
                 {isSaving ? 'Saving…' : 'Save to account'}
               </button>
               {lastSaved && !isSaving && (
-                <span className="text-xs text-[var(--text-muted)]">{formatSaved(lastSaved)}</span>
+                <span className="text-xs text-[var(--text-muted)]" title="Auto-saved to your account">
+                  Auto-saved {formatSaved(lastSaved)}
+                </span>
               )}
             </div>
           )}
@@ -198,6 +206,7 @@ function DelegateDashboardContent() {
         {active === 'resources' && <DelegateResources />}
         {active === 'checklist' && <DelegateChecklist />}
         {active === 'countdown' && <DelegateCountdown />}
+        <DelegateHowToGuide />
       </main>
     </div>
   )

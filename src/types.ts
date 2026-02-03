@@ -67,6 +67,8 @@ export interface DelegateConference {
   id: string
   name: string
   country: string
+  /** Delegate's email (optional), e.g. for chair contact. */
+  delegateEmail: string
   stanceOverview: string
   /** Number of committees for this conference (set when registering) */
   committeeCount: number

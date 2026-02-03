@@ -1,6 +1,7 @@
 import { useDelegate } from '../../context/DelegateContext'
 import type { DelegateConference } from '../../context/DelegateContext'
 import { CheckSquare, Square, ExternalLink } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 import { MUN_PREP_TEMPLATE_URL } from '../../constants/prepTemplate'
 
 type ChecklistKey = keyof DelegateConference['checklist']
@@ -67,20 +68,27 @@ export default function DelegateChecklist() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">✅ Preparation checklist</h2>
-        <p className="text-[var(--text-muted)] text-sm mb-2">
-          This checklist follows the sections of the MUN Prep Template. Make a copy of the template and work through each section in your doc.
-        </p>
-        <a
-          href={MUN_PREP_TEMPLATE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Open MUN Prep Template (Google Doc)
-        </a>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            ✅ Preparation checklist
+            <InfoPopover title="Preparation checklist">
+              Tick off research, position paper, speeches, and materials. The checklist follows the sections of the MUN Prep Template — make a copy of the template and work through each section in your doc.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm mb-2">
+            This checklist follows the sections of the MUN Prep Template. Make a copy of the template and work through each section in your doc.
+          </p>
+          <a
+            href={MUN_PREP_TEMPLATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open MUN Prep Template (Google Doc)
+          </a>
+        </div>
       </div>
       <div className="space-y-5">
         {GROUPS.map((group) => (

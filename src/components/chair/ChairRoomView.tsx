@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { AlertTriangle, ThumbsUp, MessageCircle, ChevronDown } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 import type { Delegate, RollCallStatus } from '../../types'
 import { STRIKE_THRESHOLD } from './strikeMisbehaviours'
 
@@ -36,15 +37,22 @@ export default function ChairRoomView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">🖥️ Digital Room View</h2>
-        <p className="text-[var(--text-muted)] text-sm">
-          {committee}
-          {universe ? ` — ${universe} — ${topic}` : ` — ${topic}`}
-        </p>
-        <p className="text-xs text-[var(--text-muted)] mt-1">
-          Click a delegate to give a compliment or concern reminder.
-        </p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            🖥️ Digital Room View
+            <InfoPopover title="Digital Room">
+              Shows all delegates with their roll-call status (Absent, Present, P&amp;V). Click a delegate card to give a compliment or concern reminder. Delegates are listed alphabetically by country.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            {committee}
+            {universe ? ` — ${universe} — ${topic}` : ` — ${topic}`}
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Click a delegate to give a compliment or concern reminder.
+          </p>
+        </div>
       </div>
       <div className="card-block p-6 min-h-[320px]">
         {delegates.length === 0 ? (

@@ -1,6 +1,7 @@
 import { useChair } from '../../context/ChairContext'
 import { Check, X, Minus } from 'lucide-react'
 import type { Delegate, RollCallStatus } from '../../types'
+import InfoPopover from '../InfoPopover'
 
 function getRollCallStatus(d: Delegate): RollCallStatus {
   if (d.rollCallStatus) return d.rollCallStatus
@@ -40,9 +41,16 @@ export default function ChairVoting() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">🗳️ Active Voting</h2>
-        <p className="text-[var(--text-muted)] text-sm">Record each delegate&apos;s vote.</p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            🗳️ Active Voting
+            <InfoPopover title="Voting">
+              Start a vote from a motion in Motions &amp; Points. Record each delegate&apos;s vote: Yes, No, or Abstain. Delegates marked &quot;Present and voting&quot; cannot abstain. Absent delegates have no vote buttons. End vote to record the result on the motion.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">Record each delegate&apos;s vote.</p>
+        </div>
       </div>
 
       <div className="rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">

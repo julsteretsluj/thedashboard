@@ -44,6 +44,7 @@ import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
 import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
+import ChairHowToGuide from '../components/ChairHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 
 const sections = [
@@ -148,6 +149,7 @@ function ChairRoomContent() {
             <OfficialUnLinks showHeading={true} />
           </div>
         )}
+        <ChairHowToGuide />
       </main>
     </div>
   )
@@ -160,9 +162,12 @@ export default function ChairRoom() {
         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0">
           <Gavel className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">⚖️ Chair Room</h1>
           <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Data is saved locally — clearing site data will remove it.
+          </p>
         </div>
       </div>
       <ChairRoomContent />

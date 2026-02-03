@@ -1,5 +1,6 @@
 import { useChair } from '../../context/ChairContext'
 import { CheckSquare, Square, RotateCcw } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 
 const FLOW_STEPS: { id: string; label: string }[] = [
   { id: 'rollcall', label: 'Roll call' },
@@ -19,11 +20,18 @@ export default function ChairFlowChecklist() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📋 Committee flow checklist</h2>
-        <p className="text-[var(--text-muted)] text-sm">
-          Normal committee flow — tick steps as you go. Reset when starting a new session or cycle.
-        </p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            📋 Committee flow checklist
+            <InfoPopover title="Committee flow">
+              Tick each step as you run the session: roll call → open the floor → recognize motions → vote → engage in the motion or move to GSL → open the floor again. Reset when starting a new session or cycle.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            Normal committee flow — tick steps as you go. Reset when starting a new session or cycle.
+          </p>
+        </div>
       </div>
       <div className="card-block p-4 space-y-2">
         <div className="flex items-center justify-between gap-2 mb-3">

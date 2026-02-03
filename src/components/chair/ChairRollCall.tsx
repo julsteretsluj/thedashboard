@@ -1,6 +1,7 @@
 import { useChair } from '../../context/ChairContext'
 import type { Delegate, RollCallStatus } from '../../types'
 import { Check, X, Vote } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 
 function getRollCallStatus(d: Delegate): RollCallStatus {
   if (d.rollCallStatus) return d.rollCallStatus
@@ -37,11 +38,18 @@ export default function ChairRollCall() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">✅ Roll Call Tracker</h2>
-        <p className="text-[var(--text-muted)] text-sm">
-          Present (may abstain from voting), Present and voting (must vote, cannot abstain), or Absent. Click to cycle.
-        </p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            ✅ Roll Call Tracker
+            <InfoPopover title="Roll call">
+              Mark each delegate as Absent, Present (may abstain), or Present and voting (must vote, cannot abstain). Click a delegate&apos;s status to cycle. During voting, only present delegates can vote; present-and-voting cannot choose abstain.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            Present (may abstain from voting), Present and voting (must vote, cannot abstain), or Absent. Click to cycle.
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <label className="flex items-center gap-2 cursor-pointer">

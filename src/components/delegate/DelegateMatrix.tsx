@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import { Plus, Trash2 } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
 import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
 import { getPresetDelegationFlag } from '../../constants/delegationFlags'
@@ -83,9 +84,16 @@ export default function DelegateMatrix() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📊 Committee Matrix</h2>
-        <p className="text-[var(--text-muted)] text-sm">Set how many committees for this conference, which committees, then add delegates (first name + delegation).</p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            📊 Committee Matrix
+            <InfoPopover title="Committee Matrix">
+              Set how many committees and which ones for this conference. Use one tab per committee to add entries: first name and delegation. Each delegation shows a flag emoji. Use this to track who is in which committee.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">Set how many committees for this conference, which committees, then add delegates (first name + delegation).</p>
+        </div>
       </div>
 
       {/* Conference committees setup */}

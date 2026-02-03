@@ -1,5 +1,6 @@
 import { useChair } from '../../context/ChairContext'
 import { CheckSquare, Square, RotateCcw } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 
 const PREP_GROUPS: { title: string; steps: { id: string; label: string }[] }[] = [
   {
@@ -62,11 +63,18 @@ export default function ChairPrepChecklist() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📋 Chair preparation checklist</h2>
-        <p className="text-[var(--text-muted)] text-sm">
-          Before the conference: rules, topic, room, materials, and team. Reset when prepping a new session.
-        </p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            📋 Chair preparation checklist
+            <InfoPopover title="Chair prep">
+              Before the conference: review rules and procedure, research the topic, set up the digital room and tech, prepare roll call and speakers list, and coordinate with co-chairs. Reset when prepping a new session.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">
+            Before the conference: rules, topic, room, materials, and team. Reset when prepping a new session.
+          </p>
+        </div>
       </div>
       <div className="card-block p-4 flex items-center justify-between gap-2 mb-4">
         <span className="text-xs font-medium text-[var(--text-muted)]">

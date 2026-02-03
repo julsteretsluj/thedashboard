@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Mail } from 'lucide-react'
+import InfoPopover from '../InfoPopover'
 import { DEFAULT_MISBEHAVIOURS, STRIKE_THRESHOLD } from './strikeMisbehaviours'
 import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
 
@@ -58,9 +59,16 @@ export default function ChairDelegates() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">👥 Delegates</h2>
-        <p className="text-[var(--text-muted)] text-sm">Add or remove delegates. Preset UNGA flags shown; use the 😊 button to set a custom emoji for delegations (e.g. FWC).</p>
+      <div className="flex items-start gap-2">
+        <div>
+          <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
+            👥 Delegates
+            <InfoPopover title="Delegates">
+              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Use the 😊 icon to set a custom flag/emoji for non-UN delegations (e.g. FWC). Strikes can be recorded per delegate.
+            </InfoPopover>
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm">Add or remove delegates. Preset UNGA flags shown; use the 😊 button to set a custom emoji for delegations (e.g. FWC).</p>
+        </div>
       </div>
 
       <div className="card-block p-4 space-y-4">

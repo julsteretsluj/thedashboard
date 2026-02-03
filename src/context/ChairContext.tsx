@@ -1,6 +1,8 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
+
+const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
 
 interface ChairState {
   committee: string
@@ -103,10 +105,35 @@ type ChairContextValue = ChairState & {
   getDelegationEmoji: (delegation: string) => string
 }
 
+function loadChairStateFromStorage(): ChairState {
+  try {
+    const raw = localStorage.getItem(CHAIR_STATE_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<ChairState>
+      return { ...defaultState, ...parsed }
+    }
+  } catch {
+    /* ignore */
+  }
+  return defaultState
+}
+
 const ChairContext = createContext<ChairContextValue | null>(null)
 
 export function ChairProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<ChairState>(defaultState)
+  const [state, setState] = useState<ChairState>(loadChairStateFromStorage)
+
+  // Persist chair state to localStorage (debounced) so refresh doesn't lose data
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(state))
+      } catch {
+        /* ignore */
+      }
+    }, 1000)
+    return () => clearTimeout(t)
+  }, [state])
 
   const setCommittee = useCallback((committee: string) => {
     setState((s) => ({ ...s, committee }))
