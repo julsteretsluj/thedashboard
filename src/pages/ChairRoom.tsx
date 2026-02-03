@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { ChairProvider } from '../context/ChairContext'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import { ChairProvider, useChair } from '../context/ChairContext'
+import { useFirebaseAuth } from '../context/FirebaseAuthContext'
 import {
   LayoutGrid,
   Users,
@@ -19,6 +19,7 @@ import {
   Link as LinkIcon,
   CheckSquare,
   ListChecks,
+  Save,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -47,25 +48,26 @@ import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
 import ChairHowToGuide from '../components/ChairHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 
+// Order: setup → session flow → tracking → reference
 const sections = [
+  { id: 'committee', label: '📌 Committee & Topic', icon: BookOpen },
   { id: 'prep', label: '✅ Prep checklist', icon: ListChecks },
   { id: 'flow', label: '📋 Flow checklist', icon: CheckSquare },
-  { id: 'room', label: '🖥️ Digital Room', icon: LayoutGrid },
   { id: 'delegates', label: '👥 Delegates', icon: Users },
-  { id: 'motions', label: '📜 Motions & Points', icon: FileText },
-  { id: 'voting', label: '🗳️ Voting', icon: Vote },
-  { id: 'committee', label: '📌 Committee & Topic', icon: BookOpen },
-  { id: 'score', label: '📊 Score', icon: ListOrdered },
+  { id: 'room', label: '🖥️ Digital Room', icon: LayoutGrid },
   { id: 'rollcall', label: '✅ Roll Call', icon: ListOrdered },
   { id: 'session', label: '▶️ Session', icon: Play },
   { id: 'speakers', label: '🎤 Speakers', icon: Mic },
+  { id: 'motions', label: '📜 Motions & Points', icon: FileText },
+  { id: 'voting', label: '🗳️ Voting', icon: Vote },
+  { id: 'score', label: '📊 Score', icon: ListOrdered },
   { id: 'crisis', label: '⚠️ Crisis', icon: AlertTriangle },
   { id: 'archive', label: '📁 Archive', icon: Archive },
   { id: 'links', label: '🔗 Official links', icon: LinkIcon },
 ]
 
 function ChairRoomContent() {
-  const [active, setActive] = useState('prep')
+  const [active, setActive] = useState('committee')
   const [showSettings, setShowSettings] = useState(false)
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
 
@@ -155,21 +157,65 @@ function ChairRoomContent() {
   )
 }
 
-export default function ChairRoom() {
+function ChairRoomHeader() {
+  const { saveToAccount, isSaving, lastSaved, isLoaded } = useChair()
+  const { isAuthenticated } = useFirebaseAuth()
+
+  const formatSaved = (d: Date) => {
+    const n = Date.now() - d.getTime()
+    if (n < 60_000) return 'Saved just now'
+    if (n < 3600_000) return `Saved ${Math.floor(n / 60_000)}m ago`
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  }
+
   return (
-    <ChairProvider>
-      <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-[0_1px_0_0_var(--border)]">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0">
-          <Gavel className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">⚖️ Chair Room</h1>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">
-            Data is saved locally — clearing site data will remove it.
-          </p>
-        </div>
+    <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 sm:px-4 py-2 sm:py-3 flex flex-wrap items-center gap-2 sm:gap-3 shadow-[0_1px_0_0_var(--border)]">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0">
+        <Gavel className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
       </div>
+      <div className="min-w-0 flex-1">
+        <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">⚖️ Chair Room</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
+        {isLoaded && !isAuthenticated && (
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Data is saved automatically to this device. Sign in to save to your account and sync across devices.
+          </p>
+        )}
+        {isLoaded && isAuthenticated && (
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Data is saved automatically to this device and to your account.
+          </p>
+        )}
+      </div>
+      {isLoaded && isAuthenticated && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => saveToAccount()}
+            disabled={isSaving}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {isSaving ? 'Saving…' : 'Save to account'}
+          </button>
+          {lastSaved && !isSaving && (
+            <span className="text-xs text-[var(--text-muted)]" title="Auto-saved to your account">
+              Auto-saved {formatSaved(lastSaved)}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ChairRoom() {
+  const { user } = useFirebaseAuth()
+  const userId = user?.uid ?? null
+
+  return (
+    <ChairProvider userId={userId}>
+      <ChairRoomHeader />
       <ChairRoomContent />
     </ChairProvider>
   )

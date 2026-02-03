@@ -132,15 +132,16 @@ function DelegateDashboardHeader() {
   )
 }
 
+// Order: identity & timing → committees → prep → before conference → links
 const sections = [
   { id: 'country', label: '🌍 Country & Stance', icon: Globe },
+  { id: 'countdown', label: '⏱️ Countdown', icon: Clock },
   { id: 'matrix', label: '📊 Committee Matrix', icon: Users },
   { id: 'prep', label: '📝 Prep Template', icon: FileText },
   { id: 'sources', label: '🔗 Trusted & Nation Sources', icon: LinkIcon },
-  { id: 'links', label: '🔗 Official links', icon: LinkIcon },
   { id: 'resources', label: '📚 Chair Report & Resources', icon: BookOpen },
   { id: 'checklist', label: '✅ Checklist', icon: CheckSquare },
-  { id: 'countdown', label: '⏱️ Conference & position paper countdown', icon: Clock },
+  { id: 'links', label: '🔗 Official links', icon: LinkIcon },
 ]
 
 function DelegateDashboardContent() {

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
+import { loadChairData, saveChairData, type ChairDataDoc } from '../lib/chairData'
 
 const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
 
@@ -103,6 +104,10 @@ type ChairContextValue = ChairState & {
   resetPrepChecklist: () => void
   setDelegationEmoji: (delegation: string, emoji: string | null) => void
   getDelegationEmoji: (delegation: string) => string
+  saveToAccount: () => Promise<void>
+  isSaving: boolean
+  lastSaved: Date | null
+  isLoaded: boolean
 }
 
 function loadChairStateFromStorage(): ChairState {
@@ -120,8 +125,38 @@ function loadChairStateFromStorage(): ChairState {
 
 const ChairContext = createContext<ChairContextValue | null>(null)
 
-export function ChairProvider({ children }: { children: ReactNode }) {
+export function ChairProvider({
+  children,
+  userId = null,
+}: {
+  children: ReactNode
+  userId?: string | null
+}) {
   const [state, setState] = useState<ChairState>(loadChairStateFromStorage)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Load chair state from Firestore when signed in
+  useEffect(() => {
+    if (!userId) {
+      setIsLoaded(true)
+      return
+    }
+    let cancelled = false
+    loadChairData(userId)
+      .then((data) => {
+        if (cancelled || !data) return
+        setState({ ...defaultState, ...data })
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
 
   // Persist chair state to localStorage (debounced) so refresh doesn't lose data
   useEffect(() => {
@@ -134,6 +169,26 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     }, 1000)
     return () => clearTimeout(t)
   }, [state])
+
+  const saveToAccount = useCallback(async () => {
+    if (!userId) return
+    setIsSaving(true)
+    try {
+      await saveChairData(userId, state as unknown as ChairDataDoc)
+      setLastSaved(new Date())
+    } finally {
+      setIsSaving(false)
+    }
+  }, [userId, state])
+
+  // Autosave to Firestore when signed in and after initial load
+  useEffect(() => {
+    if (!userId || !isLoaded) return
+    const t = setTimeout(() => {
+      saveToAccount()
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [userId, isLoaded, state, saveToAccount])
 
   const setCommittee = useCallback((committee: string) => {
     setState((s) => ({ ...s, committee }))
@@ -437,6 +492,10 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     resetPrepChecklist,
     setDelegationEmoji,
     getDelegationEmoji,
+    saveToAccount,
+    isSaving,
+    lastSaved,
+    isLoaded,
   }
 
   return <ChairContext.Provider value={value}>{children}</ChairContext.Provider>
