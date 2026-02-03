@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Plus, Trash2, User, AlertTriangle, Minus, Smile } from 'lucide-react'
+import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Mail } from 'lucide-react'
 import { DEFAULT_MISBEHAVIOURS, STRIKE_THRESHOLD } from './strikeMisbehaviours'
 import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
 
@@ -9,6 +9,7 @@ export default function ChairDelegates() {
     delegates,
     addDelegate,
     removeDelegate,
+    updateDelegate,
     committee,
     addStrike,
     removeStrike,
@@ -19,7 +20,10 @@ export default function ChairDelegates() {
   const [countrySelect, setCountrySelect] = useState<string>('')
   const [customCountry, setCustomCountry] = useState('')
   const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [showBulkAdd, setShowBulkAdd] = useState(false)
+  const [editingEmailForId, setEditingEmailForId] = useState<string | null>(null)
+  const [editingEmailValue, setEditingEmailValue] = useState('')
   const [strikeDelegateId, setStrikeDelegateId] = useState<string | null>(null)
   const [customMisbehaviour, setCustomMisbehaviour] = useState('')
   const [selectedStrikeType, setSelectedStrikeType] = useState('')
@@ -33,12 +37,14 @@ export default function ChairDelegates() {
     addDelegate({
       country: countryValue,
       name: name.trim() || undefined,
+      email: email.trim() || undefined,
       committee: committee || undefined,
       rollCallStatus: 'absent',
     })
     setCountrySelect('')
     setCustomCountry('')
     setName('')
+    setEmail('')
   }
 
   const addAllMissing = () => {
@@ -98,6 +104,16 @@ export default function ChairDelegates() {
               className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-[var(--text-muted)]">Email (optional)</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="delegate@example.com"
+              className="w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+          </label>
           <button
             onClick={addOne}
             disabled={!countryValue}
@@ -133,7 +149,7 @@ export default function ChairDelegates() {
           <span className="text-sm font-medium text-[var(--text)]">👥 Current delegates ({delegates.length})</span>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-[28rem] overflow-auto">
-          {delegates.map((d) => {
+          {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
             const counts = getStrikeCountsByType(d.id)
             const hasRed = Object.values(counts).some((c) => c >= STRIKE_THRESHOLD)
             const totalStrikes = Object.values(counts).reduce((a, b) => a + b, 0)
@@ -150,6 +166,11 @@ export default function ChairDelegates() {
                     </span>
                     <strong className="text-[var(--accent)] truncate">{d.country}</strong>
                     {d.name && <span className="text-[var(--text-muted)] ml-1 shrink-0">— {d.name}</span>}
+                    {d.email && (
+                      <span className="text-xs text-[var(--text-muted)] ml-1 shrink-0 truncate" title={d.email}>
+                        · {d.email}
+                      </span>
+                    )}
                     {totalStrikes > 0 && (
                       <span className="ml-2 inline-flex items-center gap-1 text-xs" title="Strikes">
                         <AlertTriangle className={`w-3.5 h-3.5 ${hasRed ? 'text-[var(--danger)]' : 'text-[var(--accent)]'}`} />
@@ -158,6 +179,16 @@ export default function ChairDelegates() {
                     )}
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingEmailForId(editingEmailForId === d.id ? null : d.id)
+                        setEditingEmailValue(d.email ?? '')
+                      }}
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors"
+                      title="Edit delegate email"
+                    >
+                      <Mail className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => {
                         setEditingEmojiFor(editingEmojiFor === d.country ? null : d.country)
@@ -216,6 +247,44 @@ export default function ChairDelegates() {
                     </button>
                     <button
                       onClick={() => { setEditingEmojiFor(null); setCustomEmojiInput('') }}
+                      className="px-2 py-1.5 rounded-lg text-[var(--text-muted)] text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                {editingEmailForId === d.id && (
+                  <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-center">
+                    <label className="text-xs text-[var(--text-muted)]">Delegate email:</label>
+                    <input
+                      type="email"
+                      value={editingEmailValue}
+                      onChange={(e) => setEditingEmailValue(e.target.value)}
+                      placeholder="delegate@example.com"
+                      className="flex-1 min-w-[12rem] px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        updateDelegate(d.id, { email: editingEmailValue.trim() || undefined })
+                        setEditingEmailForId(null)
+                        setEditingEmailValue('')
+                      }}
+                      className="px-2 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      onClick={() => {
+                        updateDelegate(d.id, { email: undefined })
+                        setEditingEmailForId(null)
+                        setEditingEmailValue('')
+                      }}
+                      className="px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => { setEditingEmailForId(null); setEditingEmailValue('') }}
                       className="px-2 py-1.5 rounded-lg text-[var(--text-muted)] text-xs"
                     >
                       Cancel

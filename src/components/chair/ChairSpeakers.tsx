@@ -90,7 +90,7 @@ export default function ChairSpeakers() {
             className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <option value="">Select delegate</option>
-            {delegates.map((d) => (
+            {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => (
               <option key={d.id} value={d.id}>
                 {d.country} {d.name ? `— ${d.name}` : ''}
               </option>

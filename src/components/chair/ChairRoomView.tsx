@@ -54,7 +54,7 @@ export default function ChairRoomView() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {delegates.map((d) => {
+            {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
               const counts = getStrikeCountsByType(d.id)
               const totalStrikes = Object.values(counts).reduce((a, b) => a + b, 0)
               const hasRed = Object.values(counts).some((c) => c >= STRIKE_THRESHOLD)

@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ChairCommitteeTopic({ onClose }: Props) {
-  const { committee, topic, universe, setCommittee, setTopic, setUniverse } = useChair()
+  const { committee, topic, universe, chairName, chairEmail, setCommittee, setTopic, setUniverse, setChairName, setChairEmail } = useChair()
 
   const selectedPreset = useMemo(() => {
     const found = COMMITTEE_OPTIONS.find((o) => o.value === committee)
@@ -81,6 +81,31 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
           className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
         />
       </label>
+      <div className="pt-2 border-t border-[var(--border)]">
+        <h4 className="text-sm font-medium text-[var(--text)] mb-2">👤 Chair</h4>
+        <label className="block mb-2">
+          <span className="text-xs text-[var(--text-muted)] block mb-1">Chair name (optional)</span>
+          <input
+            type="text"
+            value={chairName}
+            onChange={(e) => setChairName(e.target.value)}
+            placeholder="e.g. Jane Smith"
+            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            aria-label="Chair name"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs text-[var(--text-muted)] block mb-1">Chair email (optional)</span>
+          <input
+            type="email"
+            value={chairEmail}
+            onChange={(e) => setChairEmail(e.target.value)}
+            placeholder="e.g. chair@conference.org"
+            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            aria-label="Chair email"
+          />
+        </label>
+      </div>
     </div>
   )
 }

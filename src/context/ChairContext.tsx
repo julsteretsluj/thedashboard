@@ -28,6 +28,8 @@ interface ChairState {
   prepChecklist: Record<string, boolean>
   /** Custom emoji per delegation (e.g. "FWC" -> "🏴"). Overrides preset flags. */
   delegationEmojiOverrides: Record<string, string>
+  chairName: string
+  chairEmail: string
 }
 
 const defaultState: ChairState = {
@@ -54,12 +56,16 @@ const defaultState: ChairState = {
   flowChecklist: {},
   prepChecklist: {},
   delegationEmojiOverrides: {},
+  chairName: '',
+  chairEmail: '',
 }
 
 type ChairContextValue = ChairState & {
   setCommittee: (c: string) => void
   setTopic: (t: string) => void
   setUniverse: (u: string) => void
+  setChairName: (n: string) => void
+  setChairEmail: (e: string) => void
   startSession: () => void
   stopSession: () => void
   addDelegate: (d: Omit<Delegate, 'id'>) => void
@@ -110,6 +116,12 @@ export function ChairProvider({ children }: { children: ReactNode }) {
   }, [])
   const setUniverse = useCallback((universe: string) => {
     setState((s) => ({ ...s, universe }))
+  }, [])
+  const setChairName = useCallback((chairName: string) => {
+    setState((s) => ({ ...s, chairName }))
+  }, [])
+  const setChairEmail = useCallback((chairEmail: string) => {
+    setState((s) => ({ ...s, chairEmail }))
   }, [])
   const startSession = useCallback(() => {
     setState((s) => ({
@@ -352,6 +364,8 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     setCommittee,
     setTopic,
     setUniverse,
+    setChairName,
+    setChairEmail,
     startSession,
     stopSession,
     addDelegate,

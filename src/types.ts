@@ -5,6 +5,7 @@ export interface Delegate {
   id: string
   country: string
   name?: string
+  email?: string
   committee?: string
   /** @deprecated Use rollCallStatus. Kept for migration. */
   present?: boolean

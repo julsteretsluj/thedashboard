@@ -73,7 +73,7 @@ export default function ChairRollCall() {
           <h3 className="text-sm font-medium text-[var(--text)]">👥 Delegates</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
-          {delegates.map((d) => {
+          {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
             const status = getRollCallStatus(d)
             const isPresent = status === 'present'
             const isPresentAndVoting = status === 'present-and-voting'

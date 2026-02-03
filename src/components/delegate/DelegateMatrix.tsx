@@ -20,12 +20,11 @@ export default function DelegateMatrix() {
     addCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
   } = useDelegate()
-  const [committeeSelect, setCommitteeSelect] = useState('')
-  const [addCommitteeCustom, setAddCommitteeCustom] = useState('')
   const [firstName, setFirstName] = useState('')
   const [delegationSelect, setDelegationSelect] = useState('')
   const [delegationCustom, setDelegationCustom] = useState('')
   const [customCommitteeNames, setCustomCommitteeNames] = useState<Record<number, string>>({})
+  const [activeTabIndex, setActiveTabIndex] = useState(0)
 
   const committeeCountNum = Math.max(0, Math.min(20, committeeCount))
   const effectiveCommittees =
@@ -57,8 +56,18 @@ export default function DelegateMatrix() {
     setCommittees(list)
   }
 
-  const add = () => {
-    const comm = committeeSelect === OTHER_COMMITTEE_VALUE ? addCommitteeCustom.trim() : committeeSelect
+  const displayCommitteeLabel = (value: string) => {
+    if (value === OTHER_COMMITTEE_VALUE) return 'Other'
+    return getCommitteeLabel(value)
+  }
+
+  const tabCommittees = effectiveCommittees.filter(Boolean)
+  const safeTabIndex = Math.min(Math.max(0, activeTabIndex), Math.max(0, tabCommittees.length - 1))
+  const activeCommittee = tabCommittees[safeTabIndex] ?? ''
+  const entriesForCommittee = (comm: string) =>
+    committeeMatrixEntries.map((entry, i) => ({ entry, i })).filter(({ entry }) => entry.committee === comm)
+
+  const addForTab = (comm: string) => {
     const delegation = delegationSelect === OTHER_DELEGATION_VALUE ? delegationCustom.trim() : delegationSelect
     if (!comm || !firstName.trim()) return
     addCommitteeMatrixEntry({
@@ -66,16 +75,9 @@ export default function DelegateMatrix() {
       firstName: firstName.trim(),
       delegation: delegation || '',
     })
-    setCommitteeSelect('')
-    setAddCommitteeCustom('')
     setFirstName('')
     setDelegationSelect('')
     setDelegationCustom('')
-  }
-
-  const displayCommitteeLabel = (value: string) => {
-    if (value === OTHER_COMMITTEE_VALUE) return 'Other'
-    return getCommitteeLabel(value)
   }
 
   return (
@@ -143,134 +145,118 @@ export default function DelegateMatrix() {
         )}
       </div>
 
-      {/* Add matrix entry */}
-      <div className="card-block p-4 space-y-3">
-        <h3 className="text-sm font-medium text-[var(--text)]">➕ Add entry</h3>
-        <div className="flex flex-wrap gap-2 items-end">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)]">Committee</span>
-            <select
-              value={committeeSelect}
-              onChange={(e) => setCommitteeSelect(e.target.value)}
-              className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              aria-label="Committee"
-            >
-              <option value="">Select committee…</option>
-              {effectiveCommittees.filter(Boolean).map((c, i) => (
-                <option key={i} value={c}>
-                  {displayCommitteeLabel(c)}
-                </option>
-              ))}
-              {effectiveCommittees.filter(Boolean).length === 0 && (
-                <>
-                  {COMMITTEE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                  <option value={OTHER_COMMITTEE_VALUE}>Other (custom)</option>
-                </>
-              )}
-            </select>
-            {committeeSelect === OTHER_COMMITTEE_VALUE && (
-              <input
-                type="text"
-                value={addCommitteeCustom}
-                onChange={(e) => setAddCommitteeCustom(e.target.value)}
-                placeholder="Committee name"
-                className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              />
-            )}
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)]">First name</span>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="e.g. Alex"
-              className="w-28 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)]">Delegation</span>
-            <select
-              value={delegationSelect}
-              onChange={(e) => setDelegationSelect(e.target.value)}
-              className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              aria-label="Delegation"
-            >
-              <option value="">Select…</option>
-              {DELEGATION_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-              <option value={OTHER_DELEGATION_VALUE}>Other</option>
-            </select>
-            {delegationSelect === OTHER_DELEGATION_VALUE && (
-              <input
-                type="text"
-                value={delegationCustom}
-                onChange={(e) => setDelegationCustom(e.target.value)}
-                placeholder="Delegation name"
-                className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              />
-            )}
-          </label>
-          <button
-            onClick={add}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
-          >
-            <Plus className="w-4 h-4" /> Add
-          </button>
-        </div>
-      </div>
-
-      {/* Matrix table */}
+      {/* Matrix: one tab per committee */}
       <div className="card-block overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--border)]">
-          <h3 className="text-sm font-medium text-[var(--text)]">▸ Matrix</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--bg-elevated)]">
-                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">Committee</th>
-                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">First name</th>
-                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">Delegation</th>
-                <th className="w-10 px-2 py-2" aria-label="Remove" />
-              </tr>
-            </thead>
-            <tbody>
-              {committeeMatrixEntries.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">
-                    No entries yet.
-                  </td>
-                </tr>
-              ) : (
-                committeeMatrixEntries.map((entry, i) => (
-                  <tr key={i} className="border-b border-[var(--border)]">
-                    <td className="px-4 py-3 text-[var(--accent)] font-medium">{displayCommitteeLabel(entry.committee)}</td>
-                    <td className="px-4 py-3 text-[var(--text)]">{entry.firstName}</td>
-                    <td className="px-4 py-3 text-[var(--text)]">{entry.delegation || '—'}</td>
-                    <td className="px-2 py-3">
-                      <button
-                        type="button"
-                        onClick={() => removeCommitteeMatrixEntry(i)}
-                        className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)]"
-                        aria-label="Remove entry"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        {tabCommittees.length === 0 ? (
+          <div className="px-4 py-8 text-center text-[var(--text-muted)] text-sm">
+            Set committees above, then use the tabs to add and view matrix entries per committee.
+          </div>
+        ) : (
+          <>
+            <div className="flex border-b border-[var(--border)] overflow-x-auto">
+              {tabCommittees.map((comm, idx) => (
+                <button
+                  key={comm}
+                  type="button"
+                  onClick={() => setActiveTabIndex(idx)}
+                  className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                    idx === safeTabIndex
+                      ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-soft)]/30'
+                      : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)]'
+                  }`}
+                >
+                  {displayCommitteeLabel(comm)}
+                </button>
+              ))}
+            </div>
+            {activeCommittee && (
+              <div className="p-4 space-y-4">
+                <div className="flex flex-wrap gap-2 items-end">
+                  <span className="text-xs text-[var(--text-muted)] mr-2">➕ Add to this committee:</span>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs text-[var(--text-muted)]">First name</span>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="e.g. Alex"
+                      className="w-28 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs text-[var(--text-muted)]">Delegation</span>
+                    <select
+                      value={delegationSelect}
+                      onChange={(e) => setDelegationSelect(e.target.value)}
+                      className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      aria-label="Delegation"
+                    >
+                      <option value="">Select…</option>
+                      {DELEGATION_OPTIONS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                      <option value={OTHER_DELEGATION_VALUE}>Other</option>
+                    </select>
+                    {delegationSelect === OTHER_DELEGATION_VALUE && (
+                      <input
+                        type="text"
+                        value={delegationCustom}
+                        onChange={(e) => setDelegationCustom(e.target.value)}
+                        placeholder="Delegation name"
+                        className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      />
+                    )}
+                  </label>
+                  <button
+                    onClick={() => addForTab(activeCommittee)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+                  >
+                    <Plus className="w-4 h-4" /> Add
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+                        <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">First name</th>
+                        <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">Delegation</th>
+                        <th className="w-10 px-2 py-2" aria-label="Remove" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entriesForCommittee(activeCommittee).length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-8 text-center text-[var(--text-muted)]">
+                            No entries for this committee yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        entriesForCommittee(activeCommittee).map(({ entry, i }) => (
+                          <tr key={i} className="border-b border-[var(--border)]">
+                            <td className="px-4 py-3 text-[var(--text)]">{entry.firstName}</td>
+                            <td className="px-4 py-3 text-[var(--text)]">{entry.delegation || '—'}</td>
+                            <td className="px-2 py-3">
+                              <button
+                                type="button"
+                                onClick={() => removeCommitteeMatrixEntry(i)}
+                                className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)]"
+                                aria-label="Remove entry"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

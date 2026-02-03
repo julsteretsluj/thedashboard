@@ -67,7 +67,7 @@ export default function ChairVoting() {
           <h3 className="text-sm font-medium text-[var(--text)]">👥 Delegate votes</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
-          {delegates.map((d) => {
+          {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
             const vote = delegateVotes[d.id]
             const rc = getRollCallStatus(d)
             const isAbsent = rc === 'absent'
