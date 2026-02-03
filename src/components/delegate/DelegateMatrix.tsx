@@ -3,6 +3,7 @@ import { useDelegate } from '../../context/DelegateContext'
 import { Plus, Trash2 } from 'lucide-react'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
 import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+import { getPresetDelegationFlag } from '../../constants/delegationFlags'
 
 function getCommitteeLabel(value: string): string {
   if (value === OTHER_COMMITTEE_VALUE) return 'Other'
@@ -236,7 +237,14 @@ export default function DelegateMatrix() {
                         entriesForCommittee(activeCommittee).map(({ entry, i }) => (
                           <tr key={i} className="border-b border-[var(--border)]">
                             <td className="px-4 py-3 text-[var(--text)]">{entry.firstName}</td>
-                            <td className="px-4 py-3 text-[var(--text)]">{entry.delegation || '—'}</td>
+                            <td className="px-4 py-3 text-[var(--text)]">
+                              <span className="inline-flex items-center gap-2">
+                                <span className="text-base shrink-0" title={entry.delegation || undefined}>
+                                  {getPresetDelegationFlag(entry.delegation || '') || '🏳️'}
+                                </span>
+                                {entry.delegation || '—'}
+                              </span>
+                            </td>
                             <td className="px-2 py-3">
                               <button
                                 type="button"
