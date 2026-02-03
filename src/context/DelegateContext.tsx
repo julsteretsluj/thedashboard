@@ -15,6 +15,7 @@ function migrateConference(c: DelegateConference): DelegateConference {
   const base = {
     ...c,
     delegateEmail: c.delegateEmail ?? '',
+    positionPaperDeadline: c.positionPaperDeadline ?? '',
     committeeCount: c.committeeCount ?? 0,
     committees: c.committees ?? [],
     committeeMatrixEntries:
@@ -60,6 +61,7 @@ const defaultConference = (id: string): DelegateConference => ({
   committees: [],
   committeeMatrixEntries: [],
   countdownDate: '',
+  positionPaperDeadline: '',
   checklist: { ...defaultChecklist },
   trustedSources: [],
   nationSources: [],
@@ -82,6 +84,7 @@ type DelegateContextValue = DelegateConference & {
   addCommitteeMatrixEntry: (entry: CommitteeMatrixEntry) => void
   removeCommitteeMatrixEntry: (index: number) => void
   setCountdownDate: (d: string) => void
+  setPositionPaperDeadline: (d: string) => void
   toggleChecklist: (key: keyof DelegateConference['checklist']) => void
   addTrustedSource: (s: string) => void
   removeTrustedSource: (i: number) => void
@@ -196,6 +199,7 @@ export function DelegateProvider({
     [updateActive]
   )
   const setCountdownDate = useCallback((d: string) => updateActive((c) => ({ ...c, countdownDate: d })), [updateActive])
+  const setPositionPaperDeadline = useCallback((d: string) => updateActive((c) => ({ ...c, positionPaperDeadline: d })), [updateActive])
   const toggleChecklist = useCallback(
     (key: keyof DelegateConference['checklist']) =>
       updateActive((c) => ({
@@ -301,6 +305,7 @@ export function DelegateProvider({
     addCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
     setCountdownDate,
+    setPositionPaperDeadline,
     toggleChecklist,
     addTrustedSource,
     removeTrustedSource,
