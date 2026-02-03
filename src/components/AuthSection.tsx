@@ -1,8 +1,8 @@
-import { useAuth0 } from '@auth0/auth0-react'
 import { LogIn, LogOut, User } from 'lucide-react'
+import { useFirebaseAuth } from '../context/FirebaseAuthContext'
 
 export default function AuthSection() {
-  const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0()
+  const { login, logout, isAuthenticated, user, isLoading } = useFirebaseAuth()
 
   if (isLoading) {
     return (
@@ -29,7 +29,7 @@ export default function AuthSection() {
         </div>
         <button
           type="button"
-          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+          onClick={() => logout()}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] transition-colors"
         >
           <LogOut className="w-3 h-3" />
@@ -42,11 +42,11 @@ export default function AuthSection() {
   return (
     <button
       type="button"
-      onClick={() => loginWithRedirect()}
+      onClick={() => login()}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity"
     >
       <LogIn className="w-3 h-3" />
-      Log in
+      Log in with Gmail
     </button>
   )
 }

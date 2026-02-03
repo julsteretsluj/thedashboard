@@ -302,6 +302,6 @@ Example: if the doc root is `public_html`, upload the **contents** of `dist/` in
 
 If you see **two** workflows running on each push (e.g. “Deploy to GitHub Pages” and “Deploy Next.js site to Pages”):
 
-- We only want to deploy the **SEAMUNs Dashboard** (Vite app in the repo root), not the Next.js app in `auth0-nextjs-app/`.
+- We only want to deploy the **SEAMUNs Dashboard** (Vite app in the repo root).
 - **Remove or disable** the “Deploy Next.js site to Pages” (or any other Pages) workflow: repo → **Actions** → click that workflow → **⋯** (top right) → **Delete workflow**, or delete its file under **.github/workflows/** in the repo.
 - Keep only **Deploy to GitHub Pages**, which builds the root app and deploys `dist/`.

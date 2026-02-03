@@ -64,7 +64,7 @@ export default function Layout() {
                 </NavLink>
               ))}
             </nav>
-            {import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID && (
+            {import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID && (
               <AuthSection />
             )}
           </div>
@@ -80,7 +80,7 @@ export default function Layout() {
             >
               {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            {import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID && (
+            {import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID && (
               <AuthSection />
             )}
           </div>

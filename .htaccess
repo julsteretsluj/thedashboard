@@ -1,0 +1,15 @@
+# Serve the built app from dist/ when document root is the repo root.
+# Fixes: main.tsx MIME type error and favicon 404 (browser must get built JS, not raw .tsx).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  # If the requested path exists in dist/ (file or directory), serve it
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
+  RewriteRule ^(.*)$ dist/$1 [L]
+  # SPA fallback: all other paths (e.g. /chair, /delegate) → dist/index.html
+  RewriteRule ^(.*)$ dist/index.html [L]
+</IfModule>
+<IfModule mod_negotiation.c>
+  DirectoryIndex index.html
+</IfModule>
