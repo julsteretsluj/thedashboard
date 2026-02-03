@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
-import { Plus, Trash2, Upload } from 'lucide-react'
+import { Plus, Trash2, Upload, ExternalLink } from 'lucide-react'
 
 export default function DelegateResources() {
   const { uploadedResources, addUploadedResource, removeUploadedResource } = useDelegate()
@@ -48,12 +48,32 @@ export default function DelegateResources() {
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-64 overflow-auto">
           {uploadedResources.map((r, i) => (
-            <li key={i} className="px-3 py-3 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-[var(--text)]">{r.name}</p>
-                {r.url && <p className="text-xs text-[var(--text-muted)] truncate max-w-xs">{r.url}</p>}
-              </div>
-              <button onClick={() => removeUploadedResource(i)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)]">
+            <li key={i} className="px-3 py-3 flex items-center justify-between gap-2">
+              {r.url ? (
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-0 flex items-center gap-2 rounded-lg py-1 -mx-1 px-1 hover:bg-[var(--accent-soft)] transition-colors group"
+                >
+                  <ExternalLink className="w-4 h-4 flex-shrink-0 text-[var(--text-muted)] group-hover:text-[var(--accent)]" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[var(--text)] group-hover:text-[var(--accent)] truncate">{r.name}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate max-w-xs">{r.url}</p>
+                  </div>
+                </a>
+              ) : (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--text)]">{r.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">No link</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => removeUploadedResource(i)}
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] flex-shrink-0"
+                aria-label="Remove resource"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             </li>
