@@ -42,12 +42,25 @@ export interface CommitteeSession {
   rollCallComplete: boolean
 }
 
+export interface CommitteeMatrixEntry {
+  committee: string
+  firstName: string
+  delegation: string
+}
+
 export interface DelegateConference {
   id: string
   name: string
   country: string
   stanceOverview: string
-  committeeMatrix: Record<string, string> // committee -> first name
+  /** Number of committees for this conference (set when registering) */
+  committeeCount: number
+  /** Which committees (set when registering) */
+  committees: string[]
+  /** Legacy: committee -> first name (migrated to committeeMatrixEntries) */
+  committeeMatrix?: Record<string, string>
+  /** Committee matrix: committee, first name, delegation */
+  committeeMatrixEntries: CommitteeMatrixEntry[]
   countdownDate: string
   checklist: {
     positionPaper: boolean

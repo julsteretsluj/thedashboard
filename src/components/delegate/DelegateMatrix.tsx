@@ -1,31 +1,149 @@
 import { useState } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
+import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+
+function getCommitteeLabel(value: string): string {
+  if (value === OTHER_COMMITTEE_VALUE) return 'Other'
+  const opt = COMMITTEE_OPTIONS.find((o) => o.value === value)
+  return opt ? opt.label : value
+}
 
 export default function DelegateMatrix() {
-  const { committeeMatrix, setCommitteeMatrix } = useDelegate()
+  const {
+    committeeCount,
+    committees,
+    setCommitteeCount,
+    setCommittees,
+    committeeMatrixEntries,
+    addCommitteeMatrixEntry,
+    removeCommitteeMatrixEntry,
+  } = useDelegate()
   const [committeeSelect, setCommitteeSelect] = useState('')
-  const [committeeCustom, setCommitteeCustom] = useState('')
+  const [addCommitteeCustom, setAddCommitteeCustom] = useState('')
   const [firstName, setFirstName] = useState('')
+  const [delegationSelect, setDelegationSelect] = useState('')
+  const [delegationCustom, setDelegationCustom] = useState('')
+  const [customCommitteeNames, setCustomCommitteeNames] = useState<Record<number, string>>({})
 
-  const add = () => {
-    const comm = committeeSelect === OTHER_COMMITTEE_VALUE ? committeeCustom.trim() : committeeSelect
-    if (!comm || !firstName.trim()) return
-    setCommitteeMatrix(comm, firstName.trim())
-    setCommitteeSelect('')
-    setCommitteeCustom('')
-    setFirstName('')
+  const committeeCountNum = Math.max(0, Math.min(20, committeeCount))
+  const effectiveCommittees =
+    committees.length > 0
+      ? committees
+      : Array.from({ length: committeeCountNum }, (_, i) => customCommitteeNames[i] ?? '')
+
+  const handleCommitteeCountChange = (n: number) => {
+    const num = Math.max(0, Math.min(20, n))
+    setCommitteeCount(num)
+    if (num < committees.length) {
+      setCommittees(committees.slice(0, num))
+    } else if (num > committees.length) {
+      setCommittees([...committees, ...Array(num - committees.length).fill('')])
+    }
   }
 
-  const entries = Object.entries(committeeMatrix)
+  const handleCommitteeChange = (index: number, value: string) => {
+    const list = [...effectiveCommittees]
+    list[index] = value === OTHER_COMMITTEE_VALUE ? OTHER_COMMITTEE_VALUE : value
+    setCommittees(list)
+  }
+
+  const handleCustomCommitteeName = (index: number, name: string) => {
+    setCustomCommitteeNames((prev) => ({ ...prev, [index]: name }))
+    const list = [...committees]
+    if (list.length <= index) return
+    list[index] = name
+    setCommittees(list)
+  }
+
+  const add = () => {
+    const comm = committeeSelect === OTHER_COMMITTEE_VALUE ? addCommitteeCustom.trim() : committeeSelect
+    const delegation = delegationSelect === OTHER_DELEGATION_VALUE ? delegationCustom.trim() : delegationSelect
+    if (!comm || !firstName.trim()) return
+    addCommitteeMatrixEntry({
+      committee: comm,
+      firstName: firstName.trim(),
+      delegation: delegation || '',
+    })
+    setCommitteeSelect('')
+    setAddCommitteeCustom('')
+    setFirstName('')
+    setDelegationSelect('')
+    setDelegationCustom('')
+  }
+
+  const displayCommitteeLabel = (value: string) => {
+    if (value === OTHER_COMMITTEE_VALUE) return 'Other'
+    return getCommitteeLabel(value)
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📊 Committee Matrix</h2>
-        <p className="text-[var(--text-muted)] text-sm">First names only — who is in which committee.</p>
+        <p className="text-[var(--text-muted)] text-sm">Set how many committees for this conference, which committees, then add delegates (first name + delegation).</p>
       </div>
+
+      {/* Conference committees setup */}
+      <div className="card-block p-4 space-y-4">
+        <h3 className="text-sm font-medium text-[var(--text)]">🏛️ Conference committees</h3>
+        <p className="text-xs text-[var(--text-muted)]">When registering this conference: how many committees, and which ones?</p>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-[var(--text-muted)]">How many committees?</span>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={committeeCountNum}
+            onChange={(e) => handleCommitteeCountChange(parseInt(e.target.value, 10) || 0)}
+            className="w-24 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            aria-label="Number of committees"
+          />
+        </label>
+        {committeeCountNum > 0 && (
+          <div className="space-y-2">
+            <span className="text-xs text-[var(--text-muted)] block">Which committees?</span>
+            {Array.from({ length: committeeCountNum }, (_, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-[var(--text-muted)] w-20">Committee {i + 1}</span>
+                <select
+                  value={
+                    effectiveCommittees[i] && COMMITTEE_OPTIONS.some((o) => o.value === effectiveCommittees[i])
+                      ? effectiveCommittees[i]
+                      : effectiveCommittees[i]
+                        ? OTHER_COMMITTEE_VALUE
+                        : ''
+                  }
+                  onChange={(e) => handleCommitteeChange(i, e.target.value)}
+                  className="min-w-[12rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  aria-label={`Committee ${i + 1}`}
+                >
+                  <option value="">Select…</option>
+                  {COMMITTEE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                  <option value={OTHER_COMMITTEE_VALUE}>Other (custom)</option>
+                </select>
+                {(effectiveCommittees[i] === OTHER_COMMITTEE_VALUE ||
+                  (effectiveCommittees[i] && !COMMITTEE_OPTIONS.some((o) => o.value === effectiveCommittees[i]))) && (
+                  <input
+                    type="text"
+                    value={effectiveCommittees[i] && effectiveCommittees[i] !== OTHER_COMMITTEE_VALUE ? effectiveCommittees[i] : (customCommitteeNames[i] ?? '')}
+                    onChange={(e) => handleCustomCommitteeName(i, e.target.value)}
+                    placeholder="Committee name"
+                    className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add matrix entry */}
       <div className="card-block p-4 space-y-3">
         <h3 className="text-sm font-medium text-[var(--text)]">➕ Add entry</h3>
         <div className="flex flex-wrap gap-2 items-end">
@@ -38,26 +156,34 @@ export default function DelegateMatrix() {
               aria-label="Committee"
             >
               <option value="">Select committee…</option>
-              {COMMITTEE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
+              {effectiveCommittees.filter(Boolean).map((c, i) => (
+                <option key={i} value={c}>
+                  {displayCommitteeLabel(c)}
                 </option>
               ))}
-              <option value={OTHER_COMMITTEE_VALUE}>Other (custom)</option>
+              {effectiveCommittees.filter(Boolean).length === 0 && (
+                <>
+                  {COMMITTEE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                  <option value={OTHER_COMMITTEE_VALUE}>Other (custom)</option>
+                </>
+              )}
             </select>
             {committeeSelect === OTHER_COMMITTEE_VALUE && (
               <input
                 type="text"
-                value={committeeCustom}
-                onChange={(e) => setCommitteeCustom(e.target.value)}
+                value={addCommitteeCustom}
+                onChange={(e) => setAddCommitteeCustom(e.target.value)}
                 placeholder="Committee name"
                 className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                aria-label="Custom committee name"
               />
             )}
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)]">First name only</span>
+            <span className="text-xs text-[var(--text-muted)]">First name</span>
             <input
               type="text"
               value={firstName}
@@ -65,6 +191,32 @@ export default function DelegateMatrix() {
               placeholder="e.g. Alex"
               className="w-28 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-[var(--text-muted)]">Delegation</span>
+            <select
+              value={delegationSelect}
+              onChange={(e) => setDelegationSelect(e.target.value)}
+              className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Delegation"
+            >
+              <option value="">Select…</option>
+              {DELEGATION_OPTIONS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+              <option value={OTHER_DELEGATION_VALUE}>Other</option>
+            </select>
+            {delegationSelect === OTHER_DELEGATION_VALUE && (
+              <input
+                type="text"
+                value={delegationCustom}
+                onChange={(e) => setDelegationCustom(e.target.value)}
+                placeholder="Delegation name"
+                className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+            )}
           </label>
           <button
             onClick={add}
@@ -74,22 +226,51 @@ export default function DelegateMatrix() {
           </button>
         </div>
       </div>
+
+      {/* Matrix table */}
       <div className="card-block overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
           <h3 className="text-sm font-medium text-[var(--text)]">▸ Matrix</h3>
         </div>
-        <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
-          {entries.length === 0 ? (
-            <li className="px-4 py-8 text-center text-[var(--text-muted)] text-sm">No entries yet.</li>
-          ) : (
-            entries.map(([comm, name]) => (
-              <li key={comm} className="px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-[var(--accent)] font-medium">{comm}</span>
-                <span className="text-sm text-[var(--text)]">{name}</span>
-              </li>
-            ))
-          )}
-        </ul>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">Committee</th>
+                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">First name</th>
+                <th className="text-left px-4 py-2 font-medium text-[var(--text-muted)]">Delegation</th>
+                <th className="w-10 px-2 py-2" aria-label="Remove" />
+              </tr>
+            </thead>
+            <tbody>
+              {committeeMatrixEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">
+                    No entries yet.
+                  </td>
+                </tr>
+              ) : (
+                committeeMatrixEntries.map((entry, i) => (
+                  <tr key={i} className="border-b border-[var(--border)]">
+                    <td className="px-4 py-3 text-[var(--accent)] font-medium">{displayCommitteeLabel(entry.committee)}</td>
+                    <td className="px-4 py-3 text-[var(--text)]">{entry.firstName}</td>
+                    <td className="px-4 py-3 text-[var(--text)]">{entry.delegation || '—'}</td>
+                    <td className="px-2 py-3">
+                      <button
+                        type="button"
+                        onClick={() => removeCommitteeMatrixEntry(i)}
+                        className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)]"
+                        aria-label="Remove entry"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

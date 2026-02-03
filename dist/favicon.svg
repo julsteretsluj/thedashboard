@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#1a1e28"/>
-  <path d="M8 10h16v2H8V10zm0 5h12v2H8v-2zm0 5h14v2H8v-2z" fill="#3b82f6"/>
-  <circle cx="24" cy="22" r="4" fill="#d4a853"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <title>SEAMUNs</title>
+  <defs>
+    <linearGradient id="logo-light-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#e0e7ff"/>
+  <path d="M8 10h16v2H8V10zm0 5h12v2H8v-2zm0 5h14v2H8v-2z" fill="url(#logo-light-accent)"/>
+  <circle cx="24" cy="22" r="4" fill="#b45309"/>
 </svg>

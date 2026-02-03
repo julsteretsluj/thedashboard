@@ -6,15 +6,40 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { DelegateConference } from '../types'
+import type { DelegateConference, CommitteeMatrixEntry } from '../types'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
+
+function migrateConference(c: DelegateConference): DelegateConference {
+  const hasLegacy = c.committeeMatrix && Object.keys(c.committeeMatrix).length > 0
+  const hasEntries = c.committeeMatrixEntries && c.committeeMatrixEntries.length > 0
+  if (hasLegacy && !hasEntries && c.committeeMatrix) {
+    return {
+      ...c,
+      committeeCount: c.committeeCount ?? 0,
+      committees: c.committees ?? [],
+      committeeMatrixEntries: Object.entries(c.committeeMatrix).map(([committee, firstName]) => ({
+        committee,
+        firstName,
+        delegation: '',
+      })),
+    }
+  }
+  return {
+    ...c,
+    committeeCount: c.committeeCount ?? 0,
+    committees: c.committees ?? [],
+    committeeMatrixEntries: c.committeeMatrixEntries ?? [],
+  }
+}
 
 const defaultConference = (id: string): DelegateConference => ({
   id,
   name: 'New Conference',
   country: '',
   stanceOverview: '',
-  committeeMatrix: {},
+  committeeCount: 0,
+  committees: [],
+  committeeMatrixEntries: [],
   countdownDate: '',
   checklist: {
     positionPaper: false,
@@ -38,7 +63,10 @@ type DelegateContextValue = DelegateConference & {
   setName: (n: string) => void
   setCountry: (c: string) => void
   setStanceOverview: (s: string) => void
-  setCommitteeMatrix: (committee: string, firstName: string) => void
+  setCommitteeCount: (n: number) => void
+  setCommittees: (list: string[]) => void
+  addCommitteeMatrixEntry: (entry: CommitteeMatrixEntry) => void
+  removeCommitteeMatrixEntry: (index: number) => void
   setCountdownDate: (d: string) => void
   toggleChecklist: (key: keyof DelegateConference['checklist']) => void
   addTrustedSource: (s: string) => void
@@ -102,7 +130,7 @@ export function DelegateProvider({
       .then((data) => {
         if (cancelled || !data) return
         if (data.conferences.length > 0) {
-          setConferences(data.conferences)
+          setConferences(data.conferences.map(migrateConference))
           setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
         }
       })
@@ -128,11 +156,27 @@ export function DelegateProvider({
   const setName = useCallback((name: string) => updateActive((c) => ({ ...c, name })), [updateActive])
   const setCountry = useCallback((country: string) => updateActive((c) => ({ ...c, country })), [updateActive])
   const setStanceOverview = useCallback((s: string) => updateActive((c) => ({ ...c, stanceOverview: s })), [updateActive])
-  const setCommitteeMatrix = useCallback(
-    (committee: string, firstName: string) =>
+  const setCommitteeCount = useCallback(
+    (n: number) => updateActive((c) => ({ ...c, committeeCount: Math.max(0, Math.min(20, n)) })),
+    [updateActive]
+  )
+  const setCommittees = useCallback(
+    (list: string[]) => updateActive((c) => ({ ...c, committees: list })),
+    [updateActive]
+  )
+  const addCommitteeMatrixEntry = useCallback(
+    (entry: CommitteeMatrixEntry) =>
       updateActive((c) => ({
         ...c,
-        committeeMatrix: { ...c.committeeMatrix, [committee]: firstName },
+        committeeMatrixEntries: [...(c.committeeMatrixEntries ?? []), entry],
+      })),
+    [updateActive]
+  )
+  const removeCommitteeMatrixEntry = useCallback(
+    (index: number) =>
+      updateActive((c) => ({
+        ...c,
+        committeeMatrixEntries: (c.committeeMatrixEntries ?? []).filter((_, i) => i !== index),
       })),
     [updateActive]
   )
@@ -227,7 +271,10 @@ export function DelegateProvider({
     setName,
     setCountry,
     setStanceOverview,
-    setCommitteeMatrix,
+    setCommitteeCount,
+    setCommittees,
+    addCommitteeMatrixEntry,
+    removeCommitteeMatrixEntry,
     setCountdownDate,
     toggleChecklist,
     addTrustedSource,
