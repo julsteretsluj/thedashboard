@@ -1,9 +1,15 @@
+/** Roll call: absent; present (may abstain from voting); present-and-voting (must vote, cannot abstain). */
+export type RollCallStatus = 'absent' | 'present' | 'present-and-voting'
+
 export interface Delegate {
   id: string
   country: string
   name?: string
   committee?: string
+  /** @deprecated Use rollCallStatus. Kept for migration. */
   present?: boolean
+  /** Roll call status. Defaults to absent if unset (or derived from present). */
+  rollCallStatus?: RollCallStatus
   vote?: 'yes' | 'no' | 'abstain' | null
 }
 

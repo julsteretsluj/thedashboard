@@ -30,7 +30,7 @@ export default function ChairDelegates() {
       country: countryValue,
       name: name.trim() || undefined,
       committee: committee || undefined,
-      present: false,
+      rollCallStatus: 'absent',
     })
     setCountrySelect('')
     setCustomCountry('')
@@ -40,7 +40,7 @@ export default function ChairDelegates() {
   const addAllMissing = () => {
     DELEGATION_OPTIONS.forEach((c) => {
       if (!delegates.some((d) => d.country === c)) {
-        addDelegate({ country: c, committee: committee || undefined, present: false })
+        addDelegate({ country: c, committee: committee || undefined, rollCallStatus: 'absent' })
       }
     })
     setShowBulkAdd(false)

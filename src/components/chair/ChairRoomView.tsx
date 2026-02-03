@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { AlertTriangle, ThumbsUp, MessageCircle, ChevronDown } from 'lucide-react'
+import type { Delegate, RollCallStatus } from '../../types'
 import { STRIKE_THRESHOLD } from './strikeMisbehaviours'
+
+function getRollCallStatus(d: Delegate): RollCallStatus {
+  if (d.rollCallStatus) return d.rollCallStatus
+  return d.present ? 'present' : 'absent'
+}
 
 export default function ChairRoomView() {
   const {
@@ -82,14 +88,31 @@ export default function ChairRoomView() {
                       <div className="text-xs text-[var(--text-muted)] mt-0.5">{d.committee}</div>
                     )}
                     <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-                      {d.present !== undefined && (
-                        <span
-                          className={`inline-block w-2 h-2 rounded-sm ${
-                            d.present ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
-                          }`}
-                          title={d.present ? 'Present' : 'Absent'}
-                        />
-                      )}
+                      {(() => {
+                        const rc = getRollCallStatus(d)
+                        const titles: Record<RollCallStatus, string> = {
+                          absent: 'Absent',
+                          present: 'Present (may abstain)',
+                          'present-and-voting': 'Present and voting',
+                        }
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              rc === 'absent'
+                                ? 'bg-[var(--text-muted)]/20 text-[var(--text-muted)]'
+                                : rc === 'present'
+                                  ? 'bg-[var(--success)]/20 text-[var(--success)]'
+                                  : 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                            }`}
+                            title={titles[rc]}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              rc === 'absent' ? 'bg-[var(--text-muted)]' : rc === 'present' ? 'bg-[var(--success)]' : 'bg-[var(--accent)]'
+                            }`} />
+                            {rc === 'present-and-voting' ? 'P&V' : rc === 'present' ? 'Present' : 'Absent'}
+                          </span>
+                        )
+                      })()}
                       {totalStrikes > 0 && (
                         <span
                           className={`inline-flex items-center gap-0.5 text-xs ${

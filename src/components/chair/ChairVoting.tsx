@@ -1,5 +1,11 @@
 import { useChair } from '../../context/ChairContext'
 import { Check, X, Minus } from 'lucide-react'
+import type { Delegate, RollCallStatus } from '../../types'
+
+function getRollCallStatus(d: Delegate): RollCallStatus {
+  if (d.rollCallStatus) return d.rollCallStatus
+  return d.present ? 'present' : 'absent'
+}
 
 export default function ChairVoting() {
   const {
@@ -27,7 +33,8 @@ export default function ChairVoting() {
   const yes = Object.values(delegateVotes).filter((v) => v === 'yes').length
   const no = Object.values(delegateVotes).filter((v) => v === 'no').length
   const abstain = Object.values(delegateVotes).filter((v) => v === 'abstain').length
-  const total = delegates.length
+  const votingDelegates = delegates.filter((d) => getRollCallStatus(d) !== 'absent')
+  const total = votingDelegates.length
   const recorded = Object.keys(delegateVotes).length
 
   return (
@@ -61,41 +68,56 @@ export default function ChairVoting() {
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {delegates.map((d) => {
             const vote = delegateVotes[d.id]
+            const rc = getRollCallStatus(d)
+            const isAbsent = rc === 'absent'
+            const canAbstain = rc === 'present'
             return (
-              <li key={d.id} className="px-4 py-3 flex items-center justify-between">
+              <li
+                key={d.id}
+                className={`px-4 py-3 flex items-center justify-between ${isAbsent ? 'opacity-60' : ''}`}
+              >
                 <span className="text-sm text-[var(--text)]">
                   <strong className="text-[var(--accent)]">{d.country}</strong>
                   {d.name && <span className="text-[var(--text-muted)] ml-2">{d.name}</span>}
+                  {isAbsent && (
+                    <span className="ml-2 text-xs text-[var(--text-muted)]">(Absent)</span>
+                  )}
                 </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => recordVote(d.id, 'yes')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      vote === 'yes' ? 'bg-[var(--success)]/30 text-[var(--success)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--success)]'
-                    }`}
-                    title="Yes"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => recordVote(d.id, 'no')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      vote === 'no' ? 'bg-[var(--danger)]/30 text-[var(--danger)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--danger)]'
-                    }`}
-                    title="No"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => recordVote(d.id, 'abstain')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      vote === 'abstain' ? 'bg-[var(--text-muted)]/30 text-[var(--text)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text)]'
-                    }`}
-                    title="Abstain"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                </div>
+                {isAbsent ? (
+                  <span className="text-xs text-[var(--text-muted)]">—</span>
+                ) : (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => recordVote(d.id, 'yes')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        vote === 'yes' ? 'bg-[var(--success)]/30 text-[var(--success)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--success)]'
+                      }`}
+                      title="Yes"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => recordVote(d.id, 'no')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        vote === 'no' ? 'bg-[var(--danger)]/30 text-[var(--danger)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--danger)]'
+                      }`}
+                      title="No"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    {canAbstain && (
+                      <button
+                        onClick={() => recordVote(d.id, 'abstain')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          vote === 'abstain' ? 'bg-[var(--text-muted)]/30 text-[var(--text)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text)]'
+                        }`}
+                        title="Abstain (present only)"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </li>
             )
           })}
