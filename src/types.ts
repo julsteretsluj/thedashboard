@@ -13,6 +13,14 @@ export interface DelegateStrike {
   timestamp: string
 }
 
+export type DelegateFeedbackType = 'compliment' | 'concern'
+
+export interface DelegateFeedback {
+  delegateId: string
+  type: DelegateFeedbackType
+  timestamp: string
+}
+
 export interface Motion {
   id: string
   text: string

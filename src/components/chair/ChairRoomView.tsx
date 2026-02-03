@@ -1,9 +1,30 @@
+import { useState, useRef, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ThumbsUp, MessageCircle, ChevronDown } from 'lucide-react'
 import { STRIKE_THRESHOLD } from './strikeMisbehaviours'
 
 export default function ChairRoomView() {
-  const { delegates, committee, topic, getStrikeCountsByType } = useChair()
+  const {
+    delegates,
+    committee,
+    topic,
+    getStrikeCountsByType,
+    addDelegateFeedback,
+    getFeedbackCountsByType,
+  } = useChair()
+  const [openDelegateId, setOpenDelegateId] = useState<string | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!openDelegateId) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDelegateId(null)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [openDelegateId])
 
   return (
     <div className="space-y-6">
@@ -11,6 +32,9 @@ export default function ChairRoomView() {
         <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">🖥️ Digital Room View</h2>
         <p className="text-[var(--text-muted)] text-sm">
           {committee} — {topic}
+        </p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">
+          Click a delegate to give a compliment or concern reminder.
         </p>
       </div>
       <div className="card-block p-6 min-h-[320px]">
@@ -25,47 +49,110 @@ export default function ChairRoomView() {
               const counts = getStrikeCountsByType(d.id)
               const totalStrikes = Object.values(counts).reduce((a, b) => a + b, 0)
               const hasRed = Object.values(counts).some((c) => c >= STRIKE_THRESHOLD)
+              const feedback = getFeedbackCountsByType(d.id)
+              const compliments = feedback.compliment ?? 0
+              const concerns = feedback.concern ?? 0
+              const isOpen = openDelegateId === d.id
+
               return (
                 <div
                   key={d.id}
-                  className={`rounded-lg border p-3 text-center ${
-                    hasRed
-                      ? 'border-[var(--danger)] bg-[var(--danger)]/10'
-                      : 'border-[var(--border)] bg-[var(--bg-elevated)]'
-                  }`}
+                  ref={isOpen ? dropdownRef : undefined}
+                  className="relative"
                 >
-                  <div className="text-xs font-medium text-[var(--accent)] uppercase tracking-wide">
-                    {d.country}
-                  </div>
-                  <div className="text-sm text-[var(--text)] mt-1 font-medium">
-                    {d.name || '—'}
-                  </div>
-                  {d.committee && (
-                    <div className="text-xs text-[var(--text-muted)] mt-0.5">{d.committee}</div>
-                  )}
-                  <div className="mt-2 flex items-center justify-center gap-2">
-                    {d.present !== undefined && (
-                      <span
-                        className={`inline-block w-2 h-2 rounded-sm ${
-                          d.present ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
-                        }`}
-                        title={d.present ? 'Present' : 'Absent'}
+                  <button
+                    type="button"
+                    onClick={() => setOpenDelegateId(isOpen ? null : d.id)}
+                    className={`w-full rounded-lg border p-3 text-center transition-colors text-left ${
+                      hasRed
+                        ? 'border-[var(--danger)] bg-[var(--danger)]/10 hover:bg-[var(--danger)]/15'
+                        : 'border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-card)] hover:border-[var(--accent)]/50'
+                    } ${isOpen ? 'ring-2 ring-[var(--accent)]' : ''}`}
+                    aria-expanded={isOpen}
+                    aria-haspopup="menu"
+                    aria-label={`${d.country} — give compliment or concern`}
+                  >
+                    <div className="text-xs font-medium text-[var(--accent)] uppercase tracking-wide">
+                      {d.country}
+                    </div>
+                    <div className="text-sm text-[var(--text)] mt-1 font-medium">
+                      {d.name || '—'}
+                    </div>
+                    {d.committee && (
+                      <div className="text-xs text-[var(--text-muted)] mt-0.5">{d.committee}</div>
+                    )}
+                    <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+                      {d.present !== undefined && (
+                        <span
+                          className={`inline-block w-2 h-2 rounded-sm ${
+                            d.present ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
+                          }`}
+                          title={d.present ? 'Present' : 'Absent'}
+                        />
+                      )}
+                      {totalStrikes > 0 && (
+                        <span
+                          className={`inline-flex items-center gap-0.5 text-xs ${
+                            hasRed ? 'text-[var(--danger)]' : 'text-[var(--accent)]'
+                          }`}
+                          title={Object.entries(counts)
+                            .map(([t, c]) => `${t}: ${c}`)
+                            .join(', ')}
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          {totalStrikes}
+                        </span>
+                      )}
+                      {compliments > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-[var(--success)]" title="Compliments">
+                          <ThumbsUp className="w-3 h-3" />
+                          {compliments}
+                        </span>
+                      )}
+                      {concerns > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-[var(--danger)]" title="Concern reminders">
+                          <MessageCircle className="w-3 h-3" />
+                          {concerns}
+                        </span>
+                      )}
+                      <ChevronDown
+                        className={`w-3 h-3 text-[var(--text-muted)] flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        aria-hidden
                       />
-                    )}
-                    {totalStrikes > 0 && (
-                      <span
-                        className={`inline-flex items-center gap-0.5 text-xs ${
-                          hasRed ? 'text-[var(--danger)]' : 'text-[var(--accent)]'
-                        }`}
-                        title={Object.entries(counts)
-                          .map(([t, c]) => `${t}: ${c}`)
-                          .join(', ')}
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div
+                      className="absolute left-0 right-0 top-full mt-1 z-10 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-lg py-1 min-w-[10rem]"
+                      role="menu"
+                      aria-label="Delegate actions"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          addDelegateFeedback(d.id, 'compliment')
+                          setOpenDelegateId(null)
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--bg-elevated)] transition-colors"
                       >
-                        <AlertTriangle className="w-3 h-3" />
-                        {totalStrikes}
-                      </span>
-                    )}
-                  </div>
+                        <ThumbsUp className="w-4 h-4 text-[var(--success)]" />
+                        Give compliment
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          addDelegateFeedback(d.id, 'concern')
+                          setOpenDelegateId(null)
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--bg-elevated)] transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4 text-[var(--danger)]" />
+                        Give concern reminder
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             })}

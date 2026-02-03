@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Link as LinkIcon,
+  CheckSquare,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -40,9 +41,11 @@ import ChairSession from '../components/chair/ChairSession'
 import ChairSpeakers from '../components/chair/ChairSpeakers'
 import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
+import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 
 const sections = [
+  { id: 'flow', label: '📋 Flow checklist', icon: CheckSquare },
   { id: 'room', label: '🖥️ Digital Room', icon: LayoutGrid },
   { id: 'delegates', label: '👥 Delegates', icon: Users },
   { id: 'motions', label: '📜 Motions & Points', icon: FileText },
@@ -58,7 +61,7 @@ const sections = [
 ]
 
 function ChairRoomContent() {
-  const [active, setActive] = useState('room')
+  const [active, setActive] = useState('flow')
   const [showSettings, setShowSettings] = useState(false)
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
 
@@ -124,6 +127,7 @@ function ChairRoomContent() {
             <ChairCommitteeTopic onClose={() => setShowSettings(false)} />
           </div>
         )}
+        {active === 'flow' && <ChairFlowChecklist />}
         {active === 'room' && <ChairRoomView />}
         {active === 'delegates' && <ChairDelegates />}
         {active === 'motions' && <ChairMotions />}

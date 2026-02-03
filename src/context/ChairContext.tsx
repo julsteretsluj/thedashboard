@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import type { Delegate, DelegateStrike, Motion, Speaker } from '../types'
+import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker } from '../types'
 
 interface ChairState {
   committee: string
@@ -8,6 +8,7 @@ interface ChairState {
   sessionStartTime: string | null
   delegates: Delegate[]
   delegateStrikes: DelegateStrike[]
+  delegateFeedback: DelegateFeedback[]
   motions: Motion[]
   speakers: Speaker[]
   activeSpeaker: Speaker | null
@@ -20,6 +21,7 @@ interface ChairState {
   archive: { type: string; name: string; content?: string }[]
   voteInProgress: Motion | null
   delegateVotes: Record<string, 'yes' | 'no' | 'abstain'>
+  flowChecklist: Record<string, boolean>
 }
 
 const defaultState: ChairState = {
@@ -29,6 +31,7 @@ const defaultState: ChairState = {
   sessionStartTime: null,
   delegates: [],
   delegateStrikes: [],
+  delegateFeedback: [],
   motions: [],
   speakers: [],
   activeSpeaker: null,
@@ -41,6 +44,7 @@ const defaultState: ChairState = {
   archive: [],
   voteInProgress: null,
   delegateVotes: {},
+  flowChecklist: {},
 }
 
 type ChairContextValue = ChairState & {
@@ -71,6 +75,11 @@ type ChairContextValue = ChairState & {
   removeStrike: (delegateId: string, type: string) => void
   getStrikeCount: (delegateId: string, type: string) => number
   getStrikeCountsByType: (delegateId: string) => Record<string, number>
+  addDelegateFeedback: (delegateId: string, type: DelegateFeedbackType) => void
+  getFeedbackCountsByType: (delegateId: string) => Record<DelegateFeedbackType, number>
+  toggleFlowStep: (stepId: string) => void
+  isFlowStepDone: (stepId: string) => boolean
+  resetFlowChecklist: () => void
 }
 
 const ChairContext = createContext<ChairContextValue | null>(null)
@@ -109,6 +118,7 @@ export function ChairProvider({ children }: { children: ReactNode }) {
       ...s,
       delegates: s.delegates.filter((x) => x.id !== id),
       delegateStrikes: s.delegateStrikes.filter((x) => x.delegateId !== id),
+      delegateFeedback: s.delegateFeedback.filter((x) => x.delegateId !== id),
     }))
   }, [])
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
@@ -257,6 +267,40 @@ export function ChairProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const addDelegateFeedback = useCallback((delegateId: string, type: DelegateFeedbackType) => {
+    setState((s) => ({
+      ...s,
+      delegateFeedback: [
+        ...s.delegateFeedback,
+        { delegateId, type, timestamp: new Date().toISOString() },
+      ],
+    }))
+  }, [])
+
+  const getFeedbackCountsByType = useCallback((delegateId: string): Record<DelegateFeedbackType, number> => {
+    const counts: Record<DelegateFeedbackType, number> = { compliment: 0, concern: 0 }
+    state.delegateFeedback
+      .filter((f) => f.delegateId === delegateId)
+      .forEach((f) => {
+        counts[f.type] = (counts[f.type] ?? 0) + 1
+      })
+    return counts
+  }, [state.delegateFeedback])
+
+  const toggleFlowStep = useCallback((stepId: string) => {
+    setState((s) => ({
+      ...s,
+      flowChecklist: {
+        ...s.flowChecklist,
+        [stepId]: !s.flowChecklist[stepId],
+      },
+    }))
+  }, [])
+  const isFlowStepDone = useCallback((stepId: string) => !!state.flowChecklist[stepId], [state.flowChecklist])
+  const resetFlowChecklist = useCallback(() => {
+    setState((s) => ({ ...s, flowChecklist: {} }))
+  }, [])
+
   const value: ChairContextValue = {
     ...state,
     setCommittee,
@@ -295,6 +339,11 @@ export function ChairProvider({ children }: { children: ReactNode }) {
         })
       return counts
     },
+    addDelegateFeedback,
+    getFeedbackCountsByType,
+    toggleFlowStep,
+    isFlowStepDone,
+    resetFlowChecklist,
   }
 
   return <ChairContext.Provider value={value}>{children}</ChairContext.Provider>
