@@ -38,41 +38,31 @@ const UNSC_DELEGATIONS = [
 /** Historical Security Council: same 15 as typical UNSC. */
 const HSC_DELEGATIONS = [...UNSC_DELEGATIONS]
 
-/** Committees that use a limited allocation (e.g. UNSC 15, US Senate 100, Arab League, EU, etc.). Others get full UNGA. */
-const LIMITED_ALLOCATION_COMMITTEES: Record<string, readonly string[]> = {
+/** Map from committee option value to limited allocation. Single source of truth keyed by value only. */
+const ALLOCATION_BY_VALUE: Record<string, readonly string[]> = {
   UNSC: UNSC_DELEGATIONS,
-  'SC / UNSC — Security Council': UNSC_DELEGATIONS,
   HSC: HSC_DELEGATIONS,
-  'HSC — Historical Security Council': HSC_DELEGATIONS,
   'US-Senate': US_SENATE_ALLOCATION_OPTIONS,
-  'US Senate — United States Senate': US_SENATE_ALLOCATION_OPTIONS,
-  // Non-traditional (THAIMUN-style)
   AL: ARAB_LEAGUE_ALLOCATION,
-  'AL — Arab League': ARAB_LEAGUE_ALLOCATION,
   EU: EU_ALLOCATION,
-  'EU — European Union': EU_ALLOCATION,
   IOPC: IOC_ALLOCATION,
-  'IOPC — International Olympic and Paralympic Committee': IOC_ALLOCATION,
   UKPC: UKPC_ALLOCATION,
-  'UKPC — UK Parliament Committee': UKPC_ALLOCATION,
   PC: PRESS_CORPS_ALLOCATION,
-  'PC — Press Corps': PRESS_CORPS_ALLOCATION,
   HCC: HCC_ALLOCATION,
-  'HCC — Historical Crisis Committee': HCC_ALLOCATION,
 }
 
 const FULL_UNGA = [...DELEGATION_OPTIONS]
 
-/** Resolve committee string (value or label) to canonical option value for lookup. */
-function resolveCommitteeKey(committeeValueOrLabel: string): string {
-  const key = committeeValueOrLabel?.trim() ?? ''
+/** Resolve committee string (value or label) to committee option value. */
+function toCommitteeValue(committeeValueOrLabel: string): string {
+  const key = (committeeValueOrLabel ?? '').trim()
   if (!key) return ''
   const option = COMMITTEE_OPTIONS.find((o) => o.value === key || o.label === key)
   return option ? option.value : key
 }
 
 /**
- * Returns possible delegation (country) options for a committee.
+ * Returns possible delegation (country/role) options for a committee.
  * Use in Chair when adding delegates and in Delegate Matrix per-committee tab.
  * @param committeeValueOrLabel - Committee value (e.g. UNSC, AL) or display label; custom names get full UNGA.
  */
@@ -80,19 +70,9 @@ export function getDelegationsForCommittee(committeeValueOrLabel: string): strin
   if (!committeeValueOrLabel || !committeeValueOrLabel.trim()) {
     return FULL_UNGA
   }
-  const key = committeeValueOrLabel.trim()
-  // Try exact key first (value or label)
-  let limited = LIMITED_ALLOCATION_COMMITTEES[key]
+  const value = toCommitteeValue(committeeValueOrLabel)
+  const limited = value ? ALLOCATION_BY_VALUE[value] : undefined
   if (limited) return [...limited]
-  // Resolve to canonical value and try again
-  const canonical = resolveCommitteeKey(key)
-  if (canonical) {
-    limited = LIMITED_ALLOCATION_COMMITTEES[canonical]
-    if (limited) return [...limited]
-    const label = COMMITTEE_OPTIONS.find((o) => o.value === canonical)?.label
-    if (label) limited = LIMITED_ALLOCATION_COMMITTEES[label]
-    if (limited) return [...limited]
-  }
   return FULL_UNGA
 }
 
