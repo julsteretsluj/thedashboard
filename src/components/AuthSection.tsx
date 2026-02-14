@@ -126,9 +126,11 @@ export default function AuthSection() {
           </div>
           <form onSubmit={handleEmailSubmit} className="space-y-2 mt-2">
             {mode === 'signup' && (
-              <label className="block">
+              <label className="block" htmlFor="auth-display-name">
                 <span className="text-xs text-[var(--text-muted)]">Name (optional)</span>
                 <input
+                  id="auth-display-name"
+                  name="display-name"
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -137,9 +139,11 @@ export default function AuthSection() {
                 />
               </label>
             )}
-            <label className="block">
+            <label className="block" htmlFor="auth-email">
               <span className="text-xs text-[var(--text-muted)]">Email</span>
               <input
+                id="auth-email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -149,9 +153,11 @@ export default function AuthSection() {
                 className="mt-0.5 w-full px-2.5 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
               />
             </label>
-            <label className="block">
+            <label className="block" htmlFor="auth-password">
               <span className="text-xs text-[var(--text-muted)]">Password</span>
               <input
+                id="auth-password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

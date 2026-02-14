@@ -133,6 +133,8 @@ export default function DelegateSources() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
+              id="sources-key-terms"
+              name="sources-key-terms"
               type="text"
               value={keyTermsQuery}
               onChange={(e) => setKeyTermsQuery(e.target.value)}
@@ -206,6 +208,8 @@ export default function DelegateSources() {
         </div>
         <div className="flex gap-2">
           <input
+            id="sources-trusted-input"
+            name="sources-trusted"
             type="text"
             value={trustedInput}
             onChange={(e) => setTrustedInput(e.target.value)}
@@ -245,6 +249,8 @@ export default function DelegateSources() {
         <h3 className="text-sm font-medium text-[var(--text)]">🌍 Nation-specific sources</h3>
         <div className="flex gap-2">
           <input
+            id="sources-nation-input"
+            name="sources-nation"
             type="text"
             value={nationInput}
             onChange={(e) => setNationInput(e.target.value)}

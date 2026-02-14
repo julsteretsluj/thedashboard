@@ -26,6 +26,8 @@ export default function DelegateResources() {
         </h3>
         <div className="space-y-2">
           <input
+            id="resource-name"
+            name="resource-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -33,6 +35,8 @@ export default function DelegateResources() {
             className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           />
           <input
+            id="resource-url"
+            name="resource-url"
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}

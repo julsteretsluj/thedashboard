@@ -3,7 +3,8 @@ import { useDelegate } from '../../context/DelegateContext'
 import { Plus, Trash2 } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
-import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+import { OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+import { getDelegationsForCommittee } from '../../constants/committeeAllocations'
 import { getPresetDelegationFlag } from '../../constants/delegationFlags'
 
 function getCommitteeLabel(value: string): string {
@@ -68,6 +69,8 @@ export default function DelegateMatrix() {
   const activeCommittee = tabCommittees[safeTabIndex] ?? ''
   const entriesForCommittee = (comm: string) =>
     committeeMatrixEntries.map((entry, i) => ({ entry, i })).filter(({ entry }) => entry.committee === comm)
+
+  const delegationOptionsForCommittee = getDelegationsForCommittee(activeCommittee)
 
   const addForTab = (comm: string) => {
     const delegation = delegationSelect === OTHER_DELEGATION_VALUE ? delegationCustom.trim() : delegationSelect
@@ -180,6 +183,9 @@ export default function DelegateMatrix() {
             </div>
             {activeCommittee && (
               <div className="p-4 space-y-4">
+                <p className="text-xs text-[var(--text-muted)]">
+                  Delegation options are tailored to this committee (e.g. UNSC: 15 members; GA committees: full UNGA).
+                </p>
                 <div className="flex flex-wrap gap-2 items-end">
                   <span className="text-xs text-[var(--text-muted)] mr-2">➕ Add to this committee:</span>
                   <label className="flex flex-col gap-1">
@@ -201,7 +207,7 @@ export default function DelegateMatrix() {
                       aria-label="Delegation"
                     >
                       <option value="">Select…</option>
-                      {DELEGATION_OPTIONS.map((d) => (
+                      {delegationOptionsForCommittee.map((d) => (
                         <option key={d} value={d}>
                           {d}
                         </option>

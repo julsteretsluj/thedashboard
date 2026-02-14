@@ -51,6 +51,8 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
         </select>
         {selectedPreset === OTHER_COMMITTEE_VALUE && (
           <input
+            id="chair-committee-custom"
+            name="committee-custom"
             type="text"
             value={committee}
             onChange={(e) => setCommittee(e.target.value)}
@@ -60,9 +62,11 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
           />
         )}
       </label>
-      <label className="block">
+      <label className="block" htmlFor="chair-universe">
         <span className="text-xs text-[var(--text-muted)] block mb-1">Universe (optional, for fictional committees)</span>
         <input
+          id="chair-universe"
+          name="chair-universe"
           type="text"
           value={universe}
           onChange={(e) => setUniverse(e.target.value)}
@@ -71,9 +75,11 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
           aria-label="Universe (optional)"
         />
       </label>
-      <label className="block">
+      <label className="block" htmlFor="chair-topic">
         <span className="text-xs text-[var(--text-muted)] block mb-1">Topic</span>
         <input
+          id="chair-topic"
+          name="chair-topic"
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
@@ -83,9 +89,11 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
       </label>
       <div className="pt-2 border-t border-[var(--border)]">
         <h4 className="text-sm font-medium text-[var(--text)] mb-2">👤 Chair</h4>
-        <label className="block mb-2">
+        <label className="block mb-2" htmlFor="chair-name">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Chair name (optional)</span>
           <input
+            id="chair-name"
+            name="chair-name"
             type="text"
             value={chairName}
             onChange={(e) => setChairName(e.target.value)}
@@ -94,9 +102,11 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
             aria-label="Chair name"
           />
         </label>
-        <label className="block">
+        <label className="block" htmlFor="chair-email">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Chair email (optional)</span>
           <input
+            id="chair-email"
+            name="chair-email"
             type="email"
             value={chairEmail}
             onChange={(e) => setChairEmail(e.target.value)}

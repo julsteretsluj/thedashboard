@@ -3,7 +3,8 @@ import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Mail } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import { DEFAULT_MISBEHAVIOURS, STRIKE_THRESHOLD } from './strikeMisbehaviours'
-import { DELEGATION_OPTIONS, OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+import { OTHER_DELEGATION_VALUE } from '../../constants/delegations'
+import { getAllocationOptionsForCommittee, getDelegationsForCommittee } from '../../constants/committeeAllocations'
 
 export default function ChairDelegates() {
   const {
@@ -33,6 +34,11 @@ export default function ChairDelegates() {
 
   const countryValue = countrySelect === OTHER_DELEGATION_VALUE ? customCountry.trim() : countrySelect
 
+  const allocationOptions = getAllocationOptionsForCommittee(
+    committee,
+    delegates.map((d) => d.country)
+  )
+
   const addOne = () => {
     if (!countryValue) return
     addDelegate({
@@ -49,7 +55,8 @@ export default function ChairDelegates() {
   }
 
   const addAllMissing = () => {
-    DELEGATION_OPTIONS.forEach((c) => {
+    const possible = getDelegationsForCommittee(committee)
+    possible.forEach((c) => {
       if (!delegates.some((d) => d.country === c)) {
         addDelegate({ country: c, committee: committee || undefined, rollCallStatus: 'absent' })
       }
@@ -67,7 +74,9 @@ export default function ChairDelegates() {
               Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Use the 😊 icon to set a custom flag/emoji for non-UN delegations (e.g. FWC). Strikes can be recorded per delegate.
             </InfoPopover>
           </h2>
-          <p className="text-[var(--text-muted)] text-sm">Add or remove delegates. Preset UNGA flags shown; use the 😊 button to set a custom emoji for delegations (e.g. FWC).</p>
+          <p className="text-[var(--text-muted)] text-sm">
+            Add or remove delegates. Country list is tailored to this committee (e.g. UNSC shows 15 members; GA committees show all UNGA). Use 😊 to set a custom emoji for non-UN delegations.
+          </p>
         </div>
       </div>
 
@@ -80,9 +89,10 @@ export default function ChairDelegates() {
               value={countrySelect}
               onChange={(e) => setCountrySelect(e.target.value)}
               className="min-w-[12rem] max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Country / delegation"
             >
               <option value="">— Select country —</option>
-              {DELEGATION_OPTIONS.map((c) => (
+              {allocationOptions.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -143,7 +153,14 @@ export default function ChairDelegates() {
 
       {showBulkAdd && (
         <div className="rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] p-4 flex items-center justify-between flex-wrap gap-2">
-          <p className="text-sm text-[var(--text)]">Add all 193 UNGA member states not yet in the list?</p>
+          <p className="text-sm text-[var(--text)]">
+            Add all possible participants for this committee not yet in the list?
+            {getDelegationsForCommittee(committee).length < 50 && (
+              <span className="text-[var(--text-muted)] ml-1">
+                ({getDelegationsForCommittee(committee).length} for this committee)
+              </span>
+            )}
+          </p>
           <div className="flex gap-2">
             <button onClick={() => setShowBulkAdd(false)} className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] text-sm">Cancel</button>
             <button onClick={addAllMissing} className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-sm font-medium">Add all</button>
