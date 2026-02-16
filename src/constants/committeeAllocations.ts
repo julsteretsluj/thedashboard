@@ -53,12 +53,30 @@ const ALLOCATION_BY_VALUE: Record<string, readonly string[]> = {
 
 const FULL_UNGA = [...DELEGATION_OPTIONS]
 
+/** Known limited-allocation committee values. */
+const LIMITED_VALUES = new Set(Object.keys(ALLOCATION_BY_VALUE))
+
+/** Normalize dashes so "AL - Arab League" and "AL — Arab League" both match. */
+function normalizeForMatch(s: string): string {
+  return (s ?? '').replace(/[\u2013\u2014\u2212\-]/g, '-').trim()
+}
+
 /** Resolve committee string (value or label) to committee option value. */
 function toCommitteeValue(committeeValueOrLabel: string): string {
   const key = (committeeValueOrLabel ?? '').trim()
   if (!key) return ''
-  const option = COMMITTEE_OPTIONS.find((o) => o.value === key || o.label === key)
-  return option ? option.value : key
+  if (ALLOCATION_BY_VALUE[key]) return key
+  const normKey = normalizeForMatch(key)
+  const option = COMMITTEE_OPTIONS.find(
+    (o) =>
+      o.value === key ||
+      o.label === key ||
+      normalizeForMatch(o.label) === normKey
+  )
+  if (option) return option.value
+  const prefixMatch = key.match(/^([A-Za-z0-9\-]+)\s*[—\-–\s]/)
+  if (prefixMatch?.[1] && LIMITED_VALUES.has(prefixMatch[1])) return prefixMatch[1]
+  return key
 }
 
 /**

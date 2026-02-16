@@ -1,9 +1,17 @@
 /**
  * Committee options for Chair Room and Committee Matrix.
- * UN, regional, specialized, and fictional committees.
+ * Non-traditional / limited-allocation committees (AL, EU, IOPC, UKPC, PC, HCC, UNSC, HSC, US-Senate) are listed first so they appear at the top of the dropdown.
  */
-export const COMMITTEE_OPTIONS = [
+const ALL_COMMITTEES = [
   { value: 'AL', label: 'AL — Arab League' },
+  { value: 'EU', label: 'EU — European Union' },
+  { value: 'IOPC', label: 'IOPC — International Olympic and Paralympic Committee' },
+  { value: 'UKPC', label: 'UKPC — UK Parliament Committee' },
+  { value: 'PC', label: 'PC — Press Corps' },
+  { value: 'HCC', label: 'HCC — Historical Crisis Committee' },
+  { value: 'UNSC', label: 'SC / UNSC — Security Council' },
+  { value: 'HSC', label: 'HSC — Historical Security Council' },
+  { value: 'US-Senate', label: 'US Senate — United States Senate' },
   { value: 'ASEAN', label: 'ASEAN — Association of Southeastern Asian Nations' },
   { value: 'AU', label: 'AU — African Union' },
   { value: 'CCPCJ', label: 'CCPCJ — Commission on Crime Prevention and Criminal Justice' },
@@ -16,14 +24,11 @@ export const COMMITTEE_OPTIONS = [
   { value: 'DISEC', label: 'DISEC — Disarmament and International Security Committee (UNGA 1st)' },
   { value: 'ECOFIN', label: 'ECOFIN — Economic and Financial Committee (UNGA 2nd)' },
   { value: 'ECOSOC', label: 'ECOSOC — Economic and Social Council' },
-  { value: 'EU', label: 'EU — European Union' },
   { value: 'FAO', label: 'FAO — Food and Agriculture Organization' },
   { value: 'FIFA', label: 'FIFA — Fédération Internationale de Football Association' },
   { value: 'GA6', label: 'GA6 — Legal (UNGA 6th Committee)' },
   { value: 'HRC', label: 'HRC — Human Rights Council' },
   { value: 'UNHRC', label: 'UNHRC — Human Rights Council' },
-  { value: 'HCC', label: 'HCC — Historical Crisis Committee' },
-  { value: 'HSC', label: 'HSC — Historical Security Council' },
   { value: 'IAEA', label: 'IAEA — International Atomic Energy Agency' },
   { value: 'ICAO', label: 'ICAO — International Civil Aviation Organisation' },
   { value: 'ICC', label: 'ICC — International Criminal Court' },
@@ -34,11 +39,8 @@ export const COMMITTEE_OPTIONS = [
   { value: 'IMF', label: 'IMF — International Monetary Fund' },
   { value: 'IMO', label: 'IMO — International Maritime Organisation' },
   { value: 'Interpol', label: 'Interpol — International Criminal Police Organization' },
-  { value: 'IOPC', label: 'IOPC — International Olympic and Paralympic Committee' },
   { value: 'NATO', label: 'NATO — North Atlantic Treaty Organization' },
   { value: 'PBC', label: 'PBC — Peacebuilding Commission' },
-  { value: 'PC', label: 'PC — Press Corps' },
-  { value: 'UNSC', label: 'SC / UNSC — Security Council' },
   { value: 'SCSHT', label: 'SCSHT — Special Conference on Slavery and Human Trafficking' },
   { value: 'SOCHUM', label: 'SOCHUM — Social, Cultural, and Humanitarian Committee (UNGA 3rd)' },
   { value: 'SPECPOL', label: 'SPECPOL — Special Political and Decolonization (UNGA 4th)' },
@@ -55,8 +57,6 @@ export const COMMITTEE_OPTIONS = [
   { value: 'UNPFII', label: 'UNPFII — UN Permanent Forum on Indigenous Issues' },
   { value: 'UN-Women', label: 'UN Women — United Nations Entity for Gender Equality and the Empowerment of Women' },
   { value: 'UNWTO', label: 'UNWTO — World Tourism Organization' },
-  { value: 'UKPC', label: 'UKPC — UK Parliament Committee' },
-  { value: 'US-Senate', label: 'US Senate — United States Senate' },
   { value: 'WFP', label: 'WFP — World Food Program' },
   { value: 'WHO', label: 'WHO — World Health Organization' },
   { value: 'WMO', label: 'WMO — World Meteorological Organization' },
@@ -65,6 +65,8 @@ export const COMMITTEE_OPTIONS = [
   { value: 'WTO', label: 'WTO — World Trade Organization' },
   { value: 'Crisis', label: 'Crisis Committee' },
 ] as const
+
+export const COMMITTEE_OPTIONS = ALL_COMMITTEES
 
 export const COMMITTEE_VALUES = COMMITTEE_OPTIONS.map((c) => c.value)
 export type CommitteeValue = (typeof COMMITTEE_OPTIONS)[number]['value']
