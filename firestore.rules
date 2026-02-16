@@ -1,8 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Delegate data: users can read/write only their own document (document id = Firebase Auth uid)
+    // Chair data: users can read/write only their own document
+    match /chairData/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Delegate data: users can read/write only their own document
     match /delegateData/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Global committee list (optional): readable by all; write via Console or Admin only
+    match /config/committees {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Per-user committee options cache (survives site data clear when signed in)
+    match /userConfig/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }

@@ -1,30 +1,85 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { COMMITTEE_OPTIONS } from '../constants/committees'
+import { useFirebaseAuth } from '../context/FirebaseAuthContext'
+import {
+  loadUserCommitteeOptions,
+  loadCommitteeOptionsFromFirestore,
+  saveUserCommitteeOptions,
+  type CommitteeOption,
+} from '../lib/committeeConfig'
 
-export interface CommitteeOption {
-  value: string
-  label: string
-}
+export type { CommitteeOption }
+
+const BUILT_IN_OPTIONS: CommitteeOption[] = COMMITTEE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
 
 /**
- * Committee list for dropdowns. Fetches /committees.json at runtime so the live
- * server's file is used (avoids stale cached bundle). Falls back to built-in list.
+ * Committee list for dropdowns. Loads from Firestore (user doc then global config) so it
+ * survives site data clear when signed in; then /committees.json; then built-in.
  */
 export function useCommitteeOptions(): CommitteeOption[] {
-  const [options, setOptions] = useState<CommitteeOption[]>(() =>
-    COMMITTEE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
-  )
+  const [options, setOptions] = useState<CommitteeOption[]>(BUILT_IN_OPTIONS)
+  const { user } = useFirebaseAuth()
+  const userId = user?.uid ?? null
+  const savedRef = useRef(false)
 
   useEffect(() => {
-    fetch('/committees.json')
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Not ok'))))
-      .then((data: unknown) => {
-        if (Array.isArray(data) && data.length > 0 && data.every((x) => x && typeof x.value === 'string' && typeof x.label === 'string')) {
-          setOptions(data as CommitteeOption[])
+    let cancelled = false
+
+    async function load() {
+      // 1. Signed-in: try user's saved committee list first (survives site data clear)
+      if (userId) {
+        const userOpts = await loadUserCommitteeOptions(userId)
+        if (cancelled) return
+        if (userOpts?.length) {
+          setOptions(userOpts)
+          return
         }
-      })
-      .catch(() => {})
-  }, [])
+      }
+
+      // 2. Global Firestore config
+      const firestoreOpts = await loadCommitteeOptionsFromFirestore()
+      if (cancelled) return
+      if (firestoreOpts?.length) {
+        setOptions(firestoreOpts)
+        if (userId && !savedRef.current) {
+          savedRef.current = true
+          saveUserCommitteeOptions(userId, firestoreOpts).catch(() => {})
+        }
+        return
+      }
+
+      // 3. /committees.json
+      try {
+        const r = await fetch('/committees.json')
+        if (cancelled) return
+        if (r.ok) {
+          const data = (await r.json()) as unknown
+          if (Array.isArray(data) && data.length > 0 && data.every((x: unknown) => x && typeof (x as CommitteeOption).value === 'string' && typeof (x as CommitteeOption).label === 'string')) {
+            const list = data as CommitteeOption[]
+            setOptions(list)
+            if (userId && !savedRef.current) {
+              savedRef.current = true
+              saveUserCommitteeOptions(userId, list).catch(() => {})
+            }
+            return
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      // 4. Built-in (already set as initial state); save for signed-in user so next time we have it in Firestore
+      if (userId && !savedRef.current) {
+        savedRef.current = true
+        saveUserCommitteeOptions(userId, BUILT_IN_OPTIONS).catch(() => {})
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
 
   return options
 }
