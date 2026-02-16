@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import InfoPopover from '../InfoPopover'
+import DateTimeFields from '../DateTimeFields'
 import { CompactCountdownCards } from './DelegateCountdown'
 
 const DURATION_DAYS_MIN = 0
@@ -77,28 +78,20 @@ export default function DelegateCountry() {
           Add dates when registering your stance. Countdowns will appear here and in the ⏱️ Conference & position paper countdown section.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="block" htmlFor="stance-conference-start">
-            <span className="text-xs text-[var(--text-muted)] block mb-1">Conference start (date & time)</span>
-            <input
-              id="stance-conference-start"
-              name="conference-start"
-              type="datetime-local"
-              value={countdownDate ? countdownDate.slice(0, 16) : ''}
-              onChange={(e) => setCountdownDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-            />
-          </label>
-          <label className="block" htmlFor="stance-conference-end">
-            <span className="text-xs text-[var(--text-muted)] block mb-1">Conference end (date & time)</span>
-            <input
-              id="stance-conference-end"
-              name="conference-end"
-              type="datetime-local"
-              value={conferenceEndDate ? conferenceEndDate.slice(0, 16) : ''}
-              onChange={(e) => setConferenceEndDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-            />
-          </label>
+          <DateTimeFields
+            id="stance-conference-start"
+            label="Conference start (date & time)"
+            value={countdownDate ?? ''}
+            onChange={(iso) => setCountdownDate(iso)}
+            dateInputClassName="w-full"
+          />
+          <DateTimeFields
+            id="stance-conference-end"
+            label="Conference end (date & time)"
+            value={conferenceEndDate ?? ''}
+            onChange={(iso) => setConferenceEndDate(iso)}
+            dateInputClassName="w-full"
+          />
         </div>
         <label className="block" htmlFor="stance-conference-duration">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Duration (days) — sets end from start</span>
@@ -121,19 +114,13 @@ export default function DelegateCountry() {
             Type a number (0–31), then blur or press Enter. Set conference start first for it to set the end date.
           </span>
         </label>
-        <label className="block" htmlFor="stance-position-paper-deadline">
-          <span className="text-xs text-[var(--text-muted)] block mb-1">Position paper deadline (date & time)</span>
-          <input
-            id="stance-position-paper-deadline"
-            name="position-paper-deadline"
-            type="datetime-local"
-            value={positionPaperDeadline ? positionPaperDeadline.slice(0, 16) : ''}
-            onChange={(e) =>
-              setPositionPaperDeadline(e.target.value ? new Date(e.target.value).toISOString() : '')
-            }
-            className="w-full max-w-sm px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-        </label>
+        <DateTimeFields
+          id="stance-position-paper-deadline"
+          label="Position paper deadline (date & time)"
+          value={positionPaperDeadline ?? ''}
+          onChange={(iso) => setPositionPaperDeadline(iso)}
+          dateInputClassName="max-w-[12rem]"
+        />
       </div>
 
       <div className="flex items-start gap-2">

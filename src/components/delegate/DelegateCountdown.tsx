@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import { Clock } from 'lucide-react'
+import DateTimeFields from '../DateTimeFields'
 
 type Diff = { days: number; hours: number; minutes: number; seconds: number } | null
 
@@ -124,28 +125,20 @@ export default function DelegateCountdown() {
       </div>
 
       <div className="card-block p-4 space-y-4">
-        <label className="block" htmlFor="countdown-conference-start">
-          <span className="text-xs text-[var(--text-muted)] block mb-1">Conference start (date & time)</span>
-          <input
-            id="countdown-conference-start"
-            name="countdown-conference-start"
-            type="datetime-local"
-            value={countdownDate ? countdownDate.slice(0, 16) : ''}
-            onChange={(e) => setCountdownDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            className="w-full max-w-xs px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-        </label>
-        <label className="block" htmlFor="countdown-conference-end">
-          <span className="text-xs text-[var(--text-muted)] block mb-1">Conference end (date & time)</span>
-          <input
-            id="countdown-conference-end"
-            name="countdown-conference-end"
-            type="datetime-local"
-            value={conferenceEndDate ? conferenceEndDate.slice(0, 16) : ''}
-            onChange={(e) => setConferenceEndDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            className="w-full max-w-xs px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-        </label>
+        <DateTimeFields
+          id="countdown-conference-start"
+          label="Conference start (date & time)"
+          value={countdownDate ?? ''}
+          onChange={(iso) => setCountdownDate(iso)}
+          dateInputClassName="max-w-[12rem]"
+        />
+        <DateTimeFields
+          id="countdown-conference-end"
+          label="Conference end (date & time)"
+          value={conferenceEndDate ?? ''}
+          onChange={(iso) => setConferenceEndDate(iso)}
+          dateInputClassName="max-w-[12rem]"
+        />
         {diff && <CountdownGrid diff={diff} label="⏳ Time until conference:" />}
         {diffEnd && <CountdownGrid diff={diffEnd} label="⏳ Time until conference ends:" />}
       </div>
@@ -153,19 +146,13 @@ export default function DelegateCountdown() {
       <div className="card-block p-4 space-y-4">
         <h3 className="font-medium text-lg text-[var(--text)]">📄 Position paper countdown</h3>
         <p className="text-[var(--text-muted)] text-sm">Set the position paper due date to see time remaining.</p>
-        <label className="block" htmlFor="countdown-position-paper-deadline">
-          <span className="text-xs text-[var(--text-muted)] block mb-1">Position paper due (date & time)</span>
-          <input
-            id="countdown-position-paper-deadline"
-            name="countdown-position-paper-deadline"
-            type="datetime-local"
-            value={positionPaperDeadline ? positionPaperDeadline.slice(0, 16) : ''}
-            onChange={(e) =>
-              setPositionPaperDeadline(e.target.value ? new Date(e.target.value).toISOString() : '')
-            }
-            className="w-full max-w-xs px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-        </label>
+        <DateTimeFields
+          id="countdown-position-paper-deadline"
+          label="Position paper due (date & time)"
+          value={positionPaperDeadline ?? ''}
+          onChange={(iso) => setPositionPaperDeadline(iso)}
+          dateInputClassName="max-w-[12rem]"
+        />
         {diffPaper && <CountdownGrid diff={diffPaper} label="⏳ Time until position paper due:" />}
       </div>
     </div>
