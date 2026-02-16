@@ -1,10 +1,13 @@
 # Build the MUN Dashboard and push the built site to a branch
-# that Hostinger Git pulls into public_html. Trigger Hostinger via its webhook.
+# that Hostinger Git pulls into public_html. Also uploads dist as artifact for manual deploy.
 name: Build and push to Hostinger branch
 
 on:
   push:
     branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build-and-push:
@@ -24,6 +27,14 @@ jobs:
           npm ci
           npm run build
 
+      - name: Verify build contains committees
+        run: |
+          if ! grep -rq "Arab League" dist/assets/; then
+            echo "Build missing committee data - check committees.ts is bundled"
+            exit 1
+          fi
+          echo "Build verified: committee list present"
+
       - name: Push dist to hostinger-build branch
         uses: s0/git-publish-subdir-action@develop
         env:
@@ -32,3 +43,10 @@ jobs:
           FOLDER: dist
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: "Deploy: (${{ github.sha }}) ${{ github.event.head_commit.message }}"
+
+      - name: Upload dist for manual deploy
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: dist/
+          retention-days: 14

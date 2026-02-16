@@ -8,6 +8,31 @@
 - If you see **"Build: committees+allocations"**, the latest bundle is deployed (committees and allocation dropdowns are in this build).
 - If you **don’t** see that line, the server is still serving an older build.
 
+---
+
+## Manual deploy (if Git / auto-deploy never updates the site)
+
+Use this when the live site never gets the new build (e.g. Hostinger Git pulls the wrong branch or webhook doesn’t run).
+
+1. **Download the built site**
+   - Open the repo on GitHub → **Actions**.
+   - Click the latest **“Build and push to Hostinger branch”** run (must be green).
+   - Scroll to **Artifacts** at the bottom.
+   - Download **site-build** (zip).
+
+2. **Unzip**  
+   You should get a folder with: `index.html`, `favicon.svg`, `.htaccess`, and an `assets/` folder (with one `.js` and one `.css` file).
+
+3. **Upload to your web root**
+   - Log in to your host (e.g. Hostinger hPanel → File Manager).
+   - Go to the **document root** for thedashboard.seamuns.site (e.g. `public_html` for that domain).
+   - **Upload** the contents of the unzipped folder into that directory, **overwriting** existing files (especially `index.html` and everything in `assets/`).
+
+4. **Check the site**
+   - Hard refresh (Ctrl+Shift+R or Cmd+Shift+R).
+   - Footer should show **“Build: committees+allocations”**.
+   - Chair Room → Committee & topic: dropdown should start with **AL — Arab League**, **EU — European Union**, etc.
+
 ## 2. Where is thedashboard.seamuns.site hosted?
 
 ### If it’s on **Hostinger** (Git deploy)
