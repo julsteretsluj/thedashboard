@@ -11,6 +11,10 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInAnonymously,
+  linkWithPopup,
+  linkWithCredential,
+  EmailAuthProvider,
   signOut as firebaseSignOut,
   updateProfile,
   GoogleAuthProvider,
@@ -23,6 +27,7 @@ export interface AuthUser {
   name: string | null
   email: string | null
   picture: string | null
+  isAnonymous: boolean
 }
 
 interface FirebaseAuthContextValue {
@@ -57,6 +62,7 @@ function mapFirebaseUser(u: FirebaseUser | null): AuthUser | null {
     name: u.displayName ?? null,
     email: u.email ?? null,
     picture: u.photoURL ?? null,
+    isAnonymous: u.isAnonymous ?? false,
   }
 }
 
@@ -67,8 +73,17 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!auth) return
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(mapFirebaseUser(firebaseUser))
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(mapFirebaseUser(firebaseUser))
+      } else {
+        try {
+          const cred = await signInAnonymously(auth!)
+          setUser(mapFirebaseUser(cred.user))
+        } catch {
+          setUser(null)
+        }
+      }
       setIsLoading(false)
     })
     return () => unsubscribe()
@@ -80,9 +95,13 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
+      const current = auth.currentUser
+      if (current?.isAnonymous) {
+        await linkWithPopup(current, provider)
+      } else {
+        await signInWithPopup(auth, provider)
+      }
     } catch (e) {
-      setUser(null)
       setAuthError(e instanceof Error ? e.message : 'Google sign-in failed')
     } finally {
       setIsLoading(false)
@@ -94,7 +113,13 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     setAuthError(null)
     setIsLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password)
+      const current = auth.currentUser
+      if (current?.isAnonymous) {
+        const credential = EmailAuthProvider.credential(email.trim(), password)
+        await linkWithCredential(current, credential)
+      } else {
+        await signInWithEmailAndPassword(auth, email.trim(), password)
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign-in failed'
       setAuthError(msg.includes('auth/') ? formatAuthError(msg) : msg)
@@ -109,9 +134,18 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       setAuthError(null)
       setIsLoading(true)
       try {
-        const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
-        if (displayName?.trim() && cred.user) {
-          await updateProfile(cred.user, { displayName: displayName.trim() })
+        const current = auth.currentUser
+        if (current?.isAnonymous) {
+          const credential = EmailAuthProvider.credential(email.trim(), password)
+          const linked = await linkWithCredential(current, credential)
+          if (displayName?.trim() && linked.user) {
+            await updateProfile(linked.user, { displayName: displayName.trim() })
+          }
+        } else {
+          const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
+          if (displayName?.trim() && cred.user) {
+            await updateProfile(cred.user, { displayName: displayName.trim() })
+          }
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Sign-up failed'

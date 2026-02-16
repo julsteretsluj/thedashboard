@@ -137,7 +137,7 @@ export function ChairProvider({
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Load chair state from Firestore when signed in
+  // Load chair state from Firestore (or backfill from localStorage when no doc yet)
   useEffect(() => {
     if (!userId) {
       setIsLoaded(true)
@@ -146,18 +146,23 @@ export function ChairProvider({
     let cancelled = false
     loadChairData(userId)
       .then((data) => {
-        if (cancelled || !data) return
-        setState({
-          ...defaultState,
-          ...data,
-          delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
-          delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
-          delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
-          motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
-          speakers: Array.isArray(data.speakers) ? (data.speakers as ChairState['speakers']) : defaultState.speakers,
-          activeSpeaker: data.activeSpeaker as ChairState['activeSpeaker'],
-          voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
-        })
+        if (cancelled) return
+        if (data) {
+          setState({
+            ...defaultState,
+            ...data,
+            delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
+            delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
+            delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
+            motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
+            speakers: Array.isArray(data.speakers) ? (data.speakers as ChairState['speakers']) : defaultState.speakers,
+            activeSpeaker: data.activeSpeaker as ChairState['activeSpeaker'],
+            voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
+          })
+        } else {
+          const local = loadChairStateFromStorage()
+          saveChairData(userId, local as unknown as ChairDataDoc).catch(() => {})
+        }
       })
       .catch(() => {})
       .finally(() => {

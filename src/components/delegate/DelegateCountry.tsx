@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import InfoPopover from '../InfoPopover'
 import { CompactCountdownCards } from './DelegateCountdown'
@@ -30,9 +30,12 @@ export default function DelegateCountry() {
       : 0
 
   const [durationInput, setDurationInput] = useState<string>(durationDays ? String(durationDays) : '')
+  const isDurationFocused = useRef(false)
 
   useEffect(() => {
-    setDurationInput(durationDays ? String(durationDays) : '')
+    if (!isDurationFocused.current) {
+      setDurationInput(durationDays ? String(durationDays) : '')
+    }
   }, [durationDays])
 
   const applyDurationDays = () => {
@@ -48,7 +51,6 @@ export default function DelegateCountry() {
       return
     }
     if (!countdownDate) {
-      setDurationInput(durationDays ? String(durationDays) : '')
       return
     }
     const start = new Date(countdownDate)
@@ -56,6 +58,11 @@ export default function DelegateCountry() {
     end.setDate(end.getDate() + days)
     setConferenceEndDate(end.toISOString())
     setDurationInput(String(days))
+  }
+
+  const handleDurationBlur = () => {
+    applyDurationDays()
+    isDurationFocused.current = false
   }
 
   return (
@@ -103,14 +110,15 @@ export default function DelegateCountry() {
             max={DURATION_DAYS_MAX}
             value={durationInput}
             onChange={(e) => setDurationInput(e.target.value)}
-            onBlur={applyDurationDays}
+            onFocus={() => { isDurationFocused.current = true }}
+            onBlur={handleDurationBlur}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
             placeholder="e.g. 2"
             className="w-24 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             aria-label="Conference duration in days"
           />
           <span className="text-xs text-[var(--text-muted)] block mt-1">
-            Set conference start first. Change applies when you leave the field.
+            Type a number (0–31), then blur or press Enter. Set conference start first for it to set the end date.
           </span>
         </label>
         <label className="block" htmlFor="stance-position-paper-deadline">

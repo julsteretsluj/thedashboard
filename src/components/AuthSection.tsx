@@ -57,7 +57,7 @@ export default function AuthSection() {
     )
   }
 
-  if (isAuthenticated && user) {
+  if (isAuthenticated && user && !user.isAnonymous) {
     return (
       <div className="flex items-center gap-1.5">
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-[var(--text-muted)]">

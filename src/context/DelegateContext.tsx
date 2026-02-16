@@ -193,10 +193,18 @@ export function DelegateProvider({
     let cancelled = false
     loadDelegateData(userId)
       .then((data) => {
-        if (cancelled || !data) return
-        if (data.conferences.length > 0) {
+        if (cancelled) return
+        if (data && data.conferences.length > 0) {
           setConferences(data.conferences.map(migrateConference))
           setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
+        } else {
+          const stored = loadDelegateStateFromStorage()
+          if (stored?.conferences?.length) {
+            saveDelegateData(userId, {
+              conferences: stored.conferences,
+              activeConferenceId: stored.activeConferenceId || stored.conferences[0]?.id || '',
+            }).catch(() => {})
+          }
         }
       })
       .catch(() => {})
