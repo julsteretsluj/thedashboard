@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, Mic, Clock } from 'lucide-react'
 
+const DURATION_MIN = 30
+const DURATION_MAX = 300
+
 export default function ChairSpeakers() {
   const {
     delegates,
@@ -16,6 +19,7 @@ export default function ChairSpeakers() {
   } = useChair()
   const [selectedDelegate, setSelectedDelegate] = useState('')
   const [elapsed, setElapsed] = useState(0)
+  const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
 
   useEffect(() => {
     if (!activeSpeaker?.startTime) return
@@ -24,6 +28,20 @@ export default function ChairSpeakers() {
     }, 1000)
     return () => clearInterval(interval)
   }, [activeSpeaker?.startTime, activeSpeaker?.id])
+
+  useEffect(() => {
+    setDurationInput(String(speakerDuration))
+  }, [speakerDuration])
+
+  const commitDuration = () => {
+    const n = parseInt(durationInput, 10)
+    if (!Number.isNaN(n) && n >= DURATION_MIN && n <= DURATION_MAX) {
+      setSpeakerDuration(n)
+      setDurationInput(String(n))
+    } else {
+      setDurationInput(String(speakerDuration))
+    }
+  }
 
   const addSpeaker = () => {
     const d = delegates.find((x) => x.id === selectedDelegate)
@@ -73,12 +91,16 @@ export default function ChairSpeakers() {
         <h3 className="text-sm font-medium text-[var(--text)]">⏱️ Speaker duration (seconds)</h3>
         <input
           type="number"
-          min={30}
-          max={300}
-          value={speakerDuration}
-          onChange={(e) => setSpeakerDuration(Number(e.target.value) || 60)}
+          min={DURATION_MIN}
+          max={DURATION_MAX}
+          value={durationInput}
+          onChange={(e) => setDurationInput(e.target.value)}
+          onBlur={commitDuration}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           className="w-24 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+          aria-label="Speaker duration in seconds"
         />
+        <p className="text-xs text-[var(--text-muted)]">Between {DURATION_MIN} and {DURATION_MAX} seconds. Change takes effect when you leave the field.</p>
       </div>
 
       <div className="card-block p-4 space-y-3">

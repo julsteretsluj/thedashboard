@@ -1,6 +1,10 @@
+import { useState, useEffect } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import InfoPopover from '../InfoPopover'
 import { CompactCountdownCards } from './DelegateCountdown'
+
+const DURATION_DAYS_MIN = 0
+const DURATION_DAYS_MAX = 31
 
 export default function DelegateCountry() {
   const {
@@ -20,22 +24,39 @@ export default function DelegateCountry() {
     setPositionPaperDeadline,
   } = useDelegate()
 
-  const handleDurationDaysChange = (days: number) => {
-    if (days <= 0) {
-      setConferenceEndDate('')
-      return
-    }
-    if (!countdownDate) return
-    const start = new Date(countdownDate)
-    const end = new Date(start)
-    end.setDate(end.getDate() + days)
-    setConferenceEndDate(end.toISOString())
-  }
-
   const durationDays =
     countdownDate && conferenceEndDate
       ? Math.round((new Date(conferenceEndDate).getTime() - new Date(countdownDate).getTime()) / 86400000)
       : 0
+
+  const [durationInput, setDurationInput] = useState<string>(durationDays ? String(durationDays) : '')
+
+  useEffect(() => {
+    setDurationInput(durationDays ? String(durationDays) : '')
+  }, [durationDays])
+
+  const applyDurationDays = () => {
+    const n = parseInt(durationInput, 10)
+    if (Number.isNaN(n) || n < DURATION_DAYS_MIN) {
+      setDurationInput(durationDays ? String(durationDays) : '')
+      return
+    }
+    const days = Math.min(n, DURATION_DAYS_MAX)
+    if (days <= 0) {
+      setConferenceEndDate('')
+      setDurationInput('')
+      return
+    }
+    if (!countdownDate) {
+      setDurationInput(durationDays ? String(durationDays) : '')
+      return
+    }
+    const start = new Date(countdownDate)
+    const end = new Date(start)
+    end.setDate(end.getDate() + days)
+    setConferenceEndDate(end.toISOString())
+    setDurationInput(String(days))
+  }
 
   return (
     <div className="space-y-6">
@@ -78,16 +99,19 @@ export default function DelegateCountry() {
             id="stance-conference-duration"
             name="conference-duration-days"
             type="number"
-            min={0}
-            max={31}
-            value={durationDays || ''}
-            onChange={(e) => {
-              const v = e.target.value ? parseInt(e.target.value, 10) : 0
-              if (!Number.isNaN(v) && v >= 0) handleDurationDaysChange(v)
-            }}
+            min={DURATION_DAYS_MIN}
+            max={DURATION_DAYS_MAX}
+            value={durationInput}
+            onChange={(e) => setDurationInput(e.target.value)}
+            onBlur={applyDurationDays}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
             placeholder="e.g. 2"
             className="w-24 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            aria-label="Conference duration in days"
           />
+          <span className="text-xs text-[var(--text-muted)] block mt-1">
+            Set conference start first. Change applies when you leave the field.
+          </span>
         </label>
         <label className="block" htmlFor="stance-position-paper-deadline">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Position paper deadline (date & time)</span>
