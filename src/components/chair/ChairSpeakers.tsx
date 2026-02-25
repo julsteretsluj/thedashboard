@@ -18,18 +18,18 @@ export default function ChairSpeakers() {
     getDelegationEmoji,
   } = useChair()
   const [selectedDelegate, setSelectedDelegate] = useState('')
-  const [elapsed, setElapsed] = useState(0)
+  const [tick, setTick] = useState(0)
   const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
 
+  const elapsed =
+    activeSpeaker?.startTime && typeof activeSpeaker.startTime === 'number'
+      ? Math.floor((Date.now() - activeSpeaker.startTime) / 1000)
+      : 0
+
   useEffect(() => {
-    if (!activeSpeaker?.startTime) {
-      setElapsed(0)
-      return
-    }
-    const tick = () => setElapsed(Math.floor((Date.now() - activeSpeaker.startTime!) / 1000))
-    tick() // show immediately
-    const interval = setInterval(tick, 1000)
-    return () => clearInterval(interval)
+    if (!activeSpeaker?.startTime) return
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
   }, [activeSpeaker?.startTime, activeSpeaker?.id])
 
   useEffect(() => {
