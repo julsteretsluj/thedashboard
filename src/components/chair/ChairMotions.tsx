@@ -69,16 +69,17 @@ const PRESETS: Preset[] = [
 ]
 
 export default function ChairMotions() {
-  const { motions, addMotion, starMotion, setMotionStatus, startVote } = useChair()
+  const { motions, addMotion, starMotion, setMotionStatus, startVote, delegates, getDelegationEmoji } = useChair()
   const [text, setText] = useState('')
   const [type, setType] = useState<'motion' | 'point'>('motion')
+  const [submitter, setSubmitter] = useState('')
   const [presetOpen, setPresetOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null)
   const [presetValues, setPresetValues] = useState<Record<string, string>>({})
 
   const submit = () => {
     if (!text.trim()) return
-    addMotion(text.trim(), type)
+    addMotion(text.trim(), type, submitter || undefined)
     setText('')
   }
 
@@ -91,7 +92,7 @@ export default function ChairMotions() {
   const submitPreset = () => {
     if (!selectedPreset) return
     const built = selectedPreset.template(presetValues)
-    addMotion(built, selectedPreset.type)
+    addMotion(built, selectedPreset.type, submitter || undefined)
     setSelectedPreset(null)
     setPresetValues({})
     setPresetOpen(false)
@@ -126,15 +127,30 @@ export default function ChairMotions() {
             • Point
           </button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
             placeholder={type === 'motion' ? 'e.g. Motion to open the speaker list' : 'e.g. Point of order'}
-            className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="flex-1 min-w-[200px] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           />
+          <select
+            value={submitter}
+            onChange={(e) => setSubmitter(e.target.value)}
+            className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            title="Submitter (country)"
+          >
+            <option value="">No submitter</option>
+            {[...delegates]
+              .sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' }))
+              .map((d) => (
+                <option key={d.id} value={d.country}>
+                  {getDelegationEmoji(d.country) || '🏳️'} {d.country}
+                </option>
+              ))}
+          </select>
           <button
             onClick={submit}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
@@ -228,6 +244,11 @@ export default function ChairMotions() {
                 </button>
                 <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
                 <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
+                {m.submitter && (
+                  <span className="text-xs text-[var(--text-muted)] shrink-0">
+                    {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
+                  </span>
+                )}
                 <div className="flex gap-1">
                   <button
                     onClick={() => setMotionStatus(m.id, 'tabled')}
@@ -266,6 +287,11 @@ export default function ChairMotions() {
               </button>
               <div className="flex-1 min-w-0">
                 <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
+                {m.submitter && (
+                  <span className="text-xs text-[var(--text-muted)] ml-2">
+                    {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
+                  </span>
+                )}
                 <p className="text-sm text-[var(--text)]">{m.text}</p>
                 <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)]">
                   <span>{new Date(m.timestamp).toLocaleString()}</span>

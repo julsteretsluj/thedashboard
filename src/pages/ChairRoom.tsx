@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   Users,
   FileText,
+  ScrollText,
   Vote,
   BookOpen,
   ListOrdered,
@@ -36,6 +37,7 @@ function getSidebarExpanded(): boolean {
 import ChairRoomView from '../components/chair/ChairRoomView'
 import ChairDelegates from '../components/chair/ChairDelegates'
 import ChairMotions from '../components/chair/ChairMotions'
+import ChairResolutions from '../components/chair/ChairResolutions'
 import ChairVoting from '../components/chair/ChairVoting'
 import ChairCommitteeTopic from '../components/chair/ChairCommitteeTopic'
 import ChairScore from '../components/chair/ChairScore'
@@ -62,6 +64,7 @@ const sections = [
   { id: 'session', label: '▶️ Session', icon: Play },
   { id: 'speakers', label: '🎤 Speakers', icon: Mic },
   { id: 'motions', label: '📜 Motions & Points', icon: FileText },
+  { id: 'resolutions', label: '📄 Resolutions', icon: ScrollText },
   { id: 'voting', label: '🗳️ Voting', icon: Vote },
   { id: 'score', label: '📊 Point and motion tracker', icon: ListOrdered },
   { id: 'crisis', label: '⚠️ Crisis', icon: AlertTriangle },
@@ -150,6 +153,7 @@ function ChairRoomContent() {
         {active === 'room' && <ChairRoomView />}
         {active === 'delegates' && <ChairDelegates />}
         {active === 'motions' && <ChairMotions />}
+        {active === 'resolutions' && <ChairResolutions />}
         {active === 'voting' && <ChairVoting />}
         {active === 'committee' && <ChairCommitteeTopic />}
         {active === 'score' && <ChairScore />}

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
-import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker, DelegateScore } from '../types'
+import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { loadChairData, saveChairData, type ChairDataDoc } from '../lib/chairData'
 
@@ -26,7 +26,11 @@ interface ChairState {
   crisisPathways: string[]
   archive: { type: string; name: string; content?: string }[]
   voteInProgress: Motion | null
+  resolutionVoteInProgress: Resolution | null
+  amendmentVoteInProgress: Amendment | null
   delegateVotes: Record<string, 'yes' | 'no' | 'abstain'>
+  resolutions: Resolution[]
+  amendments: Amendment[]
   flowChecklist: Record<string, boolean>
   prepChecklist: Record<string, boolean>
   /** Custom emoji per delegation (e.g. "FWC" -> "🏴"). Overrides preset flags. */
@@ -56,7 +60,11 @@ const defaultState: ChairState = {
   crisisPathways: [],
   archive: [],
   voteInProgress: null,
+  resolutionVoteInProgress: null,
+  amendmentVoteInProgress: null,
   delegateVotes: {},
+  resolutions: [],
+  amendments: [],
   flowChecklist: {},
   prepChecklist: {},
   delegationEmojiOverrides: {},
@@ -76,12 +84,20 @@ type ChairContextValue = ChairState & {
   addDelegate: (d: Omit<Delegate, 'id'>) => void
   removeDelegate: (id: string) => void
   updateDelegate: (id: string, patch: Partial<Delegate>) => void
-  addMotion: (text: string, type: 'motion' | 'point') => void
+  addMotion: (text: string, type: 'motion' | 'point', submitter?: string) => void
   starMotion: (id: string) => void
   setMotionStatus: (id: string, status: Motion['status']) => void
   startVote: (motionId: string) => void
+  startResolutionVote: (resolutionId: string) => void
+  startAmendmentVote: (amendmentId: string) => void
   recordVote: (delegateId: string, vote: 'yes' | 'no' | 'abstain') => void
   endVote: () => void
+  endResolutionVote: () => void
+  endAmendmentVote: () => void
+  addResolution: (r: Omit<Resolution, 'id' | 'timestamp'>) => void
+  removeResolution: (id: string) => void
+  addAmendment: (a: Omit<Amendment, 'id' | 'timestamp'>) => void
+  removeAmendment: (id: string) => void
   addToSpeakers: (delegateId: string, country: string, name: string) => void
   removeFromSpeakers: (id: string) => void
   setActiveSpeaker: (s: Speaker | null) => void
@@ -193,7 +209,7 @@ export function ChairProvider({
             typeof data.speakerDuration === 'number' ? data.speakerDuration : 60
           )
           setState((prev) => {
-            const next = {
+            const next: ChairState = {
               ...defaultState,
               ...data,
               delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
@@ -201,12 +217,15 @@ export function ChairProvider({
               delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
               motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
               speakers,
-              activeSpeaker: null,
+              activeSpeaker: prev.activeSpeaker ?? null,
               speakerDuration: sd,
               voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
+              resolutionVoteInProgress: null,
+              amendmentVoteInProgress: null,
+              resolutions: Array.isArray(data.resolutions) ? (data.resolutions as ChairState['resolutions']) : defaultState.resolutions,
+              amendments: Array.isArray(data.amendments) ? (data.amendments as ChairState['amendments']) : defaultState.amendments,
               delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
             }
-            if (prev.activeSpeaker) next.activeSpeaker = prev.activeSpeaker
             return next
           })
         } else {
@@ -317,7 +336,7 @@ export function ChairProvider({
       delegates: s.delegates.map((d) => (d.id === id ? { ...d, ...patch } : d)),
     }))
   }, [])
-  const addMotion = useCallback((text: string, type: 'motion' | 'point') => {
+  const addMotion = useCallback((text: string, type: 'motion' | 'point', submitter?: string) => {
     setState((s) => ({
       ...s,
       motions: [
@@ -329,6 +348,7 @@ export function ChairProvider({
           starred: false,
           timestamp: new Date().toISOString(),
           status: 'active',
+          ...(submitter?.trim() && { submitter: submitter.trim() }),
         },
       ],
     }))
@@ -352,6 +372,34 @@ export function ChairProvider({
       return {
         ...s,
         voteInProgress: motion,
+        resolutionVoteInProgress: null,
+        amendmentVoteInProgress: null,
+        delegateVotes: {},
+      }
+    })
+  }, [])
+  const startResolutionVote = useCallback((resolutionId: string) => {
+    setState((s) => {
+      const resolution = s.resolutions.find((r) => r.id === resolutionId)
+      if (!resolution) return s
+      return {
+        ...s,
+        voteInProgress: null,
+        resolutionVoteInProgress: resolution,
+        amendmentVoteInProgress: null,
+        delegateVotes: {},
+      }
+    })
+  }, [])
+  const startAmendmentVote = useCallback((amendmentId: string) => {
+    setState((s) => {
+      const amendment = s.amendments.find((a) => a.id === amendmentId)
+      if (!amendment) return s
+      return {
+        ...s,
+        voteInProgress: null,
+        resolutionVoteInProgress: null,
+        amendmentVoteInProgress: amendment,
         delegateVotes: {},
       }
     })
@@ -379,6 +427,82 @@ export function ChairProvider({
         delegateVotes: {},
       }
     })
+  }, [])
+  const endResolutionVote = useCallback(() => {
+    setState((s) => {
+      if (!s.resolutionVoteInProgress) return s
+      const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
+      const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
+      const abstain = Object.values(s.delegateVotes).filter((v) => v === 'abstain').length
+      return {
+        ...s,
+        resolutions: s.resolutions.map((r) =>
+          r.id === s.resolutionVoteInProgress!.id
+            ? { ...r, votes: { yes, no, abstain } }
+            : r
+        ),
+        resolutionVoteInProgress: null,
+        delegateVotes: {},
+      }
+    })
+  }, [])
+  const endAmendmentVote = useCallback(() => {
+    setState((s) => {
+      if (!s.amendmentVoteInProgress) return s
+      const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
+      const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
+      const abstain = Object.values(s.delegateVotes).filter((v) => v === 'abstain').length
+      return {
+        ...s,
+        amendments: s.amendments.map((a) =>
+          a.id === s.amendmentVoteInProgress!.id
+            ? { ...a, votes: { yes, no, abstain } }
+            : a
+        ),
+        amendmentVoteInProgress: null,
+        delegateVotes: {},
+      }
+    })
+  }, [])
+  const addResolution = useCallback((r: Omit<Resolution, 'id' | 'timestamp'>) => {
+    setState((s) => ({
+      ...s,
+      resolutions: [
+        ...s.resolutions,
+        {
+          ...r,
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }))
+  }, [])
+  const removeResolution = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      resolutions: s.resolutions.filter((x) => x.id !== id),
+      resolutionVoteInProgress: s.resolutionVoteInProgress?.id === id ? null : s.resolutionVoteInProgress,
+    }))
+  }, [])
+  const addAmendment = useCallback((a: Omit<Amendment, 'id' | 'timestamp'>) => {
+    setState((s) => ({
+      ...s,
+      amendments: [
+        ...s.amendments,
+        {
+          ...a,
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }))
+  }, [])
+  const removeAmendment = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      amendments: s.amendments.filter((x) => x.id !== id),
+      amendmentVoteInProgress: s.amendmentVoteInProgress?.id === id ? null : s.amendmentVoteInProgress,
+    }))
   }, [])
   const addToSpeakers = useCallback((delegateId: string, country: string, name: string) => {
     setState((s) => ({
@@ -549,8 +673,16 @@ export function ChairProvider({
     starMotion,
     setMotionStatus,
     startVote,
+    startResolutionVote,
+    startAmendmentVote,
     recordVote,
     endVote,
+    endResolutionVote,
+    endAmendmentVote,
+    addResolution,
+    removeResolution,
+    addAmendment,
+    removeAmendment,
     addToSpeakers,
     removeFromSpeakers,
     setActiveSpeaker,

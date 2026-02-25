@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Clock, Mic } from 'lucide-react'
+import { Clock, Mic, Trash2 } from 'lucide-react'
 
 const DURATION_MIN = 30
 
@@ -20,6 +20,7 @@ export default function ActiveSpeakerBar({
     speakers,
     speakerDuration,
     setActiveSpeaker,
+    removeFromSpeakers,
     getDelegationEmoji,
   } = useChair()
 
@@ -88,16 +89,30 @@ export default function ActiveSpeakerBar({
         <Clock className="w-3.5 h-3.5" />
         <span>{displayStr}</span>
       </div>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          setActiveSpeaker(null)
-        }}
-        className="ml-auto shrink-0 px-2 py-1 rounded text-xs font-medium bg-[var(--bg-card)] text-[var(--text)] hover:bg-[var(--border)]"
-      >
-        End speech
-      </button>
+      <div className="ml-auto shrink-0 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            setActiveSpeaker(null)
+          }}
+          className="px-2 py-1 rounded text-xs font-medium bg-[var(--bg-card)] text-[var(--text)] hover:bg-[var(--border)]"
+        >
+          End speech
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (activeSpeaker) removeFromSpeakers(activeSpeaker.id)
+            setActiveSpeaker(null)
+          }}
+          className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"
+          title="End speech and remove from list"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   )
 }

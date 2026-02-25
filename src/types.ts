@@ -28,6 +28,27 @@ export interface DelegateFeedback {
   timestamp: string
 }
 
+export interface Resolution {
+  id: string
+  title: string
+  mainSubmitters: string[]
+  coSubmitters: string[]
+  gdocLink: string
+  timestamp: string
+  votes?: { yes: number; no: number; abstain: number }
+}
+
+export interface Amendment {
+  id: string
+  text: string
+  /** Id of resolution this amends (optional) */
+  resolutionId?: string
+  submitters: string[]
+  gdocLink: string
+  timestamp: string
+  votes?: { yes: number; no: number; abstain: number }
+}
+
 export interface Motion {
   id: string
   text: string
@@ -35,6 +56,8 @@ export interface Motion {
   starred: boolean
   timestamp: string
   status: 'active' | 'passed' | 'failed' | 'tabled'
+  /** Delegate/country that submitted the motion or point */
+  submitter?: string
   votes?: { yes: number; no: number; abstain: number }
 }
 

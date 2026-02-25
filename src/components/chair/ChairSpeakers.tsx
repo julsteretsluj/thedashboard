@@ -108,12 +108,25 @@ export default function ChairSpeakers() {
                 {isOvertime ? ' overtime' : ' remaining'}
               </span>
             </div>
-            <button
-              onClick={() => setActiveSpeaker(null)}
-              className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] text-sm text-[var(--text)] hover:bg-[var(--border)]"
-            >
-              End speech
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveSpeaker(null)}
+                className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] text-sm text-[var(--text)] hover:bg-[var(--border)]"
+              >
+                End speech
+              </button>
+              <button
+                onClick={() => {
+                  if (activeSpeaker) removeFromSpeakers(activeSpeaker.id)
+                  setActiveSpeaker(null)
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"
+                title="End speech and remove from list"
+              >
+                <Trash2 className="w-4 h-4" />
+                End & remove
+              </button>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-[var(--text-muted)]">No active speaker. Start one from the list below.</p>

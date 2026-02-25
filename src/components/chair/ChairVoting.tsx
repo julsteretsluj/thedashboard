@@ -11,14 +11,24 @@ function getRollCallStatus(d: Delegate): RollCallStatus {
 export default function ChairVoting() {
   const {
     voteInProgress,
+    resolutionVoteInProgress,
+    amendmentVoteInProgress,
     delegates,
     delegateVotes,
     recordVote,
     endVote,
+    endResolutionVote,
+    endAmendmentVote,
     getDelegationEmoji,
   } = useChair()
 
-  if (!voteInProgress) {
+  const activeVote = voteInProgress ?? resolutionVoteInProgress ?? amendmentVoteInProgress
+  const isResolution = !!resolutionVoteInProgress
+  const isAmendment = !!amendmentVoteInProgress
+  const voteTitle = resolutionVoteInProgress?.title ?? amendmentVoteInProgress?.text ?? voteInProgress?.text
+  const onEndVote = isAmendment ? endAmendmentVote : isResolution ? endResolutionVote : endVote
+
+  if (!activeVote) {
     return (
       <div className="space-y-6">
         <div>
@@ -26,7 +36,7 @@ export default function ChairVoting() {
           <p className="text-[var(--text-muted)] text-sm">Manual voting: chairs record each delegate&apos;s vote. Start a vote from Motions & Points.</p>
         </div>
         <div className="card-block p-8 text-center text-[var(--text-muted)]">
-          No active vote. Go to Motions & Points and click &quot;Vote&quot; on a motion. Then return here to manually record each delegate&apos;s Yes, No, or Abstain.
+          No active vote. Go to <strong>Motions &amp; Points</strong>, <strong>Resolutions</strong>, or <strong>Amendments</strong> and click &quot;Vote&quot;. Then return here to record each delegate&apos;s Yes, No, or Abstain.
         </div>
       </div>
     )
@@ -54,8 +64,8 @@ export default function ChairVoting() {
       </div>
 
       <div className="accent-highlight-wave rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">
-        <p className="text-sm font-medium text-[var(--text)] mb-2">📜 Motion:</p>
-        <p className="text-[var(--text)]">{voteInProgress.text}</p>
+        <p className="text-sm font-medium text-[var(--text)] mb-2">{isAmendment ? '📝 Amendment:' : isResolution ? '📜 Resolution:' : '📜 Motion:'}</p>
+        <p className="text-[var(--text)]">{voteTitle}</p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <span className="text-[var(--success)]">Yes: {yes}</span>
           <span className="text-[var(--danger)]">No: {no}</span>
@@ -63,7 +73,7 @@ export default function ChairVoting() {
           <span className="text-[var(--text-muted)]">Recorded: {recorded} / {total}</span>
         </div>
         <button
-          onClick={endVote}
+          onClick={onEndVote}
           className="mt-4 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
         >
           End vote & record result

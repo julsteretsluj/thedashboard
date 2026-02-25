@@ -24,6 +24,10 @@ export interface ChairDataDoc {
   crisisPathways: string[]
   archive: { type: string; name: string; content?: string }[]
   voteInProgress: unknown
+  resolutionVoteInProgress?: unknown
+  amendmentVoteInProgress?: unknown
+  resolutions?: unknown[]
+  amendments?: unknown[]
   delegateVotes: Record<string, 'yes' | 'no' | 'abstain'>
   flowChecklist: Record<string, boolean>
   prepChecklist: Record<string, boolean>

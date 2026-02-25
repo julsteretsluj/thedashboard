@@ -8,12 +8,6 @@ function getRollCallStatus(d: Delegate): RollCallStatus {
   return d.present ? 'present' : 'absent'
 }
 
-const NEXT_STATUS: Record<RollCallStatus, RollCallStatus> = {
-  absent: 'present',
-  present: 'present-and-voting',
-  'present-and-voting': 'absent',
-}
-
 const LABELS: Record<RollCallStatus, string> = {
   absent: 'Absent',
   present: 'Present (may abstain)',
@@ -25,10 +19,6 @@ export default function ChairRollCall() {
 
   const setRollCallStatus = (id: string, status: RollCallStatus) => {
     updateDelegate(id, { rollCallStatus: status })
-  }
-
-  const cycleStatus = (id: string, current: RollCallStatus) => {
-    setRollCallStatus(id, NEXT_STATUS[current])
   }
 
   const presentCount = delegates.filter((d) => getRollCallStatus(d) === 'present').length
@@ -43,11 +33,11 @@ export default function ChairRollCall() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             ✅ Roll Call Tracker
             <InfoPopover title="Roll call">
-              Mark each delegate as Absent, Present (may abstain), or Present and voting (must vote, cannot abstain). Click a delegate&apos;s status to cycle. During voting, only present delegates can vote; present-and-voting cannot choose abstain.
+              Mark each delegate as Absent, Present (may abstain), or Present and voting (must vote, cannot abstain). Click an option to set. During voting, only present delegates can vote; present-and-voting cannot choose abstain.
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">
-            Present (may abstain from voting), Present and voting (must vote, cannot abstain), or Absent. Click to cycle.
+            Present (may abstain from voting), Present and voting (must vote, cannot abstain), or Absent.
           </p>
         </div>
       </div>
@@ -83,9 +73,6 @@ export default function ChairRollCall() {
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
             const status = getRollCallStatus(d)
-            const isPresent = status === 'present'
-            const isPresentAndVoting = status === 'present-and-voting'
-            const isAbsent = status === 'absent'
             return (
               <li key={d.id} className="px-4 py-3 flex items-center justify-between gap-2">
                 <span className="text-sm text-[var(--text)] min-w-0 flex items-center gap-2">
@@ -93,29 +80,36 @@ export default function ChairRollCall() {
                   <strong className="text-[var(--accent)] truncate">{d.country}</strong>
                   {d.name && <span className="text-[var(--text-muted)] shrink-0">{d.name}</span>}
                 </span>
-                <button
-                  onClick={() => cycleStatus(d.id, status)}
-                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-colors shrink-0 ${
-                    isAbsent
-                      ? 'text-[var(--text-muted)] bg-[var(--bg-elevated)] hover:bg-[var(--border)]'
-                      : isPresent
-                        ? 'text-[var(--success)] bg-[var(--success)]/10 hover:bg-[var(--success)]/20'
-                        : 'text-[var(--accent)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80'
-                  }`}
-                  title={LABELS[status]}
-                >
-                  {isAbsent && <X className="w-4 h-4" />}
-                  {isPresent && <Check className="w-4 h-4" />}
-                  {isPresentAndVoting && <Vote className="w-4 h-4" />}
-                  {LABELS[status]}
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {(['absent', 'present', 'present-and-voting'] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setRollCallStatus(d.id, s)}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
+                        status === s
+                          ? s === 'absent'
+                            ? 'text-[var(--text)] bg-[var(--border)] ring-1 ring-[var(--border)]'
+                            : s === 'present'
+                              ? 'text-[var(--success)] bg-[var(--success)]/20 ring-1 ring-[var(--success)]/50'
+                              : 'text-[var(--accent)] bg-[var(--accent)]/20 ring-1 ring-[var(--accent)]/50'
+                          : 'text-[var(--text-muted)] bg-[var(--bg-elevated)] hover:bg-[var(--border)]'
+                      }`}
+                      title={LABELS[s]}
+                    >
+                      {s === 'absent' && <X className="w-3.5 h-3.5" />}
+                      {s === 'present' && <Check className="w-3.5 h-3.5" />}
+                      {s === 'present-and-voting' && <Vote className="w-3.5 h-3.5" />}
+                      {s === 'absent' ? 'Absent' : s === 'present' ? 'Present' : 'P&V'}
+                    </button>
+                  ))}
+                </div>
               </li>
             )
           })}
         </ul>
       </div>
       <p className="text-xs text-[var(--text-muted)]">
-        Click a delegate&apos;s status to cycle: Absent → Present (may abstain) → Present and voting → Absent.
+        Absent | Present (may abstain) | P&amp;V (present and voting, must vote).
       </p>
     </div>
   )
