@@ -357,11 +357,12 @@ export function ChairProvider({
     }))
   }, [])
   const setActiveSpeaker = useCallback((speaker: Speaker | null) => {
+    const now = Date.now()
     setState((s) => ({
       ...s,
-      activeSpeaker: speaker,
+      activeSpeaker: speaker ? { ...speaker, speaking: true, startTime: now } : null,
       speakers: s.speakers.map((sp) =>
-        sp.id === speaker?.id ? { ...sp, speaking: true, startTime: Date.now() } : { ...sp, speaking: false }
+        sp.id === speaker?.id ? { ...sp, speaking: true, startTime: now } : { ...sp, speaking: false }
       ),
     }))
   }, [])
