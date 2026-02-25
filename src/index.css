@@ -394,19 +394,19 @@ svg[class*="lucide"],
   );
 }
 
-/* Glassmorphic panels (globe overlay) — reduced transparency for better text visibility */
+/* Glassmorphic panels (globe overlay) — almost fully opaque for clear text readability */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   color: var(--text);
 }
 [data-color-mode="dark"] .glass-panel {
-  background: rgba(15, 17, 23, 0.94);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: rgba(15, 17, 23, 0.98);
+  border-color: var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
 .glass-panel .glass-panel-content {
@@ -416,16 +416,16 @@ svg[class*="lucide"],
   background: transparent;
 }
 .glass-nav {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   color: var(--text);
 }
 [data-color-mode="dark"] .glass-nav {
-  background: rgba(15, 17, 23, 0.94);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 17, 23, 0.98);
+  border-color: var(--border);
   color: var(--text);
 }
 
