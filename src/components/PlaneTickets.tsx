@@ -28,7 +28,7 @@ function BoardingPass({
   return (
     <a
       href={url}
-      className="group flex shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white/95 shadow-md hover:shadow-lg transition-shadow"
+      className="group flex shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-md hover:shadow-lg transition-shadow"
       style={{ minWidth: 140 }}
       title={`${label} — open at conference start`}
     >
@@ -58,7 +58,7 @@ function BoardingPass({
           </div>
         </div>
         {/* Barcode area */}
-        <div className="px-2 py-1 bg-[var(--bg-elevated)]/80 border-t border-dashed border-[var(--border)]/50">
+        <div className="px-2 py-1 bg-[var(--bg-elevated)] border-t border-dashed border-[var(--border)]">
           <div className="flex gap-px h-2">
             {[...Array(24)].map((_, i) => (
               <div
@@ -79,7 +79,7 @@ function BoardingPass({
               e.preventDefault()
               onCopy()
             }}
-            className="p-1.5 rounded text-[var(--text-muted)] hover:bg-white/50 hover:text-[var(--text)] transition-colors"
+            className="p-1.5 rounded text-[var(--text-muted)] hover:bg-[var(--bg-base)] hover:text-[var(--text)] transition-colors"
             title={`Copy ${label} link`}
             aria-label={`Copy ${label} link`}
           >

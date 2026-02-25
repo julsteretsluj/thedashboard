@@ -408,10 +408,10 @@ svg[class*="lucide"],
   color: var(--text);
 }
 .glass-panel .glass-panel-content {
-  background: transparent;
+  background: var(--bg-card);
 }
 [data-color-mode="dark"] .glass-panel .glass-panel-content {
-  background: transparent;
+  background: var(--bg-card);
 }
 .glass-nav {
   background: var(--bg-elevated);
