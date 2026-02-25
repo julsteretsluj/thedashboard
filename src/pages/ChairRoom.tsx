@@ -62,7 +62,7 @@ const sections = [
   { id: 'speakers', label: '🎤 Speakers', icon: Mic },
   { id: 'motions', label: '📜 Motions & Points', icon: FileText },
   { id: 'voting', label: '🗳️ Voting', icon: Vote },
-  { id: 'score', label: '📊 Votes/voting', icon: ListOrdered },
+  { id: 'score', label: '📊 Point and motion tracker', icon: ListOrdered },
   { id: 'crisis', label: '⚠️ Crisis', icon: AlertTriangle },
   { id: 'tracker', label: '🏆 Delegate Tracker', icon: Trophy },
   { id: 'archive', label: '📁 Archive', icon: Archive },

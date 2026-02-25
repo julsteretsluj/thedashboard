@@ -22,7 +22,7 @@ export const CHAIR_SECTIONS: GlobeSection[] = [
   { id: 'speakers', label: 'Speakers', role: 'chair', lat: 59.9, lng: 10.8 },               // Oslo
   { id: 'motions', label: 'Motions & Points', role: 'chair', lat: 55.8, lng: 37.6 },        // Moscow
   { id: 'voting', label: 'Voting', role: 'chair', lat: 1.3, lng: 103.8 },                   // Singapore
-  { id: 'score', label: 'Votes/voting', role: 'chair', lat: -33.9, lng: 18.4 },             // Cape Town
+  { id: 'score', label: 'Point and motion tracker', role: 'chair', lat: -33.9, lng: 18.4 },             // Cape Town
   { id: 'crisis', label: 'Crisis', role: 'chair', lat: 30.0, lng: 31.2 },                   // Cairo
   { id: 'archive', label: 'Archive', role: 'chair', lat: 41.9, lng: 12.5 },                 // Rome
   { id: 'tracker', label: 'Delegate Tracker', role: 'chair', lat: 39.9, lng: 116.4 },       // Beijing
