@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, Mic, Clock } from 'lucide-react'
 
@@ -18,19 +18,31 @@ export default function ChairSpeakers() {
     getDelegationEmoji,
   } = useChair()
   const [selectedDelegate, setSelectedDelegate] = useState('')
-  const [tick, setTick] = useState(0)
+  const [elapsed, setElapsed] = useState(0)
   const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
+  const startTimeRef = useRef<number | null>(null)
 
-  const elapsed =
-    activeSpeaker?.startTime && typeof activeSpeaker.startTime === 'number'
-      ? Math.floor((Date.now() - activeSpeaker.startTime) / 1000)
-      : 0
+  const startTime =
+    activeSpeaker?.startTime != null && typeof activeSpeaker.startTime === 'number'
+      ? activeSpeaker.startTime
+      : speakers.find((s) => s.speaking && s.startTime != null)?.startTime ?? null
 
   useEffect(() => {
-    if (!activeSpeaker?.startTime) return
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    if (startTime == null) {
+      startTimeRef.current = null
+      setElapsed(0)
+      return
+    }
+    startTimeRef.current = startTime
+    const update = () => {
+      const now = Date.now()
+      const start = startTimeRef.current ?? now
+      setElapsed(Math.floor((now - start) / 1000))
+    }
+    update()
+    const id = setInterval(update, 1000)
     return () => clearInterval(id)
-  }, [activeSpeaker?.startTime, activeSpeaker?.id])
+  }, [startTime, activeSpeaker?.id])
 
   useEffect(() => {
     setDurationInput(String(speakerDuration))
