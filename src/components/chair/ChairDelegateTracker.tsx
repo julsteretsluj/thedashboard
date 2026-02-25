@@ -132,15 +132,19 @@ function CriteriaFirstSecondPrompt({
   value,
   onChange,
   onClose,
+  initialBand,
 }: {
   value: number | undefined
   onChange: (v: number) => void
   onClose: () => void
+  initialBand?: { low: number; high: number }
 }) {
-  const [step, setStep] = useState<'band' | 'number'>('band')
-  const [selectedBand, setSelectedBand] = useState<typeof BANDS[number] | null>(null)
+  const [step, setStep] = useState<'band' | 'number'>(initialBand ? 'number' : 'band')
+  const [selectedBand, setSelectedBand] = useState<typeof BANDS[number] | null>(
+    initialBand ? BANDS.find((b) => b.low === initialBand.low) ?? null : null
+  )
 
-  const band = selectedBand ?? (value != null && value >= 1 && value <= 8
+  const band = selectedBand ?? (initialBand ? BANDS.find((b) => b.low === initialBand.low) ?? null) ?? (value != null && value >= 1 && value <= 8
     ? BANDS.find((b) => value >= b.low && value <= b.high) ?? BANDS[0]
     : null)
 
@@ -211,22 +215,31 @@ function CriteriaDropdown({
   onChange: (v: number) => void
   criterionLabel: string
   criterionKey?: string
-  openFirstSecondRef?: React.MutableRefObject<Record<string, { open: () => void }>>
+  openFirstSecondRef?: React.MutableRefObject<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>
 }) {
   const [open, setOpen] = useState(false)
   const [showFirstSecond, setShowFirstSecond] = useState(false)
 
+  const [preselectedBand, setPreselectedBand] = useState<{ low: number; high: number } | undefined>(undefined)
+
   const openFirstSecond = useCallback(() => {
+    setPreselectedBand(undefined)
+    setShowFirstSecond(true)
+    setOpen(false)
+  }, [])
+
+  const openForBand = useCallback((band: { low: number; high: number }) => {
+    setPreselectedBand(band)
     setShowFirstSecond(true)
     setOpen(false)
   }, [])
 
   useLayoutEffect(() => {
     if (openFirstSecondRef && criterionKey) {
-      openFirstSecondRef.current[criterionKey] = { open: openFirstSecond }
+      openFirstSecondRef.current[criterionKey] = { open: openFirstSecond, openForBand }
       return () => { delete openFirstSecondRef.current[criterionKey] }
     }
-  }, [openFirstSecondRef, criterionKey, openFirstSecond])
+  }, [openFirstSecondRef, criterionKey, openFirstSecond, openForBand])
   const isValid = value != null && value >= 1 && value <= 8
 
   return (
@@ -274,8 +287,9 @@ function CriteriaDropdown({
       {showFirstSecond && (
         <CriteriaFirstSecondPrompt
           value={value}
-          onChange={(v) => { onChange(v); setShowFirstSecond(false) }}
-          onClose={() => setShowFirstSecond(false)}
+          onChange={(v) => { onChange(v); setShowFirstSecond(false); setPreselectedBand(undefined) }}
+          onClose={() => { setShowFirstSecond(false); setPreselectedBand(undefined) }}
+          initialBand={preselectedBand}
         />
       )}
     </div>
@@ -288,7 +302,7 @@ export default function ChairDelegateTracker() {
   const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji } = useChair()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const tableOpenRef = useRef<Record<string, { open: () => void }>>({})
+  const tableOpenRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
 
   const scored = delegates.map((d) => {
     const s = getDelegateScore(d.id)
@@ -672,7 +686,7 @@ function PerDelegateView({
   setDelegateScore: (id: string, patch: Partial<DelegateScore>) => void
   getDelegationEmoji: (c: string) => string
 }) {
-  const openFirstSecondRef = useRef<Record<string, { open: () => void }>>({})
+  const openFirstSecondRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
   const current = scored[selectedIndex]
   if (!current) return null
 
@@ -756,17 +770,28 @@ function PerDelegateView({
                 </div>
                 {rubric && (
                   <dl className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-                    {(['beginning', 'developing', 'proficient', 'exemplary'] as const).map((k) => (
-                      <div key={k} className={levelKey === k ? 'ring-1 ring-[var(--brand)] rounded p-2 bg-[var(--brand-soft)]/50' : ''}>
-                        <dt className="text-[var(--text-muted)] font-medium">
-                          {k === 'beginning' && 'Beginning (1–2)'}
-                          {k === 'developing' && 'Developing (3–4)'}
-                          {k === 'proficient' && 'Proficient (5–6)'}
-                          {k === 'exemplary' && 'Exemplary (7–8)'}
-                        </dt>
-                        <dd className="text-[var(--text)] mt-0.5">{rubric[k]}</dd>
-                      </div>
-                    ))}
+                    {(['beginning', 'developing', 'proficient', 'exemplary'] as const).map((k) => {
+                      const band = BANDS.find((b) => b.key === k)!
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => openFirstSecondRef.current[key]?.openForBand?.({ low: band.low, high: band.high })}
+                          className={`text-left rounded p-2 transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer ${
+                            levelKey === k ? 'ring-1 ring-[var(--brand)] bg-[var(--brand-soft)]/50' : ''
+                          }`}
+                          title="Click to set first or second number"
+                        >
+                          <dt className="text-[var(--text-muted)] font-medium">
+                            {k === 'beginning' && 'Beginning (1–2)'}
+                            {k === 'developing' && 'Developing (3–4)'}
+                            {k === 'proficient' && 'Proficient (5–6)'}
+                            {k === 'exemplary' && 'Exemplary (7–8)'}
+                          </dt>
+                          <dd className="text-[var(--text)] mt-0.5">{rubric[k]}</dd>
+                        </button>
+                      )
+                    })}
                   </dl>
                 )}
               </div>
@@ -803,17 +828,28 @@ function PerDelegateView({
                 </div>
                 {rubric && (
                   <dl className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-                    {(['beginning', 'developing', 'proficient', 'exemplary'] as const).map((k) => (
-                      <div key={k} className={levelKey === k ? 'ring-1 ring-[var(--brand)] rounded p-2 bg-[var(--brand-soft)]/50' : ''}>
-                        <dt className="text-[var(--text-muted)] font-medium">
-                          {k === 'beginning' && 'Beginning (1–2)'}
-                          {k === 'developing' && 'Developing (3–4)'}
-                          {k === 'proficient' && 'Proficient (5–6)'}
-                          {k === 'exemplary' && 'Exemplary (7–8)'}
-                        </dt>
-                        <dd className="text-[var(--text)] mt-0.5">{rubric[k]}</dd>
-                      </div>
-                    ))}
+                    {(['beginning', 'developing', 'proficient', 'exemplary'] as const).map((k) => {
+                      const band = BANDS.find((b) => b.key === k)!
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => openFirstSecondRef.current[key]?.openForBand?.({ low: band.low, high: band.high })}
+                          className={`text-left rounded p-2 transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer ${
+                            levelKey === k ? 'ring-1 ring-[var(--brand)] bg-[var(--brand-soft)]/50' : ''
+                          }`}
+                          title="Click to set first or second number"
+                        >
+                          <dt className="text-[var(--text-muted)] font-medium">
+                            {k === 'beginning' && 'Beginning (1–2)'}
+                            {k === 'developing' && 'Developing (3–4)'}
+                            {k === 'proficient' && 'Proficient (5–6)'}
+                            {k === 'exemplary' && 'Exemplary (7–8)'}
+                          </dt>
+                          <dd className="text-[var(--text)] mt-0.5">{rubric[k]}</dd>
+                        </button>
+                      )
+                    })}
                   </dl>
                 )}
               </div>
