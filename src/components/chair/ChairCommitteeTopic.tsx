@@ -7,7 +7,8 @@ interface Props {
 }
 
 export default function ChairCommitteeTopic({ onClose }: Props) {
-  const { committee, topic, universe, chairName, chairEmail, setCommittee, setTopic, setUniverse, setChairName, setChairEmail } = useChair()
+  const { committee, topic, universe, chairName, chairEmail, conferences, activeConferenceId, setConferenceName, setCommittee, setTopic, setUniverse, setChairName, setChairEmail } = useChair()
+  const currentConf = conferences.find((c) => c.id === activeConferenceId)
 
   const selectedPreset = useMemo(() => {
     const found = COMMITTEE_OPTIONS.find((o) => o.value === committee)
@@ -29,6 +30,19 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
           </button>
         )}
       </div>
+      {currentConf && (
+        <label className="block">
+          <span className="text-xs text-[var(--text-muted)] block mb-1">Conference name</span>
+          <input
+            type="text"
+            value={currentConf.name}
+            onChange={(e) => setConferenceName(currentConf.id, e.target.value)}
+            placeholder="e.g. SEAMUN 2025"
+            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            aria-label="Conference name"
+          />
+        </label>
+      )}
       <label className="block">
         <span className="text-xs text-[var(--text-muted)] block mb-1">Set committee</span>
         <select

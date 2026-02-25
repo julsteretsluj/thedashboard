@@ -7,6 +7,8 @@ import {
   FileText,
   ScrollText,
   Vote,
+  Plus,
+  Trash2,
   BookOpen,
   ListOrdered,
   Play,
@@ -176,8 +178,19 @@ function ChairRoomContent() {
 }
 
 function ChairRoomHeader() {
-  const { saveToAccount, isSaving, lastSaved, isLoaded } = useChair()
+  const {
+    conferences,
+    activeConferenceId,
+    setActiveConference,
+    addConference,
+    removeConference,
+    saveToAccount,
+    isSaving,
+    lastSaved,
+    isLoaded,
+  } = useChair()
   const { isAuthenticated } = useSupabaseAuth()
+  const canRemove = conferences.length > 1
 
   const formatSaved = (d: Date) => {
     const n = Date.now() - d.getTime()
@@ -205,21 +218,58 @@ function ChairRoomHeader() {
           </p>
         )}
       </div>
-      {isLoaded && isAuthenticated && (
+      {isLoaded && (
         <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <span className="hidden sm:inline">Conference</span>
+            <select
+              value={activeConferenceId}
+              onChange={(e) => setActiveConference(e.target.value)}
+              className="min-w-[8rem] px-2.5 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Select conference"
+            >
+              {conferences.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name || 'Unnamed'}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
-            onClick={() => saveToAccount()}
-            disabled={isSaving}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+            onClick={addConference}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
           >
-            <Save className="w-3.5 h-3.5" />
-            {isSaving ? 'Saving…' : 'Save to account'}
+            <Plus className="w-3.5 h-3.5" /> Add conference
           </button>
-          {lastSaved && !isSaving && (
-            <span className="text-xs text-[var(--text-muted)]" title="Auto-saved to your account">
-              Auto-saved {formatSaved(lastSaved)}
-            </span>
+          {canRemove && (
+            <button
+              type="button"
+              onClick={() => removeConference(activeConferenceId)}
+              title="Remove this conference"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-card)] transition-colors"
+              aria-label="Remove conference"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {isAuthenticated && (
+            <>
+              <button
+                type="button"
+                onClick={() => saveToAccount()}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? 'Saving…' : 'Save to account'}
+              </button>
+                  {lastSaved && !isSaving && (
+                <span className="text-xs text-[var(--text-muted)]" title="Auto-saved to your account">
+                  Auto-saved {formatSaved(lastSaved)}
+                </span>
+              )}
+            </>
           )}
         </div>
       )}

@@ -1,10 +1,9 @@
 import { supabase } from './supabase'
 
 /**
- * All chair info persisted to Supabase: committee, topic, delegates, motions,
- * speakers, crisis, archive, voting, checklists, emoji overrides, chair name/email.
+ * Single chair room state (committee, delegates, motions, etc.).
  */
-export interface ChairDataDoc {
+export interface ChairStateDoc {
   committee: string
   topic: string
   universe: string
@@ -15,7 +14,7 @@ export interface ChairDataDoc {
   delegateFeedback: unknown[]
   motions: unknown[]
   speakers: unknown[]
-  activeSpeaker: unknown
+  activeSpeaker?: unknown
   speakerDuration: number
   rollCallComplete: boolean
   crisisSlides: string[]
@@ -37,6 +36,102 @@ export interface ChairDataDoc {
   delegateScores?: Record<string, unknown>
 }
 
+/** One conference = one chair room state. */
+export interface ChairConferenceDoc {
+  id: string
+  name: string
+  data: ChairStateDoc
+}
+
+/** Top-level persisted shape: multiple conferences per user. */
+export interface ChairDataDoc {
+  conferences: ChairConferenceDoc[]
+  activeConferenceId: string
+}
+
+/** @deprecated Legacy flat doc — migrated to ChairDataDoc. */
+export type ChairDataDocLegacy = ChairStateDoc
+
+function isConferencesFormat(raw: unknown): raw is ChairDataDoc {
+  return (
+    raw != null &&
+    typeof raw === 'object' &&
+    Array.isArray((raw as ChairDataDoc).conferences) &&
+    typeof (raw as ChairDataDoc).activeConferenceId === 'string'
+  )
+}
+
+/** Migrate legacy flat doc to conferences format. */
+export function migrateChairData(raw: unknown): ChairDataDoc {
+  if (isConferencesFormat(raw) && raw.conferences.length > 0) {
+    return raw
+  }
+  const legacy = raw as ChairDataDocLegacy | null
+  const id = typeof crypto?.randomUUID === 'function' ? crypto.randomUUID() : `conf-${Date.now()}`
+  const data: ChairStateDoc = legacy && typeof legacy === 'object'
+    ? {
+        committee: typeof legacy.committee === 'string' ? legacy.committee : 'UNSC',
+        topic: typeof legacy.topic === 'string' ? legacy.topic : 'Cybersecurity and International Peace',
+        universe: typeof legacy.universe === 'string' ? legacy.universe : '',
+        sessionStarted: !!legacy.sessionStarted,
+        sessionStartTime: legacy.sessionStartTime ?? null,
+        delegates: Array.isArray(legacy.delegates) ? legacy.delegates : [],
+        delegateStrikes: Array.isArray(legacy.delegateStrikes) ? legacy.delegateStrikes : [],
+        delegateFeedback: Array.isArray(legacy.delegateFeedback) ? legacy.delegateFeedback : [],
+        motions: Array.isArray(legacy.motions) ? legacy.motions : [],
+        speakers: Array.isArray(legacy.speakers) ? legacy.speakers : [],
+        speakerDuration: typeof legacy.speakerDuration === 'number' ? legacy.speakerDuration : 60,
+        rollCallComplete: !!legacy.rollCallComplete,
+        crisisSlides: Array.isArray(legacy.crisisSlides) ? legacy.crisisSlides : [],
+        crisisSpeakers: Array.isArray(legacy.crisisSpeakers) ? legacy.crisisSpeakers : [],
+        crisisFacts: Array.isArray(legacy.crisisFacts) ? legacy.crisisFacts : [],
+        crisisPathways: Array.isArray(legacy.crisisPathways) ? legacy.crisisPathways : [],
+        archive: Array.isArray(legacy.archive) ? legacy.archive : [],
+        voteInProgress: legacy.voteInProgress ?? null,
+        delegateVotes: legacy.delegateVotes && typeof legacy.delegateVotes === 'object' ? legacy.delegateVotes : {},
+        flowChecklist: legacy.flowChecklist && typeof legacy.flowChecklist === 'object' ? legacy.flowChecklist : {},
+        prepChecklist: legacy.prepChecklist && typeof legacy.prepChecklist === 'object' ? legacy.prepChecklist : {},
+        delegationEmojiOverrides: legacy.delegationEmojiOverrides && typeof legacy.delegationEmojiOverrides === 'object' ? legacy.delegationEmojiOverrides : {},
+        chairName: typeof legacy.chairName === 'string' ? legacy.chairName : '',
+        chairEmail: typeof legacy.chairEmail === 'string' ? legacy.chairEmail : '',
+        resolutionVoteInProgress: legacy.resolutionVoteInProgress ?? null,
+        amendmentVoteInProgress: legacy.amendmentVoteInProgress ?? null,
+        resolutions: Array.isArray(legacy.resolutions) ? legacy.resolutions : [],
+        amendments: Array.isArray(legacy.amendments) ? legacy.amendments : [],
+        delegateScores: legacy.delegateScores ?? {},
+      }
+    : {
+        committee: 'UNSC',
+        topic: 'Cybersecurity and International Peace',
+        universe: '',
+        sessionStarted: false,
+        sessionStartTime: null,
+        delegates: [],
+        delegateStrikes: [],
+        delegateFeedback: [],
+        motions: [],
+        speakers: [],
+        speakerDuration: 60,
+        rollCallComplete: false,
+        crisisSlides: [],
+        crisisSpeakers: [],
+        crisisFacts: [],
+        crisisPathways: [],
+        archive: [],
+        voteInProgress: null,
+        delegateVotes: {},
+        flowChecklist: {},
+        prepChecklist: {},
+        delegationEmojiOverrides: {},
+        chairName: '',
+        chairEmail: '',
+      }
+  return {
+    conferences: [{ id, name: 'Default Conference', data }],
+    activeConferenceId: id,
+  }
+}
+
 export async function loadChairData(userId: string): Promise<ChairDataDoc | null> {
   if (!supabase) return null
   const { data, error } = await supabase
@@ -45,7 +140,7 @@ export async function loadChairData(userId: string): Promise<ChairDataDoc | null
     .eq('user_id', userId)
     .maybeSingle()
   if (error || !data?.data) return null
-  return data.data as ChairDataDoc
+  return migrateChairData(data.data)
 }
 
 export async function saveChairData(

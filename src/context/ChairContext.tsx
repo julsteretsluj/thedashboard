@@ -1,9 +1,15 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
-import { loadChairData, saveChairData, type ChairDataDoc } from '../lib/chairData'
+import { loadChairData, saveChairData, migrateChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
 
 const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
+
+export interface ChairConference {
+  id: string
+  name: string
+  data: ChairState
+}
 
 interface ChairState {
   committee: string
@@ -128,6 +134,12 @@ type ChairContextValue = ChairState & {
   isSaving: boolean
   lastSaved: Date | null
   isLoaded: boolean
+  conferences: ChairConference[]
+  activeConferenceId: string
+  setActiveConference: (id: string) => void
+  addConference: () => void
+  removeConference: (id: string) => void
+  setConferenceName: (id: string, name: string) => void
 }
 
 function normalizeSpeaker(s: unknown): Speaker | null {
@@ -160,25 +172,60 @@ function normalizeSpeakerData(
   return { speakers: speakersCleared, activeSpeaker: null, speakerDuration: dur }
 }
 
-function loadChairStateFromStorage(): ChairState {
+function loadChairStateFromStorage(): ChairDataDoc | null {
   try {
     const raw = localStorage.getItem(CHAIR_STATE_STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as Partial<ChairState>
-      const { speakers, activeSpeaker: asp, speakerDuration: sd } = normalizeSpeakerData(
-        Array.isArray(parsed.speakers) ? parsed.speakers : [],
-        parsed.activeSpeaker ?? null,
-        typeof parsed.speakerDuration === 'number' ? parsed.speakerDuration : 60
-      )
-      return { ...defaultState, ...parsed, speakers, activeSpeaker: asp, speakerDuration: sd, delegateScores: parsed.delegateScores ?? {} }
+      const parsed = JSON.parse(raw) as unknown
+      return migrateChairData(parsed)
     }
   } catch {
     /* ignore */
   }
-  return defaultState
+  return null
+}
+
+function defaultChairConference(id: string): ChairConference {
+  return { id, name: 'New Conference', data: { ...defaultState } }
+}
+
+function migrateChairConference(c: ChairConferenceDoc): ChairConference {
+  const { speakers, speakerDuration: sd } = normalizeSpeakerData(
+    Array.isArray(c.data.speakers) ? c.data.speakers : [],
+    null,
+    typeof c.data.speakerDuration === 'number' ? c.data.speakerDuration : 60
+  )
+  const data: ChairState = {
+    ...defaultState,
+    ...c.data,
+    speakers,
+    activeSpeaker: null,
+    speakerDuration: sd,
+    delegates: Array.isArray(c.data.delegates) ? (c.data.delegates as ChairState['delegates']) : defaultState.delegates,
+    delegateStrikes: Array.isArray(c.data.delegateStrikes) ? (c.data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
+    delegateFeedback: Array.isArray(c.data.delegateFeedback) ? (c.data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
+    motions: Array.isArray(c.data.motions) ? (c.data.motions as ChairState['motions']) : defaultState.motions,
+    resolutions: Array.isArray(c.data.resolutions) ? (c.data.resolutions as ChairState['resolutions']) : defaultState.resolutions,
+    amendments: Array.isArray(c.data.amendments) ? (c.data.amendments as ChairState['amendments']) : defaultState.amendments,
+    delegateScores: (c.data.delegateScores as ChairState['delegateScores']) ?? {},
+    voteInProgress: (c.data.voteInProgress as ChairState['voteInProgress']) ?? null,
+    resolutionVoteInProgress: null,
+    amendmentVoteInProgress: null,
+  }
+  return { id: c.id, name: c.name, data }
 }
 
 const ChairContext = createContext<ChairContextValue | null>(null)
+
+function getCurrentConference(
+  conferences: ChairConference[],
+  activeId: string
+): ChairConference {
+  const c = conferences.find((x) => x.id === activeId)
+  if (c) return c
+  if (conferences.length > 0) return conferences[0]
+  return defaultChairConference(crypto.randomUUID())
+}
 
 export function ChairProvider({
   children,
@@ -187,12 +234,30 @@ export function ChairProvider({
   children: ReactNode
   userId?: string | null
 }) {
-  const [state, setState] = useState<ChairState>(loadChairStateFromStorage)
+  const [conferences, setConferences] = useState<ChairConference[]>(() => {
+    const stored = loadChairStateFromStorage()
+    if (stored?.conferences?.length) return stored.conferences.map(migrateChairConference)
+    return [defaultChairConference(crypto.randomUUID())]
+  })
+  const [activeConferenceId, setActiveConferenceIdState] = useState<string>(() => {
+    const stored = loadChairStateFromStorage()
+    if (stored?.activeConferenceId && stored?.conferences?.some((c) => c.id === stored.activeConferenceId))
+      return stored.activeConferenceId
+    return ''
+  })
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Load chair state from Firestore (or backfill from localStorage when no doc yet)
+  const activeId = activeConferenceId || conferences[0]?.id
+  const current = getCurrentConference(conferences, activeId ?? '')
+  const state = current.data
+
+  useEffect(() => {
+    if (!activeId && conferences[0]) setActiveConferenceIdState(conferences[0].id)
+  }, [activeId, conferences])
+
+  // Load chair data from Firestore
   useEffect(() => {
     if (!userId) {
       setIsLoaded(true)
@@ -202,79 +267,68 @@ export function ChairProvider({
     loadChairData(userId)
       .then((data) => {
         if (cancelled) return
-        if (data) {
-          const { speakers, speakerDuration: sd } = normalizeSpeakerData(
-            Array.isArray(data.speakers) ? data.speakers : [],
-            null,
-            typeof data.speakerDuration === 'number' ? data.speakerDuration : 60
-          )
-          setState((prev) => {
-            const next: ChairState = {
-              ...defaultState,
-              ...data,
-              delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
-              delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
-              delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
-              motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
-              speakers,
-              activeSpeaker: prev.activeSpeaker ?? null,
-              speakerDuration: sd,
-              voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
-              resolutionVoteInProgress: null,
-              amendmentVoteInProgress: null,
-              resolutions: Array.isArray(data.resolutions) ? (data.resolutions as ChairState['resolutions']) : defaultState.resolutions,
-              amendments: Array.isArray(data.amendments) ? (data.amendments as ChairState['amendments']) : defaultState.amendments,
-              delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
-            }
-            return next
-          })
+        if (data?.conferences?.length) {
+          setConferences(data.conferences.map(migrateChairConference))
+          setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
         } else {
-          const local = loadChairStateFromStorage()
-          saveChairData(userId, local as unknown as ChairDataDoc).catch(() => {})
+          const stored = loadChairStateFromStorage()
+          if (stored?.conferences?.length) {
+            saveChairData(userId, stored).catch(() => {})
+          }
         }
       })
       .catch(() => {})
       .finally(() => {
         if (!cancelled) setIsLoaded(true)
       })
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [userId])
 
-  // Persist chair state to localStorage (debounced) — never persist activeSpeaker (session-only)
+  // Persist to localStorage (debounced) — strip activeSpeaker
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        const toSave = { ...state, activeSpeaker: null }
-        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(toSave))
+        const payload: ChairDataDoc = {
+          conferences: conferences.map((c) => ({
+            id: c.id,
+            name: c.name,
+            data: { ...c.data, activeSpeaker: null } as ChairConferenceDoc['data'],
+          })),
+          activeConferenceId: activeId ?? conferences[0]?.id ?? '',
+        }
+        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(payload))
       } catch {
         /* ignore */
       }
     }, 1000)
     return () => clearTimeout(t)
-  }, [state])
+  }, [conferences, activeId])
 
   const saveToAccount = useCallback(async () => {
     if (!userId) return
     setIsSaving(true)
     try {
-      const toSave = { ...state, activeSpeaker: null }
-      await saveChairData(userId, toSave as unknown as ChairDataDoc)
+      const payload: ChairDataDoc = {
+        conferences: conferences.map((c) => ({
+          id: c.id,
+          name: c.name,
+          data: { ...c.data, activeSpeaker: null } as ChairConferenceDoc['data'],
+        })),
+        activeConferenceId: activeId ?? conferences[0]?.id ?? '',
+      }
+      await saveChairData(userId, payload)
       setLastSaved(new Date())
     } finally {
       setIsSaving(false)
     }
-  }, [userId, state])
+  }, [userId, conferences, activeId])
 
-  // Autosave to Firestore when signed in and after initial load (debounced on state change)
+  // Autosave to Firestore when signed in
   useEffect(() => {
     if (!userId || !isLoaded) return
-    const t = setTimeout(() => {
-      saveToAccount()
-    }, 3000)
+    const t = setTimeout(() => saveToAccount(), 3000)
     return () => clearTimeout(t)
-  }, [userId, isLoaded, state, saveToAccount])
+  }, [userId, isLoaded, conferences, activeId, saveToAccount])
 
   // Autosave every 5 minutes
   useEffect(() => {
@@ -283,43 +337,28 @@ export function ChairProvider({
     return () => clearInterval(interval)
   }, [userId, isLoaded, saveToAccount])
 
-  const setCommittee = useCallback((committee: string) => {
-    setState((s) => ({ ...s, committee }))
-  }, [])
-  const setTopic = useCallback((topic: string) => {
-    setState((s) => ({ ...s, topic }))
-  }, [])
-  const setUniverse = useCallback((universe: string) => {
-    setState((s) => ({ ...s, universe }))
-  }, [])
-  const setChairName = useCallback((chairName: string) => {
-    setState((s) => ({ ...s, chairName }))
-  }, [])
-  const setChairEmail = useCallback((chairEmail: string) => {
-    setState((s) => ({ ...s, chairEmail }))
-  }, [])
-  const startSession = useCallback(() => {
-    setState((s) => ({
-      ...s,
-      sessionStarted: true,
-      sessionStartTime: new Date().toISOString(),
-    }))
-  }, [])
-  const stopSession = useCallback(() => {
-    setState((s) => ({
-      ...s,
-      sessionStarted: false,
-      sessionStartTime: null,
-    }))
-  }, [])
+  const updateActive = useCallback((updater: (s: ChairState) => ChairState) => {
+    setConferences((list) => {
+      const idx = list.findIndex((c) => c.id === activeId)
+      if (idx < 0) return list
+      const next = [...list]
+      next[idx] = { ...next[idx], data: updater(list[idx].data) }
+      return next
+    })
+  }, [activeId])
+
+  const setCommittee = useCallback((committee: string) => updateActive((s) => ({ ...s, committee })), [updateActive])
+  const setTopic = useCallback((topic: string) => updateActive((s) => ({ ...s, topic })), [updateActive])
+  const setUniverse = useCallback((universe: string) => updateActive((s) => ({ ...s, universe })), [updateActive])
+  const setChairName = useCallback((chairName: string) => updateActive((s) => ({ ...s, chairName })), [updateActive])
+  const setChairEmail = useCallback((chairEmail: string) => updateActive((s) => ({ ...s, chairEmail })), [updateActive])
+  const startSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: true, sessionStartTime: new Date().toISOString() })), [updateActive])
+  const stopSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: false, sessionStartTime: null })), [updateActive])
   const addDelegate = useCallback((d: Omit<Delegate, 'id'>) => {
-    setState((s) => ({
-      ...s,
-      delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }],
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }] }))
+  }, [updateActive])
   const removeDelegate = useCallback((id: string) => {
-    setState((s) => {
+    updateActive((s) => {
       const { [id]: _, ...restScores } = s.delegateScores ?? {}
       return {
         ...s,
@@ -329,15 +368,12 @@ export function ChairProvider({
         delegateScores: restScores,
       }
     })
-  }, [])
+  }, [updateActive])
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
-    setState((s) => ({
-      ...s,
-      delegates: s.delegates.map((d) => (d.id === id ? { ...d, ...patch } : d)),
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, delegates: s.delegates.map((d) => (d.id === id ? { ...d, ...patch } : d)) }))
+  }, [updateActive])
   const addMotion = useCallback((text: string, type: 'motion' | 'point', submitter?: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       motions: [
         ...s.motions,
@@ -352,66 +388,39 @@ export function ChairProvider({
         },
       ],
     }))
-  }, [])
+  }, [updateActive])
   const starMotion = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      motions: s.motions.map((m) => (m.id === id ? { ...m, starred: !m.starred } : m)),
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, motions: s.motions.map((m) => (m.id === id ? { ...m, starred: !m.starred } : m)) }))
+  }, [updateActive])
   const setMotionStatus = useCallback((id: string, status: Motion['status']) => {
-    setState((s) => ({
-      ...s,
-      motions: s.motions.map((m) => (m.id === id ? { ...m, status } : m)),
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, motions: s.motions.map((m) => (m.id === id ? { ...m, status } : m)) }))
+  }, [updateActive])
   const startVote = useCallback((motionId: string) => {
-    setState((s) => {
+    updateActive((s) => {
       const motion = s.motions.find((m) => m.id === motionId)
       if (!motion || motion.type === 'point') return s
-      return {
-        ...s,
-        voteInProgress: motion,
-        resolutionVoteInProgress: null,
-        amendmentVoteInProgress: null,
-        delegateVotes: {},
-      }
+      return { ...s, voteInProgress: motion, resolutionVoteInProgress: null, amendmentVoteInProgress: null, delegateVotes: {} }
     })
-  }, [])
+  }, [updateActive])
   const startResolutionVote = useCallback((resolutionId: string) => {
-    setState((s) => {
+    updateActive((s) => {
       const resolution = s.resolutions.find((r) => r.id === resolutionId)
       if (!resolution) return s
-      return {
-        ...s,
-        voteInProgress: null,
-        resolutionVoteInProgress: resolution,
-        amendmentVoteInProgress: null,
-        delegateVotes: {},
-      }
+      return { ...s, voteInProgress: null, resolutionVoteInProgress: resolution, amendmentVoteInProgress: null, delegateVotes: {} }
     })
-  }, [])
+  }, [updateActive])
   const startAmendmentVote = useCallback((amendmentId: string) => {
-    setState((s) => {
+    updateActive((s) => {
       const amendment = s.amendments.find((a) => a.id === amendmentId)
       if (!amendment) return s
-      return {
-        ...s,
-        voteInProgress: null,
-        resolutionVoteInProgress: null,
-        amendmentVoteInProgress: amendment,
-        delegateVotes: {},
-      }
+      return { ...s, voteInProgress: null, resolutionVoteInProgress: null, amendmentVoteInProgress: amendment, delegateVotes: {} }
     })
-  }, [])
+  }, [updateActive])
   const recordVote = useCallback((delegateId: string, vote: 'yes' | 'no' | 'abstain') => {
-    setState((s) => ({
-      ...s,
-      delegateVotes: { ...s.delegateVotes, [delegateId]: vote },
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, delegateVotes: { ...s.delegateVotes, [delegateId]: vote } }))
+  }, [updateActive])
   const endVote = useCallback(() => {
-    setState((s) => {
+    updateActive((s) => {
       if (!s.voteInProgress) return s
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
@@ -419,17 +428,15 @@ export function ChairProvider({
       return {
         ...s,
         motions: s.motions.map((m) =>
-          m.id === s.voteInProgress!.id
-            ? { ...m, votes: { yes, no, abstain }, status: yes > no ? 'passed' : 'failed' }
-            : m
+          m.id === s.voteInProgress!.id ? { ...m, votes: { yes, no, abstain }, status: yes > no ? 'passed' : 'failed' } : m
         ),
         voteInProgress: null,
         delegateVotes: {},
       }
     })
-  }, [])
+  }, [updateActive])
   const endResolutionVote = useCallback(() => {
-    setState((s) => {
+    updateActive((s) => {
       if (!s.resolutionVoteInProgress) return s
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
@@ -437,17 +444,15 @@ export function ChairProvider({
       return {
         ...s,
         resolutions: s.resolutions.map((r) =>
-          r.id === s.resolutionVoteInProgress!.id
-            ? { ...r, votes: { yes, no, abstain } }
-            : r
+          r.id === s.resolutionVoteInProgress!.id ? { ...r, votes: { yes, no, abstain } } : r
         ),
         resolutionVoteInProgress: null,
         delegateVotes: {},
       }
     })
-  }, [])
+  }, [updateActive])
   const endAmendmentVote = useCallback(() => {
-    setState((s) => {
+    updateActive((s) => {
       if (!s.amendmentVoteInProgress) return s
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
@@ -455,142 +460,94 @@ export function ChairProvider({
       return {
         ...s,
         amendments: s.amendments.map((a) =>
-          a.id === s.amendmentVoteInProgress!.id
-            ? { ...a, votes: { yes, no, abstain } }
-            : a
+          a.id === s.amendmentVoteInProgress!.id ? { ...a, votes: { yes, no, abstain } } : a
         ),
         amendmentVoteInProgress: null,
         delegateVotes: {},
       }
     })
-  }, [])
+  }, [updateActive])
   const addResolution = useCallback((r: Omit<Resolution, 'id' | 'timestamp'>) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
-      resolutions: [
-        ...s.resolutions,
-        {
-          ...r,
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-        },
-      ],
+      resolutions: [...s.resolutions, { ...r, id: crypto.randomUUID(), timestamp: new Date().toISOString() }],
     }))
-  }, [])
+  }, [updateActive])
   const removeResolution = useCallback((id: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       resolutions: s.resolutions.filter((x) => x.id !== id),
       resolutionVoteInProgress: s.resolutionVoteInProgress?.id === id ? null : s.resolutionVoteInProgress,
     }))
-  }, [])
+  }, [updateActive])
   const addAmendment = useCallback((a: Omit<Amendment, 'id' | 'timestamp'>) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
-      amendments: [
-        ...s.amendments,
-        {
-          ...a,
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-        },
-      ],
+      amendments: [...s.amendments, { ...a, id: crypto.randomUUID(), timestamp: new Date().toISOString() }],
     }))
-  }, [])
+  }, [updateActive])
   const removeAmendment = useCallback((id: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       amendments: s.amendments.filter((x) => x.id !== id),
       amendmentVoteInProgress: s.amendmentVoteInProgress?.id === id ? null : s.amendmentVoteInProgress,
     }))
-  }, [])
+  }, [updateActive])
   const addToSpeakers = useCallback((delegateId: string, country: string, name: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       speakers: [
         ...s.speakers,
-        {
-          id: crypto.randomUUID(),
-          delegateId,
-          country,
-          name,
-          duration: s.speakerDuration,
-          speaking: false,
-        },
+        { id: crypto.randomUUID(), delegateId, country, name, duration: s.speakerDuration, speaking: false },
       ],
     }))
-  }, [])
+  }, [updateActive])
   const removeFromSpeakers = useCallback((id: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       speakers: s.speakers.filter((x) => x.id !== id),
       activeSpeaker: s.activeSpeaker?.id === id ? null : s.activeSpeaker,
     }))
-  }, [])
+  }, [updateActive])
   const setActiveSpeaker = useCallback((speaker: Speaker | null) => {
     const now = Date.now()
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       activeSpeaker: speaker ? { ...speaker, speaking: true, startTime: now } : null,
       speakers: s.speakers.map((sp) =>
         sp.id === speaker?.id ? { ...sp, speaking: true, startTime: now } : { ...sp, speaking: false }
       ),
     }))
-  }, [])
-  const setSpeakerDuration = useCallback((duration: number) => {
-    setState((s) => ({ ...s, speakerDuration: duration }))
-  }, [])
-  const setRollCallComplete = useCallback((rollCallComplete: boolean) => {
-    setState((s) => ({ ...s, rollCallComplete }))
-  }, [])
-  const addCrisisSlide = useCallback((slide: string) => {
-    setState((s) => ({ ...s, crisisSlides: [...s.crisisSlides, slide] }))
-  }, [])
-  const addCrisisSpeaker = useCallback((speaker: string) => {
-    setState((s) => ({ ...s, crisisSpeakers: [...s.crisisSpeakers, speaker] }))
-  }, [])
-  const addCrisisFact = useCallback((fact: string) => {
-    setState((s) => ({ ...s, crisisFacts: [...s.crisisFacts, fact] }))
-  }, [])
-  const addCrisisPathway = useCallback((pathway: string) => {
-    setState((s) => ({ ...s, crisisPathways: [...s.crisisPathways, pathway] }))
-  }, [])
-  const addToArchive = useCallback((type: string, name: string, content?: string) => {
-    setState((s) => ({ ...s, archive: [...s.archive, { type, name, content }] }))
-  }, [])
+  }, [updateActive])
+  const setSpeakerDuration = useCallback((duration: number) => updateActive((s) => ({ ...s, speakerDuration: duration })), [updateActive])
+  const setRollCallComplete = useCallback((rollCallComplete: boolean) => updateActive((s) => ({ ...s, rollCallComplete })), [updateActive])
+  const addCrisisSlide = useCallback((slide: string) => updateActive((s) => ({ ...s, crisisSlides: [...s.crisisSlides, slide] })), [updateActive])
+  const addCrisisSpeaker = useCallback((speaker: string) => updateActive((s) => ({ ...s, crisisSpeakers: [...s.crisisSpeakers, speaker] })), [updateActive])
+  const addCrisisFact = useCallback((fact: string) => updateActive((s) => ({ ...s, crisisFacts: [...s.crisisFacts, fact] })), [updateActive])
+  const addCrisisPathway = useCallback((pathway: string) => updateActive((s) => ({ ...s, crisisPathways: [...s.crisisPathways, pathway] })), [updateActive])
+  const addToArchive = useCallback((type: string, name: string, content?: string) => updateActive((s) => ({ ...s, archive: [...s.archive, { type, name, content }] })), [updateActive])
 
   const addStrike = useCallback((delegateId: string, type: string) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
-      delegateStrikes: [
-        ...s.delegateStrikes,
-        { delegateId, type, timestamp: new Date().toISOString() },
-      ],
+      delegateStrikes: [...s.delegateStrikes, { delegateId, type, timestamp: new Date().toISOString() }],
     }))
-  }, [])
+  }, [updateActive])
   const removeStrike = useCallback((delegateId: string, type: string) => {
-    setState((s) => {
-      const idx = [...s.delegateStrikes].reverse().findIndex(
-        (x) => x.delegateId === delegateId && x.type === type
-      )
+    updateActive((s) => {
+      const idx = [...s.delegateStrikes].reverse().findIndex((x) => x.delegateId === delegateId && x.type === type)
       if (idx === -1) return s
       const actualIdx = s.delegateStrikes.length - 1 - idx
-      return {
-        ...s,
-        delegateStrikes: s.delegateStrikes.filter((_, i) => i !== actualIdx),
-      }
+      return { ...s, delegateStrikes: s.delegateStrikes.filter((_, i) => i !== actualIdx) }
     })
-  }, [])
+  }, [updateActive])
 
   const addDelegateFeedback = useCallback((delegateId: string, type: DelegateFeedbackType) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
-      delegateFeedback: [
-        ...s.delegateFeedback,
-        { delegateId, type, timestamp: new Date().toISOString() },
-      ],
+      delegateFeedback: [...s.delegateFeedback, { delegateId, type, timestamp: new Date().toISOString() }],
     }))
-  }, [])
+  }, [updateActive])
 
   const getFeedbackCountsByType = useCallback((delegateId: string): Record<DelegateFeedbackType, number> => {
     const counts: Record<DelegateFeedbackType, number> = { compliment: 0, concern: 0 }
@@ -603,41 +560,25 @@ export function ChairProvider({
   }, [state.delegateFeedback])
 
   const toggleFlowStep = useCallback((stepId: string) => {
-    setState((s) => ({
-      ...s,
-      flowChecklist: {
-        ...s.flowChecklist,
-        [stepId]: !s.flowChecklist[stepId],
-      },
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, flowChecklist: { ...s.flowChecklist, [stepId]: !s.flowChecklist[stepId] } }))
+  }, [updateActive])
   const isFlowStepDone = useCallback((stepId: string) => !!state.flowChecklist[stepId], [state.flowChecklist])
-  const resetFlowChecklist = useCallback(() => {
-    setState((s) => ({ ...s, flowChecklist: {} }))
-  }, [])
+  const resetFlowChecklist = useCallback(() => updateActive((s) => ({ ...s, flowChecklist: {} })), [updateActive])
 
   const togglePrepStep = useCallback((stepId: string) => {
-    setState((s) => ({
-      ...s,
-      prepChecklist: {
-        ...s.prepChecklist,
-        [stepId]: !s.prepChecklist[stepId],
-      },
-    }))
-  }, [])
+    updateActive((s) => ({ ...s, prepChecklist: { ...s.prepChecklist, [stepId]: !s.prepChecklist[stepId] } }))
+  }, [updateActive])
   const isPrepStepDone = useCallback((stepId: string) => !!state.prepChecklist[stepId], [state.prepChecklist])
-  const resetPrepChecklist = useCallback(() => {
-    setState((s) => ({ ...s, prepChecklist: {} }))
-  }, [])
+  const resetPrepChecklist = useCallback(() => updateActive((s) => ({ ...s, prepChecklist: {} })), [updateActive])
 
   const setDelegationEmoji = useCallback((delegation: string, emoji: string | null) => {
-    setState((s) => {
+    updateActive((s) => {
       const next = { ...s.delegationEmojiOverrides }
       if (emoji === null || emoji === '') delete next[delegation]
       else next[delegation] = emoji
       return { ...s, delegationEmojiOverrides: next }
     })
-  }, [])
+  }, [updateActive])
   const getDelegationEmoji = useCallback((delegation: string): string => {
     const override = state.delegationEmojiOverrides[delegation]
     if (override !== undefined && override !== '') return override
@@ -645,17 +586,34 @@ export function ChairProvider({
   }, [state.delegationEmojiOverrides])
 
   const setDelegateScore = useCallback((delegateId: string, score: Partial<DelegateScore>) => {
-    setState((s) => ({
+    updateActive((s) => ({
       ...s,
       delegateScores: {
         ...(s.delegateScores ?? {}),
         [delegateId]: { ...(s.delegateScores?.[delegateId] ?? {}), ...score },
       },
     }))
-  }, [])
+  }, [updateActive])
   const getDelegateScore = useCallback((delegateId: string): DelegateScore => {
     return state.delegateScores?.[delegateId] ?? {}
   }, [state.delegateScores])
+
+  const addConference = useCallback(() => {
+    const id = crypto.randomUUID()
+    setConferences((list) => [...list, defaultChairConference(id)])
+    setActiveConferenceIdState(id)
+  }, [])
+  const removeConference = useCallback((id: string) => {
+    const remaining = conferences.filter((c) => c.id !== id)
+    const nextList = remaining.length > 0 ? remaining : [defaultChairConference(crypto.randomUUID())]
+    const newActive = id === activeId ? (nextList[0]?.id ?? '') : activeId
+    setConferences(nextList)
+    setActiveConferenceIdState(newActive)
+  }, [conferences, activeId])
+  const setActiveConference = useCallback((id: string) => setActiveConferenceIdState(id), [])
+  const setConferenceName = useCallback((id: string, name: string) => {
+    setConferences((list) => list.map((c) => (c.id === id ? { ...c, name } : c)))
+  }, [])
 
   const value: ChairContextValue = {
     ...state,
@@ -722,6 +680,12 @@ export function ChairProvider({
     isSaving,
     lastSaved,
     isLoaded,
+    conferences,
+    activeConferenceId: activeId ?? '',
+    setActiveConference,
+    addConference,
+    removeConference,
+    setConferenceName,
   }
 
   return <ChairContext.Provider value={value}>{children}</ChairContext.Provider>
