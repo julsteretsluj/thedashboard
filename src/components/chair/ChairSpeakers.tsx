@@ -32,6 +32,9 @@ export default function ChairSpeakers() {
   }
 
   const effectiveDuration = Math.max(speakerDuration || 0, DURATION_MIN)
+  const speakerTime = activeSpeaker
+    ? Math.max(activeSpeaker.duration || 0, DURATION_MIN)
+    : effectiveDuration
 
   useEffect(() => {
     setElapsed(0)
@@ -44,12 +47,12 @@ export default function ChairSpeakers() {
       return
     }
     startTimeRef.current = startTime
+    setElapsed(0)
     const update = () => {
       const now = Date.now()
       const start = startTimeRef.current ?? now
       setElapsed(Math.floor((now - start) / 1000))
     }
-    update()
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
   }, [startTime, activeSpeaker?.id])
@@ -75,7 +78,7 @@ export default function ChairSpeakers() {
     setSelectedDelegate('')
   }
 
-  const remaining = activeSpeaker ? effectiveDuration - elapsed : 0
+  const remaining = activeSpeaker ? speakerTime - elapsed : 0
   const isOvertime = remaining < 0
   const displaySeconds = isOvertime ? -remaining : remaining
 
