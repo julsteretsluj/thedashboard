@@ -34,6 +34,10 @@ export default function ChairSpeakers() {
   const effectiveDuration = Math.max(speakerDuration || 0, DURATION_MIN)
 
   useEffect(() => {
+    setElapsed(0)
+  }, [activeSpeaker?.id])
+
+  useEffect(() => {
     if (startTime == null) {
       startTimeRef.current = null
       setElapsed(0)
