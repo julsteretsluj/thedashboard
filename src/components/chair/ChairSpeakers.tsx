@@ -46,11 +46,17 @@ export default function ChairSpeakers() {
 
   useEffect(() => {
     if (startTime == null) return
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') setTick((t) => t + 1)
+    const refresh = () => setTick((t) => t + 1)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') requestAnimationFrame(refresh)
     }
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    const onFocus = () => requestAnimationFrame(refresh)
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [startTime, activeSpeaker?.id])
 
   useEffect(() => {

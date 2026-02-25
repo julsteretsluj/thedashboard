@@ -42,6 +42,7 @@ import ChairScore from '../components/chair/ChairScore'
 import ChairRollCall from '../components/chair/ChairRollCall'
 import ChairSession from '../components/chair/ChairSession'
 import ChairSpeakers from '../components/chair/ChairSpeakers'
+import ActiveSpeakerBar from '../components/chair/ActiveSpeakerBar'
 import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
 import ChairDelegateTracker from '../components/chair/ChairDelegateTracker'
@@ -71,6 +72,7 @@ const sections = [
 
 function ChairRoomContent() {
   const [active, setActive] = useState('committee')
+  const goToSpeakers = () => setActive('speakers')
   const [showSettings, setShowSettings] = useState(false)
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
   const { saveToAccount, isLoaded } = useChair()
@@ -135,7 +137,9 @@ function ChairRoomContent() {
           </button>
         </div>
       </aside>
-      <main className="flex-1 p-2 sm:p-3 md:p-5 overflow-auto min-w-0">
+      <main className="flex-1 flex flex-col overflow-auto min-w-0">
+        <div className="p-2 sm:p-3 md:p-5 flex-1 overflow-auto">
+        <ActiveSpeakerBar onSpeakersClick={goToSpeakers} />
         {showSettings && (
           <div className="mb-6 p-4 card-block">
             <ChairCommitteeTopic onClose={() => setShowSettings(false)} />
@@ -161,6 +165,7 @@ function ChairRoomContent() {
           </div>
         )}
         <ChairHowToGuide />
+        </div>
       </main>
     </div>
   )

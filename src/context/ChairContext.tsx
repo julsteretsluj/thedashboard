@@ -133,25 +133,15 @@ function normalizeSpeaker(s: unknown): Speaker | null {
 
 function normalizeSpeakerData(
   speakers: unknown[],
-  activeSpeaker: unknown,
+  _activeSpeaker: unknown, // never restore — timer is session-only
   speakerDuration: number
 ): { speakers: Speaker[]; activeSpeaker: Speaker | null; speakerDuration: number } {
   const normalized = speakers
     .map(normalizeSpeaker)
     .filter((s): s is Speaker => s != null)
-  const ids = new Set(normalized.map((s) => s.id))
   const dur = Math.max(30, Math.min(300, Number.isFinite(speakerDuration) ? speakerDuration : 60))
-  let active: Speaker | null = null
-  if (activeSpeaker && typeof activeSpeaker === 'object') {
-    const a = normalizeSpeaker(activeSpeaker)
-    if (a && ids.has(a.id)) {
-      active = { ...a, startTime: a.startTime ?? Date.now() }
-    }
-  }
-  const speakersWithActive = normalized.map((s) =>
-    active && s.id === active.id ? { ...s, speaking: true, startTime: active.startTime ?? s.startTime } : { ...s, speaking: false }
-  )
-  return { speakers: speakersWithActive, activeSpeaker: active, speakerDuration: dur }
+  const speakersCleared = normalized.map((s) => ({ ...s, speaking: false }))
+  return { speakers: speakersCleared, activeSpeaker: null, speakerDuration: dur }
 }
 
 function loadChairStateFromStorage(): ChairState {
@@ -197,23 +187,27 @@ export function ChairProvider({
       .then((data) => {
         if (cancelled) return
         if (data) {
-          const { speakers, activeSpeaker: asp, speakerDuration: sd } = normalizeSpeakerData(
+          const { speakers, speakerDuration: sd } = normalizeSpeakerData(
             Array.isArray(data.speakers) ? data.speakers : [],
-            data.activeSpeaker ?? null,
+            null,
             typeof data.speakerDuration === 'number' ? data.speakerDuration : 60
           )
-          setState({
-            ...defaultState,
-            ...data,
-            delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
-            delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
-            delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
-            motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
-            speakers,
-            activeSpeaker: asp,
-            speakerDuration: sd,
-            voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
-            delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
+          setState((prev) => {
+            const next = {
+              ...defaultState,
+              ...data,
+              delegates: Array.isArray(data.delegates) ? (data.delegates as ChairState['delegates']) : defaultState.delegates,
+              delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
+              delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
+              motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
+              speakers,
+              activeSpeaker: null,
+              speakerDuration: sd,
+              voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
+              delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
+            }
+            if (prev.activeSpeaker) next.activeSpeaker = prev.activeSpeaker
+            return next
           })
         } else {
           const local = loadChairStateFromStorage()
@@ -229,11 +223,12 @@ export function ChairProvider({
     }
   }, [userId])
 
-  // Persist chair state to localStorage (debounced) so refresh doesn't lose data
+  // Persist chair state to localStorage (debounced) — never persist activeSpeaker (session-only)
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(state))
+        const toSave = { ...state, activeSpeaker: null }
+        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(toSave))
       } catch {
         /* ignore */
       }
@@ -245,7 +240,8 @@ export function ChairProvider({
     if (!userId) return
     setIsSaving(true)
     try {
-      await saveChairData(userId, state as unknown as ChairDataDoc)
+      const toSave = { ...state, activeSpeaker: null }
+      await saveChairData(userId, toSave as unknown as ChairDataDoc)
       setLastSaved(new Date())
     } finally {
       setIsSaving(false)
