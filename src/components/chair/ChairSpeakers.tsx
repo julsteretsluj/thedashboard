@@ -53,7 +53,9 @@ export default function ChairSpeakers() {
     setSelectedDelegate('')
   }
 
-  const remaining = activeSpeaker ? Math.max(0, speakerDuration - elapsed) : 0
+  const remaining = activeSpeaker ? speakerDuration - elapsed : 0
+  const isOvertime = remaining < 0
+  const displaySeconds = isOvertime ? -remaining : remaining
 
   return (
     <div className="space-y-6">
@@ -74,8 +76,9 @@ export default function ChairSpeakers() {
             </span>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="w-4 h-4 text-[var(--text-muted)]" />
-              <span className={remaining === 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}>
-                {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')} remaining
+              <span className={isOvertime ? 'text-[var(--danger)]' : 'text-[var(--text)]'}>
+                {Math.floor(displaySeconds / 60)}:{String(displaySeconds % 60).padStart(2, '0')}
+                {isOvertime ? ' overtime' : ' remaining'}
               </span>
             </div>
             <button
