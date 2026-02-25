@@ -114,12 +114,57 @@ type ChairContextValue = ChairState & {
   isLoaded: boolean
 }
 
+function normalizeSpeaker(s: unknown): Speaker | null {
+  if (!s || typeof s !== 'object') return null
+  const o = s as Record<string, unknown>
+  const id = typeof o.id === 'string' ? o.id : null
+  const delegateId = typeof o.delegateId === 'string' ? o.delegateId : id ?? ''
+  const country = typeof o.country === 'string' ? o.country : ''
+  const name = typeof o.name === 'string' ? o.name : country
+  const duration = typeof o.duration === 'number' && o.duration >= 0 ? o.duration : 60
+  const speaking = o.speaking === true
+  let startTime: number | undefined
+  if (typeof o.startTime === 'number' && o.startTime > 0) {
+    startTime = o.startTime < 1e12 ? o.startTime * 1000 : o.startTime
+  }
+  if (!id) return null
+  return { id, delegateId, country, name, duration, speaking, ...(startTime != null && { startTime }) }
+}
+
+function normalizeSpeakerData(
+  speakers: unknown[],
+  activeSpeaker: unknown,
+  speakerDuration: number
+): { speakers: Speaker[]; activeSpeaker: Speaker | null; speakerDuration: number } {
+  const normalized = speakers
+    .map(normalizeSpeaker)
+    .filter((s): s is Speaker => s != null)
+  const ids = new Set(normalized.map((s) => s.id))
+  const dur = Math.max(30, Math.min(300, Number.isFinite(speakerDuration) ? speakerDuration : 60))
+  let active: Speaker | null = null
+  if (activeSpeaker && typeof activeSpeaker === 'object') {
+    const a = normalizeSpeaker(activeSpeaker)
+    if (a && ids.has(a.id)) {
+      active = { ...a, startTime: a.startTime ?? Date.now() }
+    }
+  }
+  const speakersWithActive = normalized.map((s) =>
+    active && s.id === active.id ? { ...s, speaking: true, startTime: active.startTime ?? s.startTime } : { ...s, speaking: false }
+  )
+  return { speakers: speakersWithActive, activeSpeaker: active, speakerDuration: dur }
+}
+
 function loadChairStateFromStorage(): ChairState {
   try {
     const raw = localStorage.getItem(CHAIR_STATE_STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<ChairState>
-      return { ...defaultState, ...parsed, delegateScores: parsed.delegateScores ?? {} }
+      const { speakers, activeSpeaker: asp, speakerDuration: sd } = normalizeSpeakerData(
+        Array.isArray(parsed.speakers) ? parsed.speakers : [],
+        parsed.activeSpeaker ?? null,
+        typeof parsed.speakerDuration === 'number' ? parsed.speakerDuration : 60
+      )
+      return { ...defaultState, ...parsed, speakers, activeSpeaker: asp, speakerDuration: sd, delegateScores: parsed.delegateScores ?? {} }
     }
   } catch {
     /* ignore */
@@ -152,6 +197,11 @@ export function ChairProvider({
       .then((data) => {
         if (cancelled) return
         if (data) {
+          const { speakers, activeSpeaker: asp, speakerDuration: sd } = normalizeSpeakerData(
+            Array.isArray(data.speakers) ? data.speakers : [],
+            data.activeSpeaker ?? null,
+            typeof data.speakerDuration === 'number' ? data.speakerDuration : 60
+          )
           setState({
             ...defaultState,
             ...data,
@@ -159,8 +209,9 @@ export function ChairProvider({
             delegateStrikes: Array.isArray(data.delegateStrikes) ? (data.delegateStrikes as ChairState['delegateStrikes']) : defaultState.delegateStrikes,
             delegateFeedback: Array.isArray(data.delegateFeedback) ? (data.delegateFeedback as ChairState['delegateFeedback']) : defaultState.delegateFeedback,
             motions: Array.isArray(data.motions) ? (data.motions as ChairState['motions']) : defaultState.motions,
-            speakers: Array.isArray(data.speakers) ? (data.speakers as ChairState['speakers']) : defaultState.speakers,
-            activeSpeaker: data.activeSpeaker as ChairState['activeSpeaker'],
+            speakers,
+            activeSpeaker: asp,
+            speakerDuration: sd,
             voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
             delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
           })

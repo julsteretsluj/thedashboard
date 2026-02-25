@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useState, useRef, useLayoutEffect, useCallback } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User } from 'lucide-react'
 import type { DelegateScore } from '../../types'
@@ -144,9 +144,10 @@ function CriteriaFirstSecondPrompt({
     initialBand ? BANDS.find((b) => b.low === initialBand.low) ?? null : null
   )
 
-  const band = selectedBand ?? (initialBand ? BANDS.find((b) => b.low === initialBand.low) ?? null) ?? (value != null && value >= 1 && value <= 8
-    ? BANDS.find((b) => value >= b.low && value <= b.high) ?? BANDS[0]
-    : null)
+  const band =
+    selectedBand ??
+    (initialBand ? (BANDS.find((b) => b.low === initialBand.low) ?? null) : null) ??
+    (value != null && value >= 1 && value <= 8 ? (BANDS.find((b) => value >= b.low && value <= b.high) ?? BANDS[0]) : null)
 
   if (step === 'band') {
     return (
