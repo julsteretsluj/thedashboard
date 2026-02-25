@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User } from 'lucide-react'
 import type { DelegateScore } from '../../types'
@@ -121,35 +121,138 @@ function scoreToLevelKey(n: number | undefined): 'beginning' | 'developing' | 'p
   return 'exemplary'
 }
 
+const BANDS = [
+  { key: 'beginning' as const, label: 'Beginning (1–2)', low: 1, high: 2 },
+  { key: 'developing' as const, label: 'Developing (3–4)', low: 3, high: 4 },
+  { key: 'proficient' as const, label: 'Proficient (5–6)', low: 5, high: 6 },
+  { key: 'exemplary' as const, label: 'Exemplary (7–8)', low: 7, high: 8 },
+]
+
+function CriteriaFirstSecondPrompt({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: number | undefined
+  onChange: (v: number) => void
+  onClose: () => void
+}) {
+  const [step, setStep] = useState<'band' | 'number'>('band')
+  const [selectedBand, setSelectedBand] = useState<typeof BANDS[number] | null>(null)
+
+  const band = selectedBand ?? (value != null && value >= 1 && value <= 8
+    ? BANDS.find((b) => value >= b.low && value <= b.high) ?? BANDS[0]
+    : null)
+
+  if (step === 'band') {
+    return (
+      <>
+        <div className="fixed inset-0 z-10" onClick={onClose} aria-hidden />
+        <div className="absolute top-full left-0 mt-0.5 z-20 min-w-[10rem] rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-lg p-2">
+          <p className="text-xs font-medium text-[var(--text-muted)] mb-2">Which level?</p>
+          <div className="space-y-1">
+            {BANDS.map((b) => (
+              <button
+                key={b.key}
+                type="button"
+                onClick={() => {
+                  setSelectedBand(b)
+                  setStep('number')
+                }}
+                className="block w-full px-3 py-1.5 text-left text-xs rounded hover:bg-[var(--bg-card)] text-[var(--text)]"
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (band && step === 'number') {
+    return (
+      <>
+        <div className="fixed inset-0 z-10" onClick={onClose} aria-hidden />
+        <div className="absolute top-full left-0 mt-0.5 z-20 min-w-[10rem] rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-lg p-2">
+          <p className="text-xs font-medium text-[var(--text-muted)] mb-2">First or second number?</p>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => { onChange(band.low); onClose() }}
+              className="flex-1 px-3 py-2 rounded text-sm font-medium bg-[var(--bg-card)] hover:bg-[var(--brand-soft)] text-[var(--text)] border border-[var(--border)]"
+            >
+              First ({band.low})
+            </button>
+            <button
+              type="button"
+              onClick={() => { onChange(band.high); onClose() }}
+              className="flex-1 px-3 py-2 rounded text-sm font-medium bg-[var(--bg-card)] hover:bg-[var(--brand-soft)] text-[var(--text)] border border-[var(--border)]"
+            >
+              Second ({band.high})
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  return null
+}
+
 function CriteriaDropdown({
   value,
   onChange,
   criterionLabel,
+  criterionKey,
+  openFirstSecondRef,
 }: {
   value: number | undefined
   onChange: (v: number) => void
   criterionLabel: string
+  criterionKey?: string
+  openFirstSecondRef?: React.MutableRefObject<Record<string, { open: () => void }>>
 }) {
   const [open, setOpen] = useState(false)
+  const [showFirstSecond, setShowFirstSecond] = useState(false)
+
+  const openFirstSecond = useCallback(() => {
+    setShowFirstSecond(true)
+    setOpen(false)
+  }, [])
+
+  useEffect(() => {
+    if (openFirstSecondRef && criterionKey) {
+      openFirstSecondRef.current[criterionKey] = { open: openFirstSecond }
+      return () => { delete openFirstSecondRef.current[criterionKey] }
+    }
+  }, [openFirstSecondRef, criterionKey, openFirstSecond])
   const isValid = value != null && value >= 1 && value <= 8
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center gap-0.5">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full min-w-[2.5rem] px-2 py-1 rounded text-xs text-left truncate border border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--brand)] transition-colors"
-        title={criterionLabel}
+        onClick={openFirstSecond}
+        className="flex-1 min-w-0 px-1.5 py-1 rounded text-xs text-center truncate border border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--brand)] transition-colors cursor-pointer"
+        title={`${criterionLabel}: click to set first or second number`}
       >
         <span className={isValid ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}>
           {isValid ? value : '—'}
         </span>
-        <ChevronDown className="w-3 h-3 inline ml-0.5 opacity-60" />
+      </button>
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setShowFirstSecond(false) }}
+        className="shrink-0 px-1 py-1 rounded border border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--brand)] transition-colors"
+        title={`${criterionLabel}: pick 1-8`}
+      >
+        <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute top-full left-0 mt-0.5 z-20 min-w-[4rem] rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-lg py-1">
+          <div className="absolute top-full right-0 mt-0.5 z-20 min-w-[4rem] rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-lg py-1">
             {SCORE_OPTIONS.map((n) => (
               <button
                 key={n}
@@ -167,6 +270,13 @@ function CriteriaDropdown({
             ))}
           </div>
         </>
+      )}
+      {showFirstSecond && (
+        <CriteriaFirstSecondPrompt
+          value={value}
+          onChange={(v) => { onChange(v); setShowFirstSecond(false) }}
+          onClose={() => setShowFirstSecond(false)}
+        />
       )}
     </div>
   )
@@ -537,6 +647,7 @@ function PerDelegateView({
   setDelegateScore: (id: string, patch: Partial<DelegateScore>) => void
   getDelegationEmoji: (c: string) => string
 }) {
+  const openFirstSecondRef = useRef<Record<string, { open: () => void }>>({})
   const current = scored[selectedIndex]
   if (!current) return null
 
@@ -602,11 +713,20 @@ function PerDelegateView({
             return (
               <div key={key} className="card-block p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-medium text-[var(--text)]">{label}</h4>
+                  <button
+                    type="button"
+                    onClick={() => openFirstSecondRef.current[key]?.open()}
+                    className="font-medium text-[var(--text)] text-left hover:text-[var(--brand)] hover:underline cursor-pointer"
+                    title="Click to set first or second number"
+                  >
+                    {label}
+                  </button>
                   <CriteriaDropdown
                     value={val}
                     onChange={(v) => setDelegateScore(delegate.id, { [key]: v })}
                     criterionLabel={label}
+                    criterionKey={key}
+                    openFirstSecondRef={openFirstSecondRef}
                   />
                 </div>
                 {rubric && (
@@ -640,11 +760,20 @@ function PerDelegateView({
             return (
               <div key={key} className="card-block p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-medium text-[var(--text)]">{label}</h4>
+                  <button
+                    type="button"
+                    onClick={() => openFirstSecondRef.current[key]?.open()}
+                    className="font-medium text-[var(--text)] text-left hover:text-[var(--brand)] hover:underline cursor-pointer"
+                    title="Click to set first or second number"
+                  >
+                    {label}
+                  </button>
                   <CriteriaDropdown
                     value={val}
                     onChange={(v) => setDelegateScore(delegate.id, { [key]: v })}
                     criterionLabel={label}
+                    criterionKey={key}
+                    openFirstSecondRef={openFirstSecondRef}
                   />
                 </div>
                 {rubric && (
