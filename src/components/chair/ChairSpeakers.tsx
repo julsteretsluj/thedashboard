@@ -49,9 +49,10 @@ export default function ChairSpeakers() {
     startTimeRef.current = startTime
     setElapsed(0)
     const update = () => {
-      const now = Date.now()
-      const start = startTimeRef.current ?? now
-      setElapsed(Math.floor((now - start) / 1000))
+      const start = startTimeRef.current
+      if (start == null) return
+      const secs = Math.floor((Date.now() - start) / 1000)
+      setElapsed(Math.max(0, secs))
     }
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
@@ -80,7 +81,7 @@ export default function ChairSpeakers() {
 
   const remaining = activeSpeaker ? speakerTime - elapsed : 0
   const isOvertime = remaining < 0
-  const displaySeconds = isOvertime ? -remaining : remaining
+  const displaySeconds = Math.max(0, Math.floor(isOvertime ? -remaining : remaining)) || 0
 
   return (
     <div className="space-y-6">
