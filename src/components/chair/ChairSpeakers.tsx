@@ -33,7 +33,7 @@ export default function ChairSpeakers() {
 
   const effectiveDuration = Math.max(speakerDuration || 0, DURATION_MIN)
   const speakerTime = activeSpeaker
-    ? Math.max(activeSpeaker.duration || 0, DURATION_MIN)
+    ? Math.max(activeSpeaker.duration || speakerDuration || 0, DURATION_MIN)
     : effectiveDuration
 
   useEffect(() => {
@@ -47,13 +47,13 @@ export default function ChairSpeakers() {
       return
     }
     startTimeRef.current = startTime
-    setElapsed(0)
     const update = () => {
       const start = startTimeRef.current
       if (start == null) return
       const secs = Math.floor((Date.now() - start) / 1000)
       setElapsed(Math.max(0, secs))
     }
+    update()
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
   }, [startTime, activeSpeaker?.id])
@@ -80,7 +80,7 @@ export default function ChairSpeakers() {
   }
 
   const remaining = activeSpeaker ? speakerTime - elapsed : 0
-  const isOvertime = remaining < 0
+  const isOvertime = remaining <= 0 && activeSpeaker != null
   const displaySeconds = Math.max(0, Math.floor(isOvertime ? -remaining : remaining)) || 0
 
   return (
@@ -100,9 +100,9 @@ export default function ChairSpeakers() {
               <span>{getDelegationEmoji(activeSpeaker.country) || '🏳️'}</span>
               {activeSpeaker.country} — {activeSpeaker.name}
             </span>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-[var(--text-muted)]" />
-              <span className={isOvertime ? 'text-[var(--danger)]' : 'text-[var(--text)]'}>
+            <div className={`flex items-center gap-2 text-sm rounded-lg px-2 py-1 ${isOvertime ? 'bg-[var(--danger)]/10 text-[var(--danger)] font-medium' : 'text-[var(--text)]'}`}>
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>
                 {Math.floor(displaySeconds / 60)}:{String(displaySeconds % 60).padStart(2, '0')}
                 {isOvertime ? ' overtime' : ' remaining'}
               </span>
