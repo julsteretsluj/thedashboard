@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, Mic, Clock } from 'lucide-react'
 
@@ -18,9 +18,8 @@ export default function ChairSpeakers() {
     getDelegationEmoji,
   } = useChair()
   const [selectedDelegate, setSelectedDelegate] = useState('')
-  const [elapsed, setElapsed] = useState(0)
+  const [, setTick] = useState(0)
   const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
-  const startTimeRef = useRef<number | null>(null)
 
   let startTime: number | null = null
   const raw =
@@ -31,31 +30,27 @@ export default function ChairSpeakers() {
     startTime = raw < 1e12 ? raw * 1000 : raw
   }
 
+  const elapsed =
+    startTime != null ? Math.max(0, Math.floor((Date.now() - startTime) / 1000)) : 0
+
   const effectiveDuration = Math.max(speakerDuration || 0, DURATION_MIN)
   const speakerTime = activeSpeaker
     ? Math.max(activeSpeaker.duration || speakerDuration || 0, DURATION_MIN)
     : effectiveDuration
 
   useEffect(() => {
-    setElapsed(0)
-  }, [activeSpeaker?.id])
+    if (startTime == null) return
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [startTime, activeSpeaker?.id])
 
   useEffect(() => {
-    if (startTime == null) {
-      startTimeRef.current = null
-      setElapsed(0)
-      return
+    if (startTime == null) return
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') setTick((t) => t + 1)
     }
-    startTimeRef.current = startTime
-    const update = () => {
-      const start = startTimeRef.current
-      if (start == null) return
-      const secs = Math.floor((Date.now() - start) / 1000)
-      setElapsed(Math.max(0, secs))
-    }
-    update()
-    const id = setInterval(update, 1000)
-    return () => clearInterval(id)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [startTime, activeSpeaker?.id])
 
   useEffect(() => {
