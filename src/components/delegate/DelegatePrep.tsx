@@ -12,7 +12,7 @@ export default function DelegatePrep() {
         <p className="text-[var(--text-muted)] text-sm">Use this template to structure your research and speaking prep.</p>
       </div>
 
-      <div className="card-block p-4 sm:p-5 border-2 border-[var(--accent)]/30 bg-[var(--accent-soft)]/50">
+      <div className="accent-highlight-wave card-block p-4 sm:p-5 border-2 border-[var(--accent)]/30 bg-[var(--accent-soft)]/50">
         <h3 className="text-sm font-medium text-[var(--text)] mb-1 flex items-center gap-2">
           <Copy className="w-4 h-4 text-[var(--accent)]" />
           Make a copy to guide your prep

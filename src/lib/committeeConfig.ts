@@ -1,9 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
-
-const CONFIG_COLLECTION = 'config'
-const COMMITTEES_DOC_ID = 'committees'
-const USER_CONFIG_COLLECTION = 'userConfig'
+import { supabase } from './supabase'
 
 export interface CommitteeOption {
   value: string
@@ -32,16 +27,18 @@ function migrateCommitteeOptions(options: CommitteeOption[]): CommitteeOption[] 
 }
 
 /**
- * Load committee options from global config (read by anyone; survives site data clear).
+ * Load committee options from global config (read by anyone).
  */
-export async function loadCommitteeOptionsFromFirestore(): Promise<CommitteeOption[] | null> {
-  if (!db) return null
+export async function loadCommitteeOptionsFromSupabase(): Promise<CommitteeOption[] | null> {
+  if (!supabase) return null
   try {
-    const ref = doc(db, CONFIG_COLLECTION, COMMITTEES_DOC_ID)
-    const snap = await getDoc(ref)
-    if (!snap.exists()) return null
-    const data = snap.data()
-    const options = data?.options ?? data?.committeeOptions ?? data
+    const { data, error } = await supabase
+      .from('config')
+      .select('options')
+      .eq('key', 'committees')
+      .maybeSingle()
+    if (error || !data) return null
+    const options = data.options ?? data
     if (isValidOptions(options)) return migrateCommitteeOptions(options)
     return null
   } catch {
@@ -50,16 +47,19 @@ export async function loadCommitteeOptionsFromFirestore(): Promise<CommitteeOpti
 }
 
 /**
- * Load committee options saved for this user (persists across site data clear when signed in).
+ * Load committee options saved for this user.
  */
 export async function loadUserCommitteeOptions(userId: string): Promise<CommitteeOption[] | null> {
-  if (!db || !userId) return null
+  if (!supabase || !userId) return null
   try {
-    const ref = doc(db, USER_CONFIG_COLLECTION, userId)
-    const snap = await getDoc(ref)
-    if (!snap.exists()) return null
-    const data = snap.data()
-    const options = data?.committeeOptions ?? data?.options ?? data
+    const { data, error } = await supabase
+      .from('user_config')
+      .select('committee_options')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (error || !data) return null
+    const d = data as Record<string, unknown>
+    const options = d.committee_options ?? d.options
     if (isValidOptions(options)) return migrateCommitteeOptions(options)
     return null
   } catch {
@@ -68,13 +68,17 @@ export async function loadUserCommitteeOptions(userId: string): Promise<Committe
 }
 
 /**
- * Save committee options for this user so they persist after site data clear.
+ * Save committee options for this user.
  */
 export async function saveUserCommitteeOptions(userId: string, options: CommitteeOption[]): Promise<void> {
-  if (!db || !userId) return
+  if (!supabase || !userId) return
   try {
-    const ref = doc(db, USER_CONFIG_COLLECTION, userId)
-    await setDoc(ref, { committeeOptions: options, updatedAt: new Date().toISOString() }, { merge: true })
+    await supabase
+      .from('user_config')
+      .upsert(
+        { user_id: userId, committee_options: options, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
   } catch {
     // ignore
   }

@@ -48,6 +48,23 @@ export interface Speaker {
   speaking: boolean
 }
 
+/** SEAMUN I delegate scoring (1–8 per category). Delegate criteria = 48 pts, Position paper = 40 pts. */
+export interface DelegateScore {
+  creativity?: number
+  diplomacy?: number
+  collaboration?: number
+  leadership?: number
+  knowledgeResearch?: number
+  participation?: number
+  researchDepth?: number
+  countryStanceAlignment?: number
+  policyAccuracy?: number
+  proposedSolutions?: number
+  formattingStyleCitations?: number
+  evidenceOfExcellence?: string
+  justification?: string
+}
+
 export interface CommitteeSession {
   id: string
   committee: string
@@ -78,6 +95,8 @@ export interface DelegateConference {
   committeeMatrix?: Record<string, string>
   /** Committee matrix: committee, first name, delegation */
   committeeMatrixEntries: CommitteeMatrixEntry[]
+  /** Pinned committee values (max 3), shown first in tabs */
+  pinnedCommittees?: string[]
   countdownDate: string
   /** Conference end date/time (optional). */
   conferenceEndDate: string

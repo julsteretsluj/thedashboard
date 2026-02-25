@@ -29,6 +29,7 @@ function migrateConference(c: DelegateConference): DelegateConference {
             delegation: '',
           }))
         : c.committeeMatrixEntries ?? [],
+    pinnedCommittees: (c.pinnedCommittees ?? []).slice(0, 3),
     checklist: { ...defaultChecklist, ...(c.checklist || {}) },
   }
   return base
@@ -63,6 +64,7 @@ const defaultConference = (id: string): DelegateConference => ({
   committeeCount: 0,
   committees: [],
   committeeMatrixEntries: [],
+  pinnedCommittees: [],
   countdownDate: '',
   conferenceEndDate: '',
   positionPaperDeadline: '',
@@ -105,6 +107,7 @@ type DelegateContextValue = DelegateConference & {
   setCommittees: (list: string[]) => void
   addCommitteeMatrixEntry: (entry: CommitteeMatrixEntry) => void
   removeCommitteeMatrixEntry: (index: number) => void
+  togglePinnedCommittee: (committee: string) => void
   setCountdownDate: (d: string) => void
   setConferenceEndDate: (d: string) => void
   setPositionPaperDeadline: (d: string) => void
@@ -254,6 +257,19 @@ export function DelegateProvider({
       })),
     [updateActive]
   )
+  const togglePinnedCommittee = useCallback(
+    (committee: string) =>
+      updateActive((c) => {
+        const pinned = c.pinnedCommittees ?? []
+        const idx = pinned.indexOf(committee)
+        if (idx >= 0) {
+          return { ...c, pinnedCommittees: pinned.filter((_, i) => i !== idx) }
+        }
+        if (pinned.length >= 3) return c
+        return { ...c, pinnedCommittees: [...pinned, committee] }
+      }),
+    [updateActive]
+  )
   const setCountdownDate = useCallback((d: string) => updateActive((c) => ({ ...c, countdownDate: d })), [updateActive])
   const setConferenceEndDate = useCallback((d: string) => updateActive((c) => ({ ...c, conferenceEndDate: d })), [updateActive])
   const setPositionPaperDeadline = useCallback((d: string) => updateActive((c) => ({ ...c, positionPaperDeadline: d })), [updateActive])
@@ -368,6 +384,7 @@ export function DelegateProvider({
     setCommittees,
     addCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
+    togglePinnedCommittee,
     setCountdownDate,
     setConferenceEndDate,
     setPositionPaperDeadline,

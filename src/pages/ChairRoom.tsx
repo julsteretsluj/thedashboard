@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ChairProvider, useChair } from '../context/ChairContext'
-import { useFirebaseAuth } from '../context/FirebaseAuthContext'
+import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
   LayoutGrid,
   Users,
@@ -20,6 +20,7 @@ import {
   CheckSquare,
   ListChecks,
   Save,
+  Trophy,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -43,6 +44,7 @@ import ChairSession from '../components/chair/ChairSession'
 import ChairSpeakers from '../components/chair/ChairSpeakers'
 import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
+import ChairDelegateTracker from '../components/chair/ChairDelegateTracker'
 import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
 import ChairHowToGuide from '../components/ChairHowToGuide'
@@ -60,8 +62,9 @@ const sections = [
   { id: 'speakers', label: '🎤 Speakers', icon: Mic },
   { id: 'motions', label: '📜 Motions & Points', icon: FileText },
   { id: 'voting', label: '🗳️ Voting', icon: Vote },
-  { id: 'score', label: '📊 Score', icon: ListOrdered },
+  { id: 'score', label: '📊 Votes/voting', icon: ListOrdered },
   { id: 'crisis', label: '⚠️ Crisis', icon: AlertTriangle },
+  { id: 'tracker', label: '🏆 Delegate Tracker', icon: Trophy },
   { id: 'archive', label: '📁 Archive', icon: Archive },
   { id: 'links', label: '🔗 Official links', icon: LinkIcon },
 ]
@@ -150,6 +153,7 @@ function ChairRoomContent() {
         {active === 'session' && <ChairSession />}
         {active === 'speakers' && <ChairSpeakers />}
         {active === 'crisis' && <ChairCrisis />}
+        {active === 'tracker' && <ChairDelegateTracker />}
         {active === 'archive' && <ChairArchive />}
         {active === 'links' && (
           <div className="card-block p-4 sm:p-6">
@@ -164,7 +168,7 @@ function ChairRoomContent() {
 
 function ChairRoomHeader() {
   const { saveToAccount, isSaving, lastSaved, isLoaded } = useChair()
-  const { isAuthenticated } = useFirebaseAuth()
+  const { isAuthenticated } = useSupabaseAuth()
 
   const formatSaved = (d: Date) => {
     const n = Date.now() - d.getTime()
@@ -215,7 +219,7 @@ function ChairRoomHeader() {
 }
 
 export default function ChairRoom() {
-  const { user } = useFirebaseAuth()
+  const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
 
   return (

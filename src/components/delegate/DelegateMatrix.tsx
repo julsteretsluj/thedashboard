@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pin } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
 import { OTHER_DELEGATION_VALUE } from '../../constants/delegations'
@@ -22,12 +22,14 @@ export default function DelegateMatrix() {
     committeeMatrixEntries,
     addCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
+    pinnedCommittees = [],
+    togglePinnedCommittee,
   } = useDelegate()
   const [firstName, setFirstName] = useState('')
   const [delegationSelect, setDelegationSelect] = useState('')
   const [delegationCustom, setDelegationCustom] = useState('')
   const [customCommitteeNames, setCustomCommitteeNames] = useState<Record<number, string>>({})
-  const [activeTabIndex, setActiveTabIndex] = useState(0)
+  const [activeCommitteeValue, setActiveCommitteeValue] = useState<string | null>(null)
 
   const committeeCountNum = Math.max(0, Math.min(20, committeeCount))
   const effectiveCommittees =
@@ -64,9 +66,16 @@ export default function DelegateMatrix() {
     return getCommitteeLabel(value)
   }
 
-  const tabCommittees = effectiveCommittees.filter(Boolean)
-  const safeTabIndex = Math.min(Math.max(0, activeTabIndex), Math.max(0, tabCommittees.length - 1))
-  const activeCommittee = tabCommittees[safeTabIndex] ?? ''
+  const tabCommittees = useMemo(() => {
+    const list = effectiveCommittees.filter(Boolean)
+    const pinned = pinnedCommittees.filter((p) => list.includes(p))
+    const unpinned = list.filter((c) => !pinned.includes(c))
+    return [...pinned, ...unpinned]
+  }, [effectiveCommittees, pinnedCommittees])
+  const activeCommittee =
+    activeCommitteeValue && tabCommittees.includes(activeCommitteeValue)
+      ? activeCommitteeValue
+      : tabCommittees[0] ?? ''
   const entriesForCommittee = (comm: string) =>
     committeeMatrixEntries.map((entry, i) => ({ entry, i })).filter(({ entry }) => entry.committee === comm)
 
@@ -166,19 +175,37 @@ export default function DelegateMatrix() {
         ) : (
           <>
             <div className="flex border-b border-[var(--border)] overflow-x-auto">
-              {tabCommittees.map((comm, idx) => (
-                <button
+              {tabCommittees.map((comm) => (
+                <div
                   key={comm}
-                  type="button"
-                  onClick={() => setActiveTabIndex(idx)}
-                  className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    idx === safeTabIndex
+                  className={`flex items-center gap-1 px-2 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors group/tab ${
+                    comm === activeCommittee
                       ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-soft)]/30'
                       : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
-                  {displayCommitteeLabel(comm)}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveCommitteeValue(comm)}
+                    className="text-left py-0.5"
+                  >
+                    {displayCommitteeLabel(comm)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); togglePinnedCommittee(comm) }}
+                    disabled={!pinnedCommittees.includes(comm) && pinnedCommittees.length >= 3}
+                    className={`p-0.5 rounded transition-colors flex-shrink-0 ${
+                      pinnedCommittees.includes(comm)
+                        ? 'text-[var(--accent)]'
+                        : 'opacity-0 group-hover/tab:opacity-60 text-[var(--text-muted)] hover:text-[var(--accent)] disabled:opacity-40 disabled:pointer-events-none'
+                    }`}
+                    title={pinnedCommittees.includes(comm) ? 'Unpin' : pinnedCommittees.length >= 3 ? 'Max 3 pins' : 'Pin committee'}
+                    aria-label={pinnedCommittees.includes(comm) ? `Unpin ${displayCommitteeLabel(comm)}` : `Pin ${displayCommitteeLabel(comm)}`}
+                  >
+                    <Pin className={`w-3.5 h-3.5 ${pinnedCommittees.includes(comm) ? 'fill-current' : ''}`} />
+                  </button>
+                </div>
               ))}
             </div>
             {activeCommittee && (

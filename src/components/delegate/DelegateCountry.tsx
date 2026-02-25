@@ -70,7 +70,7 @@ export default function DelegateCountry() {
     <div className="space-y-6">
       <CompactCountdownCards />
 
-      <div className="card-block p-4 space-y-4 border-2 border-[var(--accent)]/30">
+      <div className="accent-highlight-wave card-block p-4 space-y-4 border-2 border-[var(--accent)]/30">
         <h3 className="font-semibold text-lg text-[var(--text)] flex items-center gap-1.5">
           📅 Conference & position paper dates
         </h3>

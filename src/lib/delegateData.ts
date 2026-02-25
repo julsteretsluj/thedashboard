@@ -1,8 +1,5 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
+import { supabase } from './supabase'
 import type { DelegateConference } from '../types'
-
-const COLLECTION = 'delegateData'
 
 export interface DelegateDataDoc {
   conferences: DelegateConference[]
@@ -12,18 +9,22 @@ export interface DelegateDataDoc {
 export async function loadDelegateData(
   userId: string
 ): Promise<DelegateDataDoc | null> {
-  if (!db) return null
-  const ref = doc(db, COLLECTION, userId)
-  const snap = await getDoc(ref)
-  if (!snap.exists()) return null
-  return snap.data() as DelegateDataDoc
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('delegate_data')
+    .select('data')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error || !data?.data) return null
+  return data.data as DelegateDataDoc
 }
 
 export async function saveDelegateData(
   userId: string,
   data: DelegateDataDoc
 ): Promise<void> {
-  if (!db) return
-  const ref = doc(db, COLLECTION, userId)
-  await setDoc(ref, data)
+  if (!supabase) return
+  await supabase
+    .from('delegate_data')
+    .upsert({ user_id: userId, data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
 }

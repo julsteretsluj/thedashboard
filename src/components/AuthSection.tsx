@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { LogIn, LogOut, User, Mail, ChevronDown } from 'lucide-react'
-import { useFirebaseAuth } from '../context/FirebaseAuthContext'
+import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 
 export default function AuthSection() {
   const {
@@ -13,7 +13,7 @@ export default function AuthSection() {
     isLoading,
     authError,
     clearAuthError,
-  } = useFirebaseAuth()
+  } = useSupabaseAuth()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -91,11 +91,11 @@ export default function AuthSection() {
       <button
         type="button"
         onClick={handleOpen}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity whitespace-nowrap"
       >
-        <LogIn className="w-3 h-3" />
+        <LogIn className="w-3 h-3 shrink-0" />
         Log in / Sign up
-        <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 z-50 w-72 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-lg p-3">
@@ -112,14 +112,14 @@ export default function AuthSection() {
             <button
               type="button"
               onClick={() => { setMode('login'); clearAuthError(); }}
-              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${mode === 'login' ? 'bg-[var(--brand)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${mode === 'login' ? 'bg-[var(--brand)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
             >
               Log in
             </button>
             <button
               type="button"
               onClick={() => { setMode('signup'); clearAuthError(); }}
-              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${mode === 'signup' ? 'bg-[var(--brand)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${mode === 'signup' ? 'bg-[var(--brand)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
             >
               Sign up
             </button>

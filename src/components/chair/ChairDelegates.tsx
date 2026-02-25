@@ -152,7 +152,7 @@ export default function ChairDelegates() {
       </div>
 
       {showBulkAdd && (
-        <div className="rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] p-4 flex items-center justify-between flex-wrap gap-2">
+        <div className="accent-highlight-wave rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] p-4 flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm text-[var(--text)]">
             Add all possible participants for this committee not yet in the list?
             {getDelegationsForCommittee(committee).length < 50 && (

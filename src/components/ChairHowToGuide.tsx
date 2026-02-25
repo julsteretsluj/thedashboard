@@ -8,7 +8,7 @@ const CHAIR_STEPS = [
   { step: 4, title: 'Roll call', body: 'In ✅ Roll Call, mark each delegate as Absent, Present (may abstain), or Present and voting (must vote). Click to cycle. Mark roll call complete when done.' },
   { step: 5, title: 'Digital Room', body: '🖥️ Digital Room shows all delegates with their roll-call status. Click a delegate to give a compliment or concern reminder.' },
   { step: 6, title: 'Flow checklist', body: 'Use 📋 Flow checklist during the session: roll call → open floor → recognize motions → vote → engage or GSL → repeat.' },
-  { step: 7, title: 'Motions & voting', body: 'In 📜 Motions & Points, add motions or points. Start a vote from a motion; in 🗳️ Voting record each delegate\'s vote (Yes/No/Abstain). Present and voting delegates cannot abstain.' },
+  { step: 7, title: 'Motions & voting', body: 'In 📜 Motions & Points, add motions or points. Start a vote from a motion; in 🗳️ Voting manually record each delegate\'s vote (Yes/No/Abstain) as they vote on the floor. Present and voting delegates cannot abstain.' },
   { step: 8, title: 'Speakers', body: 'In 🎤 Speakers, add delegates to the mod speakers list, set speaking time, and start/stop the active speaker with the timer.' },
   { step: 9, title: 'Crisis & archive', body: 'Use ⚠️ Crisis for crisis elements. Use 📁 Archive to store position papers, chair reports, and prep docs.' },
 ]

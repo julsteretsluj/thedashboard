@@ -1,10 +1,7 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
-
-const COLLECTION = 'chairData'
+import { supabase } from './supabase'
 
 /**
- * All chair info persisted to Firebase: committee, topic, delegates, motions,
+ * All chair info persisted to Supabase: committee, topic, delegates, motions,
  * speakers, crisis, archive, voting, checklists, emoji overrides, chair name/email.
  */
 export interface ChairDataDoc {
@@ -33,21 +30,26 @@ export interface ChairDataDoc {
   delegationEmojiOverrides: Record<string, string>
   chairName: string
   chairEmail: string
+  delegateScores?: Record<string, unknown>
 }
 
 export async function loadChairData(userId: string): Promise<ChairDataDoc | null> {
-  if (!db) return null
-  const ref = doc(db, COLLECTION, userId)
-  const snap = await getDoc(ref)
-  if (!snap.exists()) return null
-  return snap.data() as ChairDataDoc
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('chair_data')
+    .select('data')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error || !data?.data) return null
+  return data.data as ChairDataDoc
 }
 
 export async function saveChairData(
   userId: string,
   data: ChairDataDoc
 ): Promise<void> {
-  if (!db) return
-  const ref = doc(db, COLLECTION, userId)
-  await setDoc(ref, data)
+  if (!supabase) return
+  await supabase
+    .from('chair_data')
+    .upsert({ user_id: userId, data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
 }

@@ -55,33 +55,29 @@ Open **http://localhost:5173**.
 - **Chair Room** — Digital room, delegates, motions, voting, speakers, crisis, archive
 - **Delegate Dashboard** — Country, matrix, prep, checklist, countdown
 
-### Step 2.5 — Gmail login with Firebase (optional)
+### Step 2.5 — Supabase auth & data (optional)
 
-To show **Log in with Gmail** / **Log out** in the dashboard header:
+To show **Log in with Gmail** / **Log out** and persist chair/delegate data across devices:
 
-1. In [Firebase Console](https://console.firebase.google.com/), create a project (or use an existing one).
-2. Go to **Build** → **Authentication** → **Get started** → enable **Google**, **Email/Password**, and **Anonymous** sign-in providers. Anonymous lets the app save chair and delegate conference data to Firebase even before a user signs in, so data survives clearing site/localStorage; when they later sign in with Google or email, that data stays linked to their account.
-3. Go to **Project settings** (gear) → **General** → **Your apps** → **Add app** → **Web** (</>).
-4. Register the app with a nickname; copy the `firebaseConfig` object (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).
-5. In the project root, copy the env example and fill in:
+1. Create a project at [Supabase](https://supabase.com/).
+2. Go to **Authentication** → **Providers** → enable **Google** and **Email**. Under **Auth** → **Settings**, enable **Anonymous sign-ins** so data is saved before users sign in.
+3. For Google: add your OAuth client ID/secret in Supabase → Authentication → Providers → Google. Use [Google Cloud Console](https://console.cloud.google.com/) to create OAuth credentials and add `https://<your-project>.supabase.co/auth/v1/callback` as an authorized redirect URI.
+4. In Supabase → **Project settings** → **API**, copy the **Project URL** and **anon public** key.
+5. Copy the env example and fill in:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and set the Firebase config (use the same names as in `.env.example`):
+Edit `.env.local` and set:
 
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
+- `VITE_SUPABASE_URL` — your Project URL
+- `VITE_SUPABASE_ANON_KEY` — your anon public key
 
-6. In Firebase Console → **Authentication** → **Settings** → **Authorized domains**, ensure `localhost` and your production domain are listed.
+6. Run the database migration: Supabase → **SQL Editor** → run the contents of `supabase/migrations/001_initial.sql` to create `chair_data`, `delegate_data`, `user_config`, and `config` tables with RLS.
 7. Restart the dev server (`npm run dev`). You should see **Log in with Gmail** in the header; after login, your name and **Log out** appear.
 
-If Firebase env vars are not set, the dashboard runs without the login section.
+If Supabase env vars are not set, the dashboard runs without the login section and data is stored in localStorage only.
 
 ### Step 2.6 — Build for production (optional)
 
@@ -90,7 +86,7 @@ npm run build
 npm run preview
 ```
 
-Then serve the **`dist/`** folder from your host. Do not open `index.html` with `file://` or a plain static server — use `npm run dev` locally or deploy `dist/` with a proper server. For production Gmail login, add your live domain to Firebase **Authorized domains** and set the same `VITE_FIREBASE_*` vars in your build environment.
+Then serve the **`dist/`** folder from your host. Do not open `index.html` with `file://` or a plain static server — use `npm run dev` locally or deploy `dist/` with a proper server. For production auth, add your live domain to Supabase **Authentication** → **URL configuration** and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your build environment.
 
 ---
 
@@ -108,7 +104,7 @@ Then serve the **`dist/`** folder from your host. Do not open `index.html` with 
   Don’t open `index.html` directly. Use `npm run dev` or deploy the built `dist/` folder.
 
 - **Firebase: “Redirect URI mismatch” or “unauthorized domain”**  
-  In Firebase Console → Authentication → Settings → **Authorized domains**, add `localhost` and your production domain (e.g. `thedashboard.seamuns.site`).
+  In Supabase → Authentication → **URL configuration**, add your site URL and redirect URLs. For Google OAuth, ensure your redirect URI in Google Cloud Console matches Supabase's callback URL.
 
 - **`package.json not found`**  
   Run commands from the repo root (the folder that contains `package.json`).

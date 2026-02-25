@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DelegateProvider, useDelegate } from '../context/DelegateContext'
-import { useFirebaseAuth } from '../context/FirebaseAuthContext'
+import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
   Globe,
   FileText,
@@ -49,7 +49,7 @@ function DelegateDashboardHeader() {
     lastSaved,
     isLoaded,
   } = useDelegate()
-  const { isAuthenticated } = useFirebaseAuth()
+  const { isAuthenticated } = useSupabaseAuth()
   const canRemove = conferences.length > 1
 
   const formatSaved = (d: Date) => {
@@ -219,7 +219,7 @@ function DelegateDashboardContent() {
 }
 
 export default function DelegateDashboard() {
-  const { user } = useFirebaseAuth()
+  const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
 
   return (

@@ -6,9 +6,9 @@ import ThemeSelector from './ThemeSelector'
 import Logo from './Logo'
 
 const nav = [
-  { to: '/', label: '🏠 Home' },
-  { to: '/chair', label: '⚖️ Chair Room' },
-  { to: '/delegate', label: '📄 Delegate' },
+  { to: '/', label: '🌐 Dashboard' },
+  { to: '/guide/chair', label: 'Chair guide' },
+  { to: '/guide/delegate', label: 'Delegate guide' },
 ]
 
 export default function Layout() {
@@ -64,7 +64,7 @@ export default function Layout() {
                 </NavLink>
               ))}
             </nav>
-            {import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID && (
+            {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
               <AuthSection />
             )}
           </div>
@@ -80,7 +80,7 @@ export default function Layout() {
             >
               {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            {import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID && (
+            {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
               <AuthSection />
             )}
           </div>

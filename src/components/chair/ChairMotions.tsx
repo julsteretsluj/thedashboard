@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Plus, Star, Check, X, Minus, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Star, Minus, ChevronDown, ChevronUp } from 'lucide-react'
 
 type PresetField = { key: string; label: string; placeholder: string }
 type Preset = {
@@ -214,7 +214,7 @@ export default function ChairMotions() {
       </div>
 
       {activeMotions.length > 0 && (
-        <div className="rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/30 p-4">
+        <div className="accent-highlight-wave rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/30 p-4">
           <h3 className="text-sm font-medium text-[var(--accent)] mb-3">● Active</h3>
           <ul className="space-y-2">
             {activeMotions.map((m) => (
@@ -230,22 +230,8 @@ export default function ChairMotions() {
                 <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
                 <div className="flex gap-1">
                   <button
-                    onClick={() => setMotionStatus(m.id, 'passed')}
-                    className="p-1.5 rounded-lg bg-[var(--success)]/20 text-[var(--success)] hover:bg-[var(--success)]/30"
-                    title="Passed"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setMotionStatus(m.id, 'failed')}
-                    className="p-1.5 rounded-lg bg-[var(--danger)]/20 text-[var(--danger)] hover:bg-[var(--danger)]/30"
-                    title="Failed"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <button
                     onClick={() => setMotionStatus(m.id, 'tabled')}
-                    className="p-1.5 rounded-lg bg-[var(--text-muted)]/20 text-[var(--text-muted)]"
+                    className="p-1.5 rounded-lg bg-[var(--text-muted)]/20 text-[var(--text-muted)] hover:bg-[var(--text-muted)]/30"
                     title="Tabled"
                   >
                     <Minus className="w-4 h-4" />

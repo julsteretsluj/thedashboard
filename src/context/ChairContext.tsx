@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
-import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker } from '../types'
+import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { loadChairData, saveChairData, type ChairDataDoc } from '../lib/chairData'
 
@@ -33,6 +33,7 @@ interface ChairState {
   delegationEmojiOverrides: Record<string, string>
   chairName: string
   chairEmail: string
+  delegateScores: Record<string, DelegateScore>
 }
 
 const defaultState: ChairState = {
@@ -61,6 +62,7 @@ const defaultState: ChairState = {
   delegationEmojiOverrides: {},
   chairName: '',
   chairEmail: '',
+  delegateScores: {},
 }
 
 type ChairContextValue = ChairState & {
@@ -104,6 +106,8 @@ type ChairContextValue = ChairState & {
   resetPrepChecklist: () => void
   setDelegationEmoji: (delegation: string, emoji: string | null) => void
   getDelegationEmoji: (delegation: string) => string
+  setDelegateScore: (delegateId: string, score: Partial<DelegateScore>) => void
+  getDelegateScore: (delegateId: string) => DelegateScore
   saveToAccount: () => Promise<void>
   isSaving: boolean
   lastSaved: Date | null
@@ -115,7 +119,7 @@ function loadChairStateFromStorage(): ChairState {
     const raw = localStorage.getItem(CHAIR_STATE_STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<ChairState>
-      return { ...defaultState, ...parsed }
+      return { ...defaultState, ...parsed, delegateScores: parsed.delegateScores ?? {} }
     }
   } catch {
     /* ignore */
@@ -158,6 +162,7 @@ export function ChairProvider({
             speakers: Array.isArray(data.speakers) ? (data.speakers as ChairState['speakers']) : defaultState.speakers,
             activeSpeaker: data.activeSpeaker as ChairState['activeSpeaker'],
             voteInProgress: data.voteInProgress as ChairState['voteInProgress'],
+            delegateScores: (data.delegateScores as ChairState['delegateScores']) ?? {},
           })
         } else {
           const local = loadChairStateFromStorage()
@@ -248,12 +253,16 @@ export function ChairProvider({
     }))
   }, [])
   const removeDelegate = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      delegates: s.delegates.filter((x) => x.id !== id),
-      delegateStrikes: s.delegateStrikes.filter((x) => x.delegateId !== id),
-      delegateFeedback: s.delegateFeedback.filter((x) => x.delegateId !== id),
-    }))
+    setState((s) => {
+      const { [id]: _, ...restScores } = s.delegateScores ?? {}
+      return {
+        ...s,
+        delegates: s.delegates.filter((x) => x.id !== id),
+        delegateStrikes: s.delegateStrikes.filter((x) => x.delegateId !== id),
+        delegateFeedback: s.delegateFeedback.filter((x) => x.delegateId !== id),
+        delegateScores: restScores,
+      }
+    })
   }, [])
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
     setState((s) => ({
@@ -463,6 +472,19 @@ export function ChairProvider({
     return getPresetDelegationFlag(delegation)
   }, [state.delegationEmojiOverrides])
 
+  const setDelegateScore = useCallback((delegateId: string, score: Partial<DelegateScore>) => {
+    setState((s) => ({
+      ...s,
+      delegateScores: {
+        ...(s.delegateScores ?? {}),
+        [delegateId]: { ...(s.delegateScores?.[delegateId] ?? {}), ...score },
+      },
+    }))
+  }, [])
+  const getDelegateScore = useCallback((delegateId: string): DelegateScore => {
+    return state.delegateScores?.[delegateId] ?? {}
+  }, [state.delegateScores])
+
   const value: ChairContextValue = {
     ...state,
     setCommittee,
@@ -514,6 +536,8 @@ export function ChairProvider({
     resetPrepChecklist,
     setDelegationEmoji,
     getDelegationEmoji,
+    setDelegateScore,
+    getDelegateScore,
     saveToAccount,
     isSaving,
     lastSaved,

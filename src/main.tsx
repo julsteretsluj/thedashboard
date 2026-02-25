@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { FirebaseAuthProvider, FallbackAuthProvider } from './context/FirebaseAuthContext'
+import { SupabaseAuthProvider, FallbackAuthProvider } from './context/SupabaseAuthContext'
 import App from './App'
 import './index.css'
 
@@ -14,11 +14,11 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 })
 
-const hasFirebase =
-  Boolean(import.meta.env.VITE_FIREBASE_API_KEY) &&
-  Boolean(import.meta.env.VITE_FIREBASE_PROJECT_ID)
+const hasSupabase =
+  Boolean(import.meta.env.VITE_SUPABASE_URL) &&
+  Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY)
 
-const AuthWrapper = hasFirebase ? FirebaseAuthProvider : FallbackAuthProvider
+const AuthWrapper = hasSupabase ? SupabaseAuthProvider : FallbackAuthProvider
 
 const app = (
   <StrictMode>

@@ -23,10 +23,10 @@ export default function ChairVoting() {
       <div className="space-y-6">
         <div>
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">🗳️ Voting</h2>
-          <p className="text-[var(--text-muted)] text-sm">Start a vote from a motion in Motions & Points.</p>
+          <p className="text-[var(--text-muted)] text-sm">Manual voting: chairs record each delegate&apos;s vote. Start a vote from Motions & Points.</p>
         </div>
         <div className="card-block p-8 text-center text-[var(--text-muted)]">
-          🗳️ No active vote. Go to Motions & Points and click &quot;Vote&quot; on a motion.
+          No active vote. Go to Motions & Points and click &quot;Vote&quot; on a motion. Then return here to manually record each delegate&apos;s Yes, No, or Abstain.
         </div>
       </div>
     )
@@ -45,15 +45,15 @@ export default function ChairVoting() {
         <div>
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             🗳️ Active Voting
-            <InfoPopover title="Voting">
-              Start a vote from a motion in Motions &amp; Points. Record each delegate&apos;s vote: Yes, No, or Abstain. Delegates marked &quot;Present and voting&quot; cannot abstain. Absent delegates have no vote buttons. End vote to record the result on the motion.
+            <InfoPopover title="Manual voting">
+              Not digital—chairs manually mark each delegate&apos;s vote. Start a vote from Motions &amp; Points, then record Yes, No, or Abstain for each delegate as they vote on the floor. &quot;Present and voting&quot; cannot abstain. Absent delegates have no vote. End vote to record the result.
             </InfoPopover>
           </h2>
-          <p className="text-[var(--text-muted)] text-sm">Record each delegate&apos;s vote.</p>
+          <p className="text-[var(--text-muted)] text-sm">Manually mark each delegate&apos;s vote as they vote on the floor.</p>
         </div>
       </div>
 
-      <div className="rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">
+      <div className="accent-highlight-wave rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">
         <p className="text-sm font-medium text-[var(--text)] mb-2">📜 Motion:</p>
         <p className="text-[var(--text)]">{voteInProgress.text}</p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm">

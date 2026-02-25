@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { COMMITTEE_OPTIONS } from '../constants/committees'
-import { useFirebaseAuth } from '../context/FirebaseAuthContext'
+import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
   loadUserCommitteeOptions,
-  loadCommitteeOptionsFromFirestore,
+  loadCommitteeOptionsFromSupabase,
   saveUserCommitteeOptions,
   type CommitteeOption,
 } from '../lib/committeeConfig'
@@ -18,7 +18,7 @@ const BUILT_IN_OPTIONS: CommitteeOption[] = COMMITTEE_OPTIONS.map((o) => ({ valu
  */
 export function useCommitteeOptions(): CommitteeOption[] {
   const [options, setOptions] = useState<CommitteeOption[]>(BUILT_IN_OPTIONS)
-  const { user } = useFirebaseAuth()
+  const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
   const savedRef = useRef(false)
 
@@ -38,14 +38,14 @@ export function useCommitteeOptions(): CommitteeOption[] {
         }
       }
 
-      // 2. Global Firestore config
-      const firestoreOpts = await loadCommitteeOptionsFromFirestore()
+      // 2. Global Supabase config
+      const supabaseOpts = await loadCommitteeOptionsFromSupabase()
       if (cancelled) return
-      if (firestoreOpts?.length) {
-        setOptions(firestoreOpts)
+      if (supabaseOpts?.length) {
+        setOptions(supabaseOpts)
         if (userId && !savedRef.current) {
           savedRef.current = true
-          saveUserCommitteeOptions(userId, firestoreOpts).catch(() => {})
+          saveUserCommitteeOptions(userId, supabaseOpts).catch(() => {})
         }
         return
       }

@@ -11,7 +11,7 @@ export default function ChairScore() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📊 Score</h2>
+        <h2 className="font-semibold text-2xl text-[var(--text)] mb-1">📊 Votes/voting</h2>
         <p className="text-[var(--text-muted)] text-sm">Motions and points summary.</p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

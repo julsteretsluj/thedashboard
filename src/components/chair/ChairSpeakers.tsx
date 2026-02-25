@@ -59,7 +59,7 @@ export default function ChairSpeakers() {
         <p className="text-[var(--text-muted)] text-sm">Mod Speakers List, Active Speaker (Timed), Consultation Speakers.</p>
       </div>
 
-      <div className="rounded-xl border-2 border-[var(--accent)]/50 bg-[var(--accent-soft)]/30 p-4">
+      <div className="accent-highlight-wave rounded-xl border-2 border-[var(--accent)]/50 bg-[var(--accent-soft)]/30 p-4">
           <h3 className="text-sm font-medium text-[var(--accent)] mb-2 flex items-center gap-2">
           <Mic className="w-4 h-4" /> ● Active speaker
         </h3>
