@@ -22,10 +22,13 @@ export default function ChairSpeakers() {
   const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
 
   useEffect(() => {
-    if (!activeSpeaker?.startTime) return
-    const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - activeSpeaker.startTime!) / 1000))
-    }, 1000)
+    if (!activeSpeaker?.startTime) {
+      setElapsed(0)
+      return
+    }
+    const tick = () => setElapsed(Math.floor((Date.now() - activeSpeaker.startTime!) / 1000))
+    tick() // show immediately
+    const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [activeSpeaker?.startTime, activeSpeaker?.id])
 
