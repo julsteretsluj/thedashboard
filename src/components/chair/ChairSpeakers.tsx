@@ -22,10 +22,16 @@ export default function ChairSpeakers() {
   const [durationInput, setDurationInput] = useState<string>(String(speakerDuration))
   const startTimeRef = useRef<number | null>(null)
 
-  const startTime =
+  let startTime: number | null = null
+  const raw =
     activeSpeaker?.startTime != null && typeof activeSpeaker.startTime === 'number'
       ? activeSpeaker.startTime
       : speakers.find((s) => s.speaking && s.startTime != null)?.startTime ?? null
+  if (raw != null) {
+    startTime = raw < 1e12 ? raw * 1000 : raw
+  }
+
+  const effectiveDuration = Math.max(speakerDuration || 0, DURATION_MIN)
 
   useEffect(() => {
     if (startTime == null) {
@@ -65,7 +71,7 @@ export default function ChairSpeakers() {
     setSelectedDelegate('')
   }
 
-  const remaining = activeSpeaker ? speakerDuration - elapsed : 0
+  const remaining = activeSpeaker ? effectiveDuration - elapsed : 0
   const isOvertime = remaining < 0
   const displaySeconds = isOvertime ? -remaining : remaining
 
