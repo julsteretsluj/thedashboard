@@ -101,12 +101,19 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     setAuthError(null)
     setIsLoading(true)
     try {
+      const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
       const { data: { user: current } } = await supabase.auth.getUser()
       if (current?.is_anonymous) {
-        const { error } = await supabase.auth.linkIdentity({ provider: 'google' })
+        const { error } = await supabase.auth.linkIdentity({
+          provider: 'google',
+          ...(redirectTo && { options: { redirectTo } }),
+        })
         if (error) throw error
       } else {
-        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          ...(redirectTo && { options: { redirectTo } }),
+        })
         if (error) throw error
       }
     } catch (e) {

@@ -584,7 +584,7 @@ function PerDelegateView({
           }}
           className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-base)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         >
-          {scored.map((s, i) => (
+          {scored.map((s) => (
             <option key={s.delegate.id} value={s.delegate.id}>
               {s.delegate.country} {s.delegate.name ? `(${s.delegate.name})` : ''}
             </option>
