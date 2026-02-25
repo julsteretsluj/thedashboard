@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User } from 'lucide-react'
 import type { DelegateScore } from '../../types'
@@ -221,7 +221,7 @@ function CriteriaDropdown({
     setOpen(false)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (openFirstSecondRef && criterionKey) {
       openFirstSecondRef.current[criterionKey] = { open: openFirstSecond }
       return () => { delete openFirstSecondRef.current[criterionKey] }
@@ -288,6 +288,7 @@ export default function ChairDelegateTracker() {
   const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji } = useChair()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const tableOpenRef = useRef<Record<string, { open: () => void }>>({})
 
   const scored = delegates.map((d) => {
     const s = getDelegateScore(d.id)
@@ -430,7 +431,17 @@ export default function ChairDelegateTracker() {
                 </th>
                 {DELEGATE_CRITERIA.map(({ key, label }) => (
                   <th key={key} className="px-2 py-2 font-medium text-[var(--text-muted)] whitespace-nowrap" title={label}>
-                    {label}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const first = byCountry[0]
+                        if (first) tableOpenRef.current[`${first.delegate.id}-${key}`]?.open()
+                      }}
+                      className="text-left w-full py-1 px-1 -mx-1 -my-1 rounded hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] cursor-pointer"
+                      title="Click to set first or second number (first delegate)"
+                    >
+                      {label}
+                    </button>
                   </th>
                 ))}
                 <th className="px-2 py-2 font-semibold text-[var(--brand)] text-right">Total</th>
@@ -450,6 +461,8 @@ export default function ChairDelegateTracker() {
                     <td key={key} className="px-2 py-1.5">
                       <CriteriaDropdown
                         criterionLabel={label}
+                        criterionKey={`${delegate.id}-${key}`}
+                        openFirstSecondRef={tableOpenRef}
                         value={score[key]}
                         onChange={(v) => setDelegateScore(delegate.id, { [key]: v })}
                       />
@@ -474,7 +487,17 @@ export default function ChairDelegateTracker() {
                 </th>
                 {POSITION_PAPER_CRITERIA.map(({ key, label }) => (
                   <th key={key} className="px-2 py-2 font-medium text-[var(--text-muted)] whitespace-nowrap" title={label}>
-                    {label}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const first = byCountry[0]
+                        if (first) tableOpenRef.current[`${first.delegate.id}-${key}`]?.open()
+                      }}
+                      className="text-left w-full py-1 px-1 -mx-1 -my-1 rounded hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] cursor-pointer"
+                      title="Click to set first or second number (first delegate)"
+                    >
+                      {label}
+                    </button>
                   </th>
                 ))}
                 <th className="px-2 py-2 font-semibold text-[var(--brand)] text-right">Total</th>
@@ -494,6 +517,8 @@ export default function ChairDelegateTracker() {
                     <td key={key} className="px-2 py-1.5">
                       <CriteriaDropdown
                         criterionLabel={label}
+                        criterionKey={`${delegate.id}-${key}`}
+                        openFirstSecondRef={tableOpenRef}
                         value={score[key]}
                         onChange={(v) => setDelegateScore(delegate.id, { [key]: v })}
                       />
@@ -716,7 +741,7 @@ function PerDelegateView({
                   <button
                     type="button"
                     onClick={() => openFirstSecondRef.current[key]?.open()}
-                    className="font-medium text-[var(--text)] text-left hover:text-[var(--brand)] hover:underline cursor-pointer"
+                    className="flex-1 min-w-0 text-left font-medium text-[var(--text)] py-1 -my-1 px-1 -mx-1 rounded hover:text-[var(--brand)] hover:bg-[var(--bg-elevated)] cursor-pointer select-none"
                     title="Click to set first or second number"
                   >
                     {label}
@@ -763,7 +788,7 @@ function PerDelegateView({
                   <button
                     type="button"
                     onClick={() => openFirstSecondRef.current[key]?.open()}
-                    className="font-medium text-[var(--text)] text-left hover:text-[var(--brand)] hover:underline cursor-pointer"
+                    className="flex-1 min-w-0 text-left font-medium text-[var(--text)] py-1 -my-1 px-1 -mx-1 rounded hover:text-[var(--brand)] hover:bg-[var(--bg-elevated)] cursor-pointer select-none"
                     title="Click to set first or second number"
                   >
                     {label}
