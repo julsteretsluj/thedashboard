@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
 
 const CHAIR_STEPS = [
-  { step: 1, title: 'Set committee & topic', body: 'Open Settings (⚙️) or go to 📌 Committee & Topic. Enter committee name, optional universe for fictional committees, topic, and your chair name/email.' },
+  { step: 1, title: 'Set committee & topics', body: 'Open Settings (⚙️) or go to 📌 Committee & Topic. Enter committee name, optional universe for fictional committees, up to 3 topics, and your chair name/email.' },
   { step: 2, title: 'Prep checklist', body: 'Use ✅ Prep checklist to tick off rules, topic research, room setup, materials, and team coordination before the conference.' },
   { step: 3, title: 'Add delegates', body: 'Go to 👥 Delegates. Select country from the dropdown (all UNGA members) or add custom. Optionally add name and email. Use the 😊 icon to set a custom flag/emoji for delegations like FWC.' },
   { step: 4, title: 'Roll call', body: 'In ✅ Roll Call, mark each delegate as Absent, Present (may abstain), or Present and voting (must vote). Click to cycle. Mark roll call complete when done.' },

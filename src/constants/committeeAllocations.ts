@@ -14,7 +14,9 @@ import {
   UKPC_ALLOCATION,
   PRESS_CORPS_ALLOCATION,
   HCC_ALLOCATION,
+  HSOC_ALLOCATION,
 } from './nonTraditionalAllocations'
+import { MUN07_IV_ALLOCATIONS } from './mun07Allocations'
 
 /** UNSC: 5 permanent + 10 elected (example composition; chairs can add custom via "Other"). */
 const UNSC_DELEGATIONS = [
@@ -49,6 +51,8 @@ const ALLOCATION_BY_VALUE: Record<string, readonly string[]> = {
   UKPC: UKPC_ALLOCATION,
   PC: PRESS_CORPS_ALLOCATION,
   HCC: HCC_ALLOCATION,
+  HSOC: HSOC_ALLOCATION,
+  USCC: US_SENATE_ALLOCATION_OPTIONS,
 }
 
 const FULL_UNGA = [...DELEGATION_OPTIONS]
@@ -83,12 +87,27 @@ function toCommitteeValue(committeeValueOrLabel: string): string {
  * Returns possible delegation (country/role) options for a committee.
  * Use in Chair when adding delegates and in Delegate Matrix per-committee tab.
  * @param committeeValueOrLabel - Committee value (e.g. UNSC, AL) or display label; custom names get full UNGA.
+ * @param presetId - When set (e.g. 'mun07-iv'), uses preset-specific allocation matrix.
+ * @param presetAllocationCommittees - When set, only these committees use preset allocations. When undefined, all use preset.
  */
-export function getDelegationsForCommittee(committeeValueOrLabel: string): string[] {
+export function getDelegationsForCommittee(
+  committeeValueOrLabel: string,
+  presetId?: string,
+  presetAllocationCommittees?: string[]
+): string[] {
   if (!committeeValueOrLabel || !committeeValueOrLabel.trim()) {
     return FULL_UNGA
   }
   const value = toCommitteeValue(committeeValueOrLabel)
+  const usePreset =
+    presetId === 'mun07-iv' &&
+    value &&
+    MUN07_IV_ALLOCATIONS[value] &&
+    (presetAllocationCommittees == null ||
+      (presetAllocationCommittees.length > 0 && presetAllocationCommittees.includes(value)))
+  if (usePreset) {
+    return [...MUN07_IV_ALLOCATIONS[value]]
+  }
   const limited = value ? ALLOCATION_BY_VALUE[value] : undefined
   if (limited) return [...limited]
   return FULL_UNGA
@@ -99,12 +118,16 @@ export function getDelegationsForCommittee(committeeValueOrLabel: string): strin
  * with possible participants. Real participants appear first so chairs see who's already added.
  * @param committeeValueOrLabel - Current committee
  * @param alreadyInRoom - Country names already added as delegates (real participants)
+ * @param presetId - When set, uses preset-specific allocation matrix.
+ * @param presetAllocationCommittees - When set, only these committees use preset allocations.
  */
 export function getAllocationOptionsForCommittee(
   committeeValueOrLabel: string,
-  alreadyInRoom: string[]
+  alreadyInRoom: string[],
+  presetId?: string,
+  presetAllocationCommittees?: string[]
 ): string[] {
-  const possible = getDelegationsForCommittee(committeeValueOrLabel)
+  const possible = getDelegationsForCommittee(committeeValueOrLabel, presetId, presetAllocationCommittees)
   const inRoomSet = new Set(alreadyInRoom)
   const possibleSet = new Set(possible)
   const onlyInRoom = alreadyInRoom.filter((c) => !possibleSet.has(c))

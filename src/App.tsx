@@ -7,6 +7,7 @@ import ChairRoom from './pages/ChairRoom'
 import DelegateDashboard from './pages/DelegateDashboard'
 import ChairSetupGuide from './pages/ChairSetupGuide'
 import DelegateSetupGuide from './pages/DelegateSetupGuide'
+import About from './pages/About'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="globe" element={<GlobeView />} />
           <Route path="guide/chair" element={<ChairSetupGuide />} />
           <Route path="guide/delegate" element={<DelegateSetupGuide />} />
+          <Route path="about" element={<About />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

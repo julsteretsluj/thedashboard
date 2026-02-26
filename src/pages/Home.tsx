@@ -45,6 +45,11 @@ export default function Home() {
         <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
         <span>📋 Per-conference setup for chairs and delegates</span>
       </p>
+      <p className="mt-2 text-[var(--text-muted)] text-xs sm:text-sm">
+        <Link to="/about" className="text-[var(--brand)] hover:underline">
+          View all features →
+        </Link>
+      </p>
 
       <section className="mt-10 sm:mt-14 pt-8 sm:pt-12 border-t border-[var(--border)] text-left">
         <OfficialUnLinks showHeading={true} />

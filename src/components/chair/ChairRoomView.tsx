@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { AlertTriangle, ThumbsUp, MessageCircle, ChevronDown } from 'lucide-react'
+import { AlertTriangle, ThumbsUp, MessageCircle, ChevronDown, Trophy } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
+import DelegateScorePopup from './DelegateScorePopup'
 import type { Delegate, RollCallStatus } from '../../types'
 import { STRIKE_THRESHOLD } from './strikeMisbehaviours'
 
@@ -14,14 +15,17 @@ export default function ChairRoomView() {
   const {
     delegates,
     committee,
-    topic,
+    topics,
     universe,
     getStrikeCountsByType,
     addDelegateFeedback,
     getFeedbackCountsByType,
     getDelegationEmoji,
+    setDelegateScore,
+    getDelegateScore,
   } = useChair()
   const [openDelegateId, setOpenDelegateId] = useState<string | null>(null)
+  const [scorePopupDelegateId, setScorePopupDelegateId] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,7 +51,8 @@ export default function ChairRoomView() {
           </h2>
           <p className="text-[var(--text-muted)] text-sm">
             {committee}
-            {universe ? ` — ${universe} — ${topic}` : ` — ${topic}`}
+            {universe ? ` — ${universe} — ` : ` — `}
+            {(topics ?? []).filter(Boolean).join(' · ') || '(no topics set)'}
           </p>
           <p className="text-xs text-[var(--text-muted)] mt-1">
             Click a delegate to give a compliment or concern reminder.
@@ -186,8 +191,29 @@ export default function ChairRoomView() {
                         <MessageCircle className="w-4 h-4 text-[var(--danger)]" />
                         Give concern reminder
                       </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setScorePopupDelegateId(d.id)
+                          setOpenDelegateId(null)
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--bg-elevated)] transition-colors"
+                      >
+                        <Trophy className="w-4 h-4 text-[var(--gold)]" />
+                        Edit scores
+                      </button>
                     </div>
                   )}
+                {scorePopupDelegateId === d.id && (
+                  <DelegateScorePopup
+                    delegate={d}
+                    score={getDelegateScore(d.id)}
+                    setDelegateScore={setDelegateScore}
+                    onClose={() => setScorePopupDelegateId(null)}
+                    getDelegationEmoji={getDelegationEmoji}
+                  />
+                )}
                 </div>
               )
             })}

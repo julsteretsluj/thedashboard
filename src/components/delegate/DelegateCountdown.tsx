@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
 import { Clock } from 'lucide-react'
 import DateTimeFields from '../DateTimeFields'
+import { PRESET_CONFERENCES } from '../../constants/presetConferences'
 
 type Diff = { days: number; hours: number; minutes: number; seconds: number } | null
 
@@ -112,7 +113,11 @@ export default function DelegateCountdown() {
     setConferenceEndDate,
     positionPaperDeadline,
     setPositionPaperDeadline,
+    presetId,
   } = useDelegate()
+  const positionPaperGuidelinesUrl = presetId
+    ? PRESET_CONFERENCES.find((p) => p.id === presetId)?.positionPaperGuidelinesUrl
+    : undefined
   const diff = useCountdown(countdownDate ?? '')
   const diffEnd = useCountdown(conferenceEndDate ?? '')
   const diffPaper = useCountdown(positionPaperDeadline ?? '')
@@ -145,7 +150,22 @@ export default function DelegateCountdown() {
 
       <div className="card-block p-4 space-y-4">
         <h3 className="font-medium text-lg text-[var(--text)]">📄 Position paper countdown</h3>
-        <p className="text-[var(--text-muted)] text-sm">Set the position paper due date to see time remaining.</p>
+        <p className="text-[var(--text-muted)] text-sm">
+          Set the position paper due date to see time remaining.
+          {positionPaperGuidelinesUrl && (
+            <>
+              {' '}
+              <a
+                href={positionPaperGuidelinesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--accent)] hover:underline"
+              >
+                Position paper guidelines ↗
+              </a>
+            </>
+          )}
+        </p>
         <DateTimeFields
           id="countdown-position-paper-deadline"
           label="Position paper due (date & time)"

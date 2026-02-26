@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChairProvider, useChair } from '../context/ChairContext'
 import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
@@ -37,6 +38,7 @@ function getSidebarExpanded(): boolean {
   }
 }
 import ChairRoomView from '../components/chair/ChairRoomView'
+import { PRESET_CONFERENCES } from '../constants/presetConferences'
 import ChairDelegates from '../components/chair/ChairDelegates'
 import ChairMotions from '../components/chair/ChairMotions'
 import ChairResolutions from '../components/chair/ChairResolutions'
@@ -57,6 +59,8 @@ import OfficialUnLinks from '../components/OfficialUnLinks'
 import Breadcrumbs from '../components/Breadcrumbs'
 
 // Order: setup → session flow → tracking → reference
+const SECTION_IDS = ['committee', 'prep', 'flow', 'delegates', 'room', 'rollcall', 'session', 'speakers', 'motions', 'resolutions', 'voting', 'score', 'crisis', 'tracker', 'archive', 'links'] as const
+
 const sections = [
   { id: 'committee', label: '📌 Committee & Topic', icon: BookOpen },
   { id: 'prep', label: '✅ Prep checklist', icon: ListChecks },
@@ -183,6 +187,7 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
     activeConferenceId,
     setActiveConference,
     addConference,
+    addConferenceFromPreset,
     removeConference,
     saveToAccount,
     isSaving,
@@ -250,6 +255,27 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
           >
             <Plus className="w-3.5 h-3.5" /> Add conference
           </button>
+          {PRESET_CONFERENCES.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                const v = e.target.value
+                if (v) {
+                  addConferenceFromPreset(v)
+                  e.target.value = ''
+                }
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Add from preset"
+            >
+              <option value="">From preset…</option>
+              {PRESET_CONFERENCES.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} {p.location ? `(${p.location})` : ''}
+                </option>
+              ))}
+            </select>
+          )}
           {canRemove && (
             <button
               type="button"
@@ -288,7 +314,25 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
 export default function ChairRoom() {
   const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
-  const [active, setActive] = useState('committee')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const hashToSection = (): string => {
+    const hash = location.hash.replace(/^#/, '')
+    return hash && SECTION_IDS.includes(hash as (typeof SECTION_IDS)[number]) ? hash : 'committee'
+  }
+  const [active, setActive] = useState(() => hashToSection())
+
+  useEffect(() => {
+    const fromHash = hashToSection()
+    setActive((prev) => (fromHash !== prev ? fromHash : prev))
+  }, [location.hash])
+
+  useEffect(() => {
+    const target = `${location.pathname}#${active}`
+    if (location.pathname + (location.hash || '') !== target) {
+      navigate(target, { replace: true })
+    }
+  }, [active, location.pathname, location.hash, navigate])
 
   return (
     <ChairProvider userId={userId}>

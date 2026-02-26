@@ -45,7 +45,7 @@ export default function ChairVoting() {
   const yes = Object.values(delegateVotes).filter((v) => v === 'yes').length
   const no = Object.values(delegateVotes).filter((v) => v === 'no').length
   const abstain = Object.values(delegateVotes).filter((v) => v === 'abstain').length
-  const votingDelegates = delegates.filter((d) => getRollCallStatus(d) !== 'absent')
+  const votingDelegates = delegates.filter((d) => getRollCallStatus(d) !== 'absent' && !d.votingRightsRevoked)
   const total = votingDelegates.length
   const recorded = Object.keys(delegateVotes).length
 
@@ -89,11 +89,13 @@ export default function ChairVoting() {
             const vote = delegateVotes[d.id]
             const rc = getRollCallStatus(d)
             const isAbsent = rc === 'absent'
-            const canAbstain = rc === 'present'
+            const votingRevoked = !!d.votingRightsRevoked
+            const cannotVote = isAbsent || votingRevoked
+            const canAbstain = rc === 'present' && !votingRevoked
             return (
               <li
                 key={d.id}
-                className={`px-4 py-3 flex items-center justify-between ${isAbsent ? 'opacity-60' : ''}`}
+                className={`px-4 py-3 flex items-center justify-between ${cannotVote ? 'opacity-60' : ''}`}
               >
                 <span className="text-sm text-[var(--text)] flex items-center gap-2">
                   <span className="shrink-0">{getDelegationEmoji(d.country) || '🏳️'}</span>
@@ -102,8 +104,11 @@ export default function ChairVoting() {
                   {isAbsent && (
                     <span className="ml-2 text-xs text-[var(--text-muted)]">(Absent)</span>
                   )}
+                  {votingRevoked && (
+                    <span className="ml-2 text-xs text-[var(--danger)]">(Voting revoked)</span>
+                  )}
                 </span>
-                {isAbsent ? (
+                {cannotVote ? (
                   <span className="text-xs text-[var(--text-muted)]">—</span>
                 ) : (
                   <div className="flex gap-1">

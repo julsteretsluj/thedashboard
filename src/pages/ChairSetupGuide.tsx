@@ -4,7 +4,7 @@ import Breadcrumbs from '../components/Breadcrumbs'
 
 const CHAIR_SETUP_STEPS = [
   { step: 1, title: 'Sign in (optional)', body: 'Sign in to save your committee data to your account. Your setup will persist across devices and sessions.' },
-  { step: 2, title: 'Set committee & topic', body: 'Go to Committee & Topic. Enter committee name, optional universe (for fictional committees), topic, and your chair name/email.' },
+  { step: 2, title: 'Set committee & topics', body: 'Go to Committee & Topic. Enter committee name, optional universe (for fictional committees), up to 3 topics, and your chair name/email.' },
   { step: 3, title: 'Add delegates', body: 'Go to Delegates. Select countries from the dropdown (all UNGA members) or add custom delegations. Optionally add delegate names and emails. Use the icon to set a custom flag/emoji for special delegations.' },
   { step: 4, title: 'Prep checklist', body: 'Use the Prep checklist to tick off rules review, topic research, room setup, materials, and team coordination before the conference.' },
   { step: 5, title: 'Share the link', body: 'Use the Chair Room boarding pass to copy and share the link with delegates so they can access their dashboard with the correct conference context.' },

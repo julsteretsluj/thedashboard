@@ -9,9 +9,11 @@ const ALL_COMMITTEES = [
   { value: 'UKPC', label: 'UKPC — UK Parliament Committee' },
   { value: 'PC', label: 'PC — Press Corps' },
   { value: 'HCC', label: 'HCC — Historical Crisis Committee' },
+  { value: 'HSOC', label: 'HSOC — Historical Special Operations Committee' },
   { value: 'UNSC', label: 'SC / UNSC — Security Council' },
   { value: 'HSC', label: 'HSC — Historical Security Council' },
   { value: 'US-Senate', label: 'US Senate — United States Senate' },
+  { value: 'USCC', label: 'USCC — United States Congress Committee' },
   { value: 'ASEAN', label: 'ASEAN — Association of Southeastern Asian Nations' },
   { value: 'AU', label: 'AU — African Union' },
   { value: 'CCPCJ', label: 'CCPCJ — Commission on Crime Prevention and Criminal Justice' },
@@ -64,6 +66,7 @@ const ALL_COMMITTEES = [
   { value: 'WB', label: 'WB — World Bank' },
   { value: 'WTO', label: 'WTO — World Trade Organization' },
   { value: 'Crisis', label: 'Crisis Committee' },
+  { value: 'FWC', label: 'FWC — Fantasy World Committee' },
 ] as const
 
 export const COMMITTEE_OPTIONS = ALL_COMMITTEES

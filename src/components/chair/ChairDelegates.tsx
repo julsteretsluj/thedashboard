@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Mail } from 'lucide-react'
+import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Pencil, Trophy, Vote, Mic } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
+import DelegateScorePopup from './DelegateScorePopup'
 import { DEFAULT_MISBEHAVIOURS, STRIKE_THRESHOLD } from './strikeMisbehaviours'
 import { OTHER_DELEGATION_VALUE } from '../../constants/delegations'
 import { getAllocationOptionsForCommittee, getDelegationsForCommittee } from '../../constants/committeeAllocations'
@@ -13,30 +14,41 @@ export default function ChairDelegates() {
     removeDelegate,
     updateDelegate,
     committee,
+    currentPresetId,
+    currentPresetAllocationCommittees,
     addStrike,
     removeStrike,
     getStrikeCountsByType,
     getDelegationEmoji,
     setDelegationEmoji,
+    setDelegateScore,
+    getDelegateScore,
   } = useChair()
   const [countrySelect, setCountrySelect] = useState<string>('')
   const [customCountry, setCustomCountry] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [showBulkAdd, setShowBulkAdd] = useState(false)
-  const [editingEmailForId, setEditingEmailForId] = useState<string | null>(null)
-  const [editingEmailValue, setEditingEmailValue] = useState('')
+  const [editingDelegateId, setEditingDelegateId] = useState<string | null>(null)
+  const [editCountrySelect, setEditCountrySelect] = useState('')
+  const [editCustomCountry, setEditCustomCountry] = useState('')
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
   const [strikeDelegateId, setStrikeDelegateId] = useState<string | null>(null)
   const [customMisbehaviour, setCustomMisbehaviour] = useState('')
   const [selectedStrikeType, setSelectedStrikeType] = useState('')
   const [editingEmojiFor, setEditingEmojiFor] = useState<string | null>(null)
   const [customEmojiInput, setCustomEmojiInput] = useState('')
+  const [scorePopupDelegateId, setScorePopupDelegateId] = useState<string | null>(null)
+  const [selectedDelegateIds, setSelectedDelegateIds] = useState<Set<string>>(new Set())
 
   const countryValue = countrySelect === OTHER_DELEGATION_VALUE ? customCountry.trim() : countrySelect
 
   const allocationOptions = getAllocationOptionsForCommittee(
     committee,
-    delegates.map((d) => d.country)
+    delegates.map((d) => d.country),
+    currentPresetId,
+    currentPresetAllocationCommittees
   )
 
   const addOne = () => {
@@ -55,13 +67,33 @@ export default function ChairDelegates() {
   }
 
   const addAllMissing = () => {
-    const possible = getDelegationsForCommittee(committee)
+    const possible = getDelegationsForCommittee(committee, currentPresetId, currentPresetAllocationCommittees)
     possible.forEach((c) => {
       if (!delegates.some((d) => d.country === c)) {
         addDelegate({ country: c, committee: committee || undefined, rollCallStatus: 'absent' })
       }
     })
     setShowBulkAdd(false)
+  }
+
+  const sortedDelegates = [...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' }))
+  const toggleSelect = (id: string) => {
+    setSelectedDelegateIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const selectAll = () => setSelectedDelegateIds(new Set(sortedDelegates.map((d) => d.id)))
+  const clearSelection = () => setSelectedDelegateIds(new Set())
+  const removeSelected = () => {
+    selectedDelegateIds.forEach((id) => removeDelegate(id))
+    clearSelection()
+  }
+  const removeAll = () => {
+    delegates.forEach((d) => removeDelegate(d.id))
+    clearSelection()
   }
 
   return (
@@ -71,7 +103,7 @@ export default function ChairDelegates() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             👥 Delegates
             <InfoPopover title="Delegates">
-              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Use the 😊 icon to set a custom flag/emoji for non-UN delegations (e.g. FWC). Strikes can be recorded per delegate.
+              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Use 🗳️ to revoke voting rights and 🎤 to revoke speaking rights (e.g. sanctions). Use the 😊 icon to set a custom flag/emoji for non-UN delegations (e.g. FWC). Strikes can be recorded per delegate.
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">
@@ -155,9 +187,9 @@ export default function ChairDelegates() {
         <div className="accent-highlight-wave rounded-xl border border-[var(--accent)] bg-[var(--accent-soft)] p-4 flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm text-[var(--text)]">
             Add all possible participants for this committee not yet in the list?
-            {getDelegationsForCommittee(committee).length < 50 && (
+            {getDelegationsForCommittee(committee, currentPresetId).length < 50 && (
               <span className="text-[var(--text-muted)] ml-1">
-                ({getDelegationsForCommittee(committee).length} for this committee)
+                ({getDelegationsForCommittee(committee, currentPresetId).length} for this committee)
               </span>
             )}
           </p>
@@ -169,12 +201,43 @@ export default function ChairDelegates() {
       )}
 
       <div className="card-block overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
-          <User className="w-4 h-4 text-[var(--text-muted)]" />
-          <span className="text-sm font-medium text-[var(--text)]">👥 Current delegates ({delegates.length})</span>
+        <div className="px-4 py-3 border-b border-[var(--border)] flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-[var(--text-muted)]" />
+            <span className="text-sm font-medium text-[var(--text)]">👥 Current delegates ({delegates.length})</span>
+          </div>
+          {delegates.length > 0 && (
+            <>
+              <label className="flex items-center gap-2 text-sm text-[var(--text-muted)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedDelegateIds.size === delegates.length}
+                  onChange={(e) => (e.target.checked ? selectAll() : clearSelection())}
+                  className="rounded border-[var(--border)]"
+                />
+                Select all
+              </label>
+              <div className="flex gap-2 ml-auto">
+                {selectedDelegateIds.size > 0 && (
+                  <button
+                    onClick={removeSelected}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium hover:bg-[var(--danger)]/25 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Remove selected ({selectedDelegateIds.size})
+                  </button>
+                )}
+                <button
+                  onClick={removeAll}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium hover:bg-[var(--danger)]/25 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Remove all
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-[28rem] overflow-auto">
-          {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => {
+          {sortedDelegates.map((d) => {
             const counts = getStrikeCountsByType(d.id)
             const hasRed = Object.values(counts).some((c) => c >= STRIKE_THRESHOLD)
             const totalStrikes = Object.values(counts).reduce((a, b) => a + b, 0)
@@ -182,10 +245,18 @@ export default function ChairDelegates() {
             return (
               <li
                 key={d.id}
-                className={`px-4 py-3 flex flex-col gap-2 ${hasRed ? 'bg-[var(--danger)]/10 border-l-4 border-[var(--danger)]' : ''}`}
+                className={`px-4 py-3 flex flex-col gap-2 ${hasRed ? 'bg-[var(--danger)]/10 border-l-4 border-[var(--danger)]' : ''} ${selectedDelegateIds.has(d.id) ? 'bg-[var(--accent-soft)]/50' : ''}`}
               >
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-sm text-[var(--text)] flex items-center gap-2 min-w-0">
+                  <label className="flex items-center gap-2 min-w-0 cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedDelegateIds.has(d.id)}
+                      onChange={() => toggleSelect(d.id)}
+                      className="rounded border-[var(--border)]"
+                    />
+                  </label>
+                  <span className="text-sm text-[var(--text)] flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-base shrink-0" title="Delegation flag/emoji">
                       {getDelegationEmoji(d.country) || '🏳️'}
                     </span>
@@ -205,14 +276,47 @@ export default function ChairDelegates() {
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
+                      onClick={() => setScorePopupDelegateId(scorePopupDelegateId === d.id ? null : d.id)}
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--gold)] hover:bg-[var(--gold)]/10 transition-colors"
+                      title="Edit scores"
+                    >
+                      <Trophy className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => {
-                        setEditingEmailForId(editingEmailForId === d.id ? null : d.id)
-                        setEditingEmailValue(d.email ?? '')
+                        if (editingDelegateId === d.id) {
+                          setEditingDelegateId(null)
+                        } else {
+                          setEditingDelegateId(d.id)
+                          const editOpts = getAllocationOptionsForCommittee(committee, delegates.filter((x) => x.id !== d.id).map((x) => x.country), currentPresetId)
+                          setEditCountrySelect(editOpts.includes(d.country) ? d.country : OTHER_DELEGATION_VALUE)
+                          setEditCustomCountry(editOpts.includes(d.country) ? '' : d.country)
+                          setEditName(d.name ?? '')
+                          setEditEmail(d.email ?? '')
+                        }
                       }}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors"
-                      title="Edit delegate email"
+                      title="Edit allocation, name, email"
                     >
-                      <Mail className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => updateDelegate(d.id, { votingRightsRevoked: !d.votingRightsRevoked })}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        d.votingRightsRevoked ? 'text-[var(--danger)] bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]'
+                      }`}
+                      title={d.votingRightsRevoked ? 'Voting revoked — click to restore' : 'Revoke voting rights'}
+                    >
+                      <Vote className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => updateDelegate(d.id, { speakingRightsRevoked: !d.speakingRightsRevoked })}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        d.speakingRightsRevoked ? 'text-[var(--danger)] bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]'
+                      }`}
+                      title={d.speakingRightsRevoked ? 'Speaking revoked — click to restore' : 'Revoke speaking rights'}
+                    >
+                      <Mic className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
@@ -278,42 +382,80 @@ export default function ChairDelegates() {
                     </button>
                   </div>
                 )}
-                {editingEmailForId === d.id && (
-                  <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-center">
-                    <label className="text-xs text-[var(--text-muted)]">Delegate email:</label>
-                    <input
-                      type="email"
-                      value={editingEmailValue}
-                      onChange={(e) => setEditingEmailValue(e.target.value)}
-                      placeholder="delegate@example.com"
-                      className="flex-1 min-w-[12rem] px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
-                    />
-                    <button
-                      onClick={() => {
-                        updateDelegate(d.id, { email: editingEmailValue.trim() || undefined })
-                        setEditingEmailForId(null)
-                        setEditingEmailValue('')
-                      }}
-                      className="px-2 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium"
-                    >
-                      Apply
-                    </button>
-                    <button
-                      onClick={() => {
-                        updateDelegate(d.id, { email: undefined })
-                        setEditingEmailForId(null)
-                        setEditingEmailValue('')
-                      }}
-                      className="px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => { setEditingEmailForId(null); setEditingEmailValue('') }}
-                      className="px-2 py-1.5 rounded-lg text-[var(--text-muted)] text-xs"
-                    >
-                      Cancel
-                    </button>
+                {editingDelegateId === d.id && (
+                  <div className="pt-2 border-t border-[var(--border)] space-y-3">
+                    <div className="flex flex-wrap gap-3 items-end">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs text-[var(--text-muted)]">Allocation (country)</span>
+                        <select
+                          value={editCountrySelect}
+                          onChange={(e) => setEditCountrySelect(e.target.value)}
+                          className="min-w-[12rem] max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                        >
+                          {getAllocationOptionsForCommittee(committee, delegates.filter((x) => x.id !== d.id).map((x) => x.country), currentPresetId).map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                          <option value={OTHER_DELEGATION_VALUE}>— Other —</option>
+                        </select>
+                      </label>
+                      {editCountrySelect === OTHER_DELEGATION_VALUE && (
+                        <label className="flex flex-col gap-1">
+                          <span className="text-xs text-[var(--text-muted)]">Custom country</span>
+                          <input
+                            type="text"
+                            value={editCustomCountry}
+                            onChange={(e) => setEditCustomCountry(e.target.value)}
+                            placeholder="e.g. Observer State"
+                            className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                          />
+                        </label>
+                      )}
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs text-[var(--text-muted)]">Name (optional)</span>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Delegate name"
+                          className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs text-[var(--text-muted)]">Email (optional)</span>
+                        <input
+                          type="email"
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          placeholder="delegate@example.com"
+                          className="w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const newCountry = editCountrySelect === OTHER_DELEGATION_VALUE ? editCustomCountry.trim() : editCountrySelect
+                          if (newCountry) {
+                            updateDelegate(d.id, {
+                              country: newCountry,
+                              name: editName.trim() || undefined,
+                              email: editEmail.trim() || undefined,
+                            })
+                            setEditingDelegateId(null)
+                          }
+                        }}
+                        disabled={!(editCountrySelect === OTHER_DELEGATION_VALUE ? editCustomCountry.trim() : editCountrySelect)}
+                        className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => setEditingDelegateId(null)}
+                        className="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs hover:text-[var(--text)]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 )}
                 {Object.keys(counts).length > 0 && (
@@ -338,6 +480,15 @@ export default function ChairDelegates() {
                       </span>
                     ))}
                   </div>
+                )}
+                {scorePopupDelegateId === d.id && (
+                  <DelegateScorePopup
+                    delegate={d}
+                    score={getDelegateScore(d.id)}
+                    setDelegateScore={setDelegateScore}
+                    onClose={() => setScorePopupDelegateId(null)}
+                    getDelegationEmoji={getDelegationEmoji}
+                  />
                 )}
                 {showStrikeForm && (
                   <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-end">

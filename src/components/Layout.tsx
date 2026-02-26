@@ -10,6 +10,7 @@ const nav = [
   { to: '/chair', label: 'Chair' },
   { to: '/delegate', label: 'Delegate' },
   { to: '/globe', label: 'Globe' },
+  { to: '/about', label: 'About' },
   { to: '/guide/chair', label: 'Chair guide' },
   { to: '/guide/delegate', label: 'Delegate guide' },
 ]

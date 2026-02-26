@@ -3,6 +3,7 @@ import { useDelegate } from '../../context/DelegateContext'
 import InfoPopover from '../InfoPopover'
 import DateTimeFields from '../DateTimeFields'
 import { CompactCountdownCards } from './DelegateCountdown'
+import { PRESET_CONFERENCES } from '../../constants/presetConferences'
 
 const DURATION_DAYS_MIN = 0
 const DURATION_DAYS_MAX = 31
@@ -11,6 +12,7 @@ export default function DelegateCountry() {
   const {
     name: conferenceName,
     country,
+    committeeTopics = [],
     delegateEmail,
     stanceOverview,
     countdownDate,
@@ -18,12 +20,18 @@ export default function DelegateCountry() {
     positionPaperDeadline,
     setName: setConferenceName,
     setCountry,
+    setCommitteeTopicAtIndex,
     setDelegateEmail,
     setStanceOverview,
     setCountdownDate,
     setConferenceEndDate,
     setPositionPaperDeadline,
+    presetId,
   } = useDelegate()
+
+  const positionPaperGuidelinesUrl = presetId
+    ? PRESET_CONFERENCES.find((p) => p.id === presetId)?.positionPaperGuidelinesUrl
+    : undefined
 
   const durationDays =
     countdownDate && conferenceEndDate
@@ -121,6 +129,16 @@ export default function DelegateCountry() {
           onChange={(iso) => setPositionPaperDeadline(iso)}
           dateInputClassName="max-w-[12rem]"
         />
+        {positionPaperGuidelinesUrl && (
+          <a
+            href={positionPaperGuidelinesUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+          >
+            Position paper guidelines ↗
+          </a>
+        )}
       </div>
 
       <div className="flex items-start gap-2">
@@ -147,6 +165,21 @@ export default function DelegateCountry() {
             className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           />
         </label>
+        <div className="block">
+          <span className="text-xs text-[var(--text-muted)] block mb-1">Committee topics (up to 3)</span>
+          {[0, 1, 2].map((i) => (
+            <input
+              key={i}
+              id={`stance-topic-${i}`}
+              name={`stance-topic-${i}`}
+              type="text"
+              value={committeeTopics[i] ?? ''}
+              onChange={(e) => setCommitteeTopicAtIndex(i, e.target.value)}
+              placeholder={i === 0 ? 'e.g. The Question of Cybersecurity and International Peace' : `Topic ${i + 1} (optional)`}
+              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] mt-2 first:mt-0"
+            />
+          ))}
+        </div>
         <label className="block" htmlFor="stance-country">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Country</span>
           <input

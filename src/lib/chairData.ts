@@ -5,7 +5,9 @@ import { supabase } from './supabase'
  */
 export interface ChairStateDoc {
   committee: string
-  topic: string
+  /** Committee topics (up to 3). Legacy: topic string migrated to topics[0]. */
+  topics?: string[]
+  topic?: string
   universe: string
   sessionStarted: boolean
   sessionStartTime: string | null
@@ -43,6 +45,8 @@ export interface ChairStateDoc {
 export interface ChairConferenceDoc {
   id: string
   name: string
+  presetId?: string
+  presetAllocationCommittees?: string[]
   data: ChairStateDoc
 }
 
@@ -74,7 +78,11 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
   const data: ChairStateDoc = legacy && typeof legacy === 'object'
     ? {
         committee: typeof legacy.committee === 'string' ? legacy.committee : 'UNSC',
-        topic: typeof legacy.topic === 'string' ? legacy.topic : 'Cybersecurity and International Peace',
+        topics: Array.isArray((legacy as { topics?: string[] }).topics)
+          ? (legacy as { topics: string[] }).topics.slice(0, 3)
+          : typeof (legacy as { topic?: string }).topic === 'string'
+            ? [(legacy as { topic: string }).topic]
+            : ['The Question of'],
         universe: typeof legacy.universe === 'string' ? legacy.universe : '',
         sessionStarted: !!legacy.sessionStarted,
         sessionStartTime: legacy.sessionStartTime ?? null,
@@ -108,7 +116,7 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
       }
     : {
         committee: 'UNSC',
-        topic: 'Cybersecurity and International Peace',
+        topics: ['The Question of'],
         universe: '',
         sessionStarted: false,
         sessionStartTime: null,

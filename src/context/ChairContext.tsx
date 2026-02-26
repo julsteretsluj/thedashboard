@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { loadChairData, saveChairData, migrateChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
+import { PRESET_CONFERENCES } from '../constants/presetConferences'
 
 const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
 
@@ -17,12 +18,19 @@ export interface SessionRecord {
 export interface ChairConference {
   id: string
   name: string
+  /** When set, uses preset-specific allocations (e.g. MUN07 IV matrix). */
+  presetId?: string
+  /** When set, only these committees use preset allocations. When undefined, all use preset. When [], none. */
+  presetAllocationCommittees?: string[]
   data: ChairState
 }
 
+const MAX_TOPICS = 3
+
 interface ChairState {
   committee: string
-  topic: string
+  /** Committee topics (up to 3). Replaces legacy single topic. */
+  topics: string[]
   /** Optional universe for fictional committees (e.g. Star Wars, Harry Potter). Displayed before topic. */
   universe: string
   sessionStarted: boolean
@@ -67,7 +75,7 @@ interface ChairState {
 
 const defaultState: ChairState = {
   committee: 'UNSC',
-  topic: 'Cybersecurity and International Peace',
+  topics: ['The Question of'],
   universe: '',
   sessionStarted: false,
   sessionStartTime: null,
@@ -105,7 +113,8 @@ const defaultState: ChairState = {
 
 type ChairContextValue = ChairState & {
   setCommittee: (c: string) => void
-  setTopic: (t: string) => void
+  setTopics: (t: string[]) => void
+  setTopicAtIndex: (index: number, value: string) => void
   setUniverse: (u: string) => void
   setChairName: (n: string) => void
   setChairEmail: (e: string) => void
@@ -168,8 +177,14 @@ type ChairContextValue = ChairState & {
   activeConferenceId: string
   setActiveConference: (id: string) => void
   addConference: () => void
+  addConferenceFromPreset: (presetId: string) => void
   removeConference: (id: string) => void
   setConferenceName: (id: string, name: string) => void
+  setPresetAllocationCommittees: (committees: string[] | undefined) => void
+  /** When set, allocation matrices use preset-specific options (e.g. MUN07 IV). */
+  currentPresetId: string | undefined
+  /** When set, only these committees use preset allocations. undefined = all, [] = none. */
+  currentPresetAllocationCommittees: string[] | undefined
 }
 
 function normalizeSpeaker(s: unknown): Speaker | null {
@@ -225,9 +240,16 @@ function migrateChairConference(c: ChairConferenceDoc): ChairConference {
     null,
     typeof c.data.speakerDuration === 'number' ? c.data.speakerDuration : 60
   )
+  const raw = c.data as ChairState & { topic?: string; topics?: string[] }
+  const topics = Array.isArray(raw.topics)
+    ? raw.topics.slice(0, MAX_TOPICS)
+    : typeof raw.topic === 'string' && raw.topic
+      ? [raw.topic]
+      : defaultState.topics
   const data: ChairState = {
     ...defaultState,
     ...c.data,
+    topics,
     speakers,
     activeSpeaker: null,
     speakerDuration: sd,
@@ -249,7 +271,7 @@ function migrateChairConference(c: ChairConferenceDoc): ChairConference {
       ? (c.data as { sessionRecords: SessionRecord[] }).sessionRecords
       : [],
   }
-  return { id: c.id, name: c.name, data }
+  return { id: c.id, name: c.name, presetId: c.presetId, presetAllocationCommittees: c.presetAllocationCommittees, data }
 }
 
 const ChairContext = createContext<ChairContextValue | null>(null)
@@ -329,6 +351,8 @@ export function ChairProvider({
           conferences: conferences.map((c) => ({
             id: c.id,
             name: c.name,
+            presetId: c.presetId,
+            presetAllocationCommittees: c.presetAllocationCommittees,
             data: { ...c.data, activeSpeaker: null } as ChairConferenceDoc['data'],
           })),
           activeConferenceId: activeId ?? conferences[0]?.id ?? '',
@@ -349,6 +373,8 @@ export function ChairProvider({
         conferences: conferences.map((c) => ({
           id: c.id,
           name: c.name,
+          presetId: c.presetId,
+          presetAllocationCommittees: c.presetAllocationCommittees,
           data: {
             ...c.data,
             activeSpeaker: null,
@@ -401,7 +427,15 @@ export function ChairProvider({
   }, [activeId])
 
   const setCommittee = useCallback((committee: string) => updateActive((s) => ({ ...s, committee })), [updateActive])
-  const setTopic = useCallback((topic: string) => updateActive((s) => ({ ...s, topic })), [updateActive])
+  const setTopics = useCallback((topics: string[]) => updateActive((s) => ({ ...s, topics: topics.slice(0, MAX_TOPICS) })), [updateActive])
+  const setTopicAtIndex = useCallback((index: number, value: string) => {
+    updateActive((s) => {
+      const next = [...(s.topics ?? [])]
+      while (next.length <= index) next.push('')
+      next[index] = value
+      return { ...s, topics: next.slice(0, MAX_TOPICS) }
+    })
+  }, [updateActive])
   const setUniverse = useCallback((universe: string) => updateActive((s) => ({ ...s, universe })), [updateActive])
   const setChairName = useCallback((chairName: string) => updateActive((s) => ({ ...s, chairName })), [updateActive])
   const setChairEmail = useCallback((chairEmail: string) => updateActive((s) => ({ ...s, chairEmail })), [updateActive])
@@ -709,6 +743,17 @@ export function ChairProvider({
     setConferences((list) => [...list, defaultChairConference(id)])
     setActiveConferenceIdState(id)
   }, [])
+  const addConferenceFromPreset = useCallback((presetId: string) => {
+    const preset = PRESET_CONFERENCES.find((p) => p.id === presetId)
+    if (!preset) return
+    const id = crypto.randomUUID()
+    const conf = defaultChairConference(id)
+    conf.name = preset.name
+    conf.presetId = presetId
+    conf.data.committee = preset.defaultCommittee ?? preset.committees?.[0] ?? conf.data.committee
+    setConferences((list) => [...list, conf])
+    setActiveConferenceIdState(id)
+  }, [])
   const removeConference = useCallback((id: string) => {
     const remaining = conferences.filter((c) => c.id !== id)
     const nextList = remaining.length > 0 ? remaining : [defaultChairConference(crypto.randomUUID())]
@@ -720,11 +765,18 @@ export function ChairProvider({
   const setConferenceName = useCallback((id: string, name: string) => {
     setConferences((list) => list.map((c) => (c.id === id ? { ...c, name } : c)))
   }, [])
+  const setPresetAllocationCommittees = useCallback((committees: string[] | undefined) => {
+    if (!activeId) return
+    setConferences((list) =>
+      list.map((c) => (c.id === activeId ? { ...c, presetAllocationCommittees: committees } : c))
+    )
+  }, [activeId])
 
   const value: ChairContextValue = {
     ...state,
     setCommittee,
-    setTopic,
+    setTopics,
+    setTopicAtIndex,
     setUniverse,
     setChairName,
     setChairEmail,
@@ -796,8 +848,12 @@ export function ChairProvider({
     activeConferenceId: activeId ?? '',
     setActiveConference,
     addConference,
+    addConferenceFromPreset,
     removeConference,
     setConferenceName,
+    setPresetAllocationCommittees,
+    currentPresetId: current?.presetId,
+    currentPresetAllocationCommittees: current?.presetAllocationCommittees,
   }
 
   return <ChairContext.Provider value={value}>{children}</ChairContext.Provider>

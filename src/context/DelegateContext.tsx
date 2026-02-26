@@ -8,6 +8,7 @@ import {
 } from 'react'
 import type { DelegateConference, CommitteeMatrixEntry } from '../types'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
+import { PRESET_CONFERENCES } from '../constants/presetConferences'
 
 const DELEGATE_STORAGE_KEY = 'seamuns-dashboard-delegate-state'
 
@@ -30,6 +31,7 @@ function migrateConference(c: DelegateConference): DelegateConference {
           }))
         : c.committeeMatrixEntries ?? [],
     pinnedCommittees: (c.pinnedCommittees ?? []).slice(0, 3),
+    committeeTopics: Array.isArray(c.committeeTopics) ? c.committeeTopics.slice(0, 3) : [],
     checklist: { ...defaultChecklist, ...(c.checklist || {}) },
   }
   return base
@@ -63,6 +65,7 @@ const defaultConference = (id: string): DelegateConference => ({
   stanceOverview: '',
   committeeCount: 0,
   committees: [],
+  committeeTopics: ['The Question of'],
   committeeMatrixEntries: [],
   pinnedCommittees: [],
   countdownDate: '',
@@ -105,9 +108,11 @@ type DelegateContextValue = DelegateConference & {
   setStanceOverview: (s: string) => void
   setCommitteeCount: (n: number) => void
   setCommittees: (list: string[]) => void
+  setCommitteeTopicAtIndex: (index: number, value: string) => void
   addCommitteeMatrixEntry: (entry: CommitteeMatrixEntry) => void
   removeCommitteeMatrixEntry: (index: number) => void
   togglePinnedCommittee: (committee: string) => void
+  setPresetAllocationCommittees: (committees: string[] | undefined) => void
   setCountdownDate: (d: string) => void
   setConferenceEndDate: (d: string) => void
   setPositionPaperDeadline: (d: string) => void
@@ -119,6 +124,7 @@ type DelegateContextValue = DelegateConference & {
   addUploadedResource: (name: string, url?: string) => void
   removeUploadedResource: (i: number) => void
   addConference: () => void
+  addConferenceFromPreset: (presetId: string) => void
   removeConference: (id: string) => void
   setActiveConference: (id: string) => void
   saveToAccount: () => Promise<void>
@@ -241,6 +247,17 @@ export function DelegateProvider({
     (list: string[]) => updateActive((c) => ({ ...c, committees: list })),
     [updateActive]
   )
+  const setCommitteeTopicAtIndex = useCallback(
+    (index: number, value: string) => {
+      updateActive((c) => {
+        const next = [...(c.committeeTopics ?? [])]
+        while (next.length <= index) next.push('')
+        next[index] = value
+        return { ...c, committeeTopics: next.slice(0, 3) }
+      })
+    },
+    [updateActive]
+  )
   const addCommitteeMatrixEntry = useCallback(
     (entry: CommitteeMatrixEntry) =>
       updateActive((c) => ({
@@ -255,6 +272,10 @@ export function DelegateProvider({
         ...c,
         committeeMatrixEntries: (c.committeeMatrixEntries ?? []).filter((_, i) => i !== index),
       })),
+    [updateActive]
+  )
+  const setPresetAllocationCommittees = useCallback(
+    (committees: string[] | undefined) => updateActive((c) => ({ ...c, presetAllocationCommittees: committees })),
     [updateActive]
   )
   const togglePinnedCommittee = useCallback(
@@ -328,6 +349,23 @@ export function DelegateProvider({
     setConferences((list) => [...list, conf])
     setActiveConferenceIdState(id)
   }, [])
+  const addConferenceFromPreset = useCallback((presetId: string) => {
+    const preset = PRESET_CONFERENCES.find((p) => p.id === presetId)
+    if (!preset) return
+    const id = generateId()
+    const conf = defaultConference(id)
+    conf.name = preset.name
+    conf.presetId = presetId
+    if (preset.countdownDate) conf.countdownDate = preset.countdownDate
+    if (preset.conferenceEndDate) conf.conferenceEndDate = preset.conferenceEndDate
+    if (preset.positionPaperDeadline) conf.positionPaperDeadline = preset.positionPaperDeadline
+    if (preset.committees?.length) {
+      conf.committees = preset.committees
+      conf.committeeCount = preset.committees.length
+    }
+    setConferences((list) => [...list, conf])
+    setActiveConferenceIdState(id)
+  }, [])
 
   const removeConference = useCallback((id: string) => {
     const remaining = conferences.filter((c) => c.id !== id)
@@ -382,9 +420,11 @@ export function DelegateProvider({
     setStanceOverview,
     setCommitteeCount,
     setCommittees,
+    setCommitteeTopicAtIndex,
     addCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
     togglePinnedCommittee,
+    setPresetAllocationCommittees,
     setCountdownDate,
     setConferenceEndDate,
     setPositionPaperDeadline,
@@ -396,6 +436,7 @@ export function DelegateProvider({
     addUploadedResource,
     removeUploadedResource,
     addConference,
+    addConferenceFromPreset,
     removeConference,
     setActiveConference,
     saveToAccount,

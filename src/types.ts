@@ -12,6 +12,10 @@ export interface Delegate {
   /** Roll call status. Defaults to absent if unset (or derived from present). */
   rollCallStatus?: RollCallStatus
   vote?: 'yes' | 'no' | 'abstain' | null
+  /** When true, delegate cannot vote (e.g. sanctions). */
+  votingRightsRevoked?: boolean
+  /** When true, delegate cannot be added to speakers list (e.g. sanctions). */
+  speakingRightsRevoked?: boolean
 }
 
 export interface DelegateStrike {
@@ -108,6 +112,10 @@ export interface CommitteeMatrixEntry {
 export interface DelegateConference {
   id: string
   name: string
+  /** When set, uses preset-specific allocations (e.g. MUN07 IV matrix). */
+  presetId?: string
+  /** When set, only these committees use preset allocations. undefined = all, [] = none. */
+  presetAllocationCommittees?: string[]
   country: string
   /** Delegate's email (optional), e.g. for chair contact. */
   delegateEmail: string
@@ -116,6 +124,8 @@ export interface DelegateConference {
   committeeCount: number
   /** Which committees (set when registering) */
   committees: string[]
+  /** Committee topics (up to 3) for this conference */
+  committeeTopics?: string[]
   /** Legacy: committee -> first name (migrated to committeeMatrixEntries) */
   committeeMatrix?: Record<string, string>
   /** Committee matrix: committee, first name, delegation */

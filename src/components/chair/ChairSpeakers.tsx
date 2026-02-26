@@ -158,11 +158,14 @@ export default function ChairSpeakers() {
             className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <option value="">Select delegate</option>
-            {[...delegates].sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' })).map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.country} {d.name ? `— ${d.name}` : ''}
-              </option>
-            ))}
+            {[...delegates]
+              .filter((d) => !d.speakingRightsRevoked)
+              .sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' }))
+              .map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.country} {d.name ? `— ${d.name}` : ''}
+                </option>
+              ))}
           </select>
           <button
             onClick={addSpeaker}
@@ -179,7 +182,10 @@ export default function ChairSpeakers() {
           <h3 className="text-sm font-medium text-[var(--text)]">📋 Mod speakers list</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
-          {speakers.map((s, i) => (
+          {speakers.map((s, i) => {
+            const delegate = delegates.find((d) => d.id === s.delegateId)
+            const speakingRevoked = !!delegate?.speakingRightsRevoked
+            return (
             <li key={s.id} className="px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-[var(--text-muted)] w-6">{i + 1}.</span>
@@ -192,12 +198,18 @@ export default function ChairSpeakers() {
                     Speaking
                   </span>
                 )}
+                {speakingRevoked && (
+                  <span className="px-2 py-0.5 rounded bg-[var(--danger)]/15 text-[var(--danger)] text-xs">
+                    Speaking revoked
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {!s.speaking && (
                   <button
-                    onClick={() => setActiveSpeaker(s)}
-                    className="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90"
+                    onClick={() => !speakingRevoked && setActiveSpeaker(s)}
+                    disabled={speakingRevoked}
+                    className={`px-2 py-1 rounded-lg text-xs font-medium ${speakingRevoked ? 'opacity-50 cursor-not-allowed bg-[var(--bg-elevated)] text-[var(--text-muted)]' : 'bg-[var(--accent)] text-white hover:opacity-90'}`}
                   >
                     Start
                   </button>
@@ -211,7 +223,8 @@ export default function ChairSpeakers() {
                 </button>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { DelegateProvider, useDelegate } from '../context/DelegateContext'
 import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
@@ -36,6 +37,7 @@ import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import DelegateHowToGuide from '../components/DelegateHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import Breadcrumbs from '../components/Breadcrumbs'
+import { PRESET_CONFERENCES } from '../constants/presetConferences'
 import { User } from 'lucide-react'
 
 function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
@@ -44,6 +46,7 @@ function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
     activeConferenceId,
     setActiveConference,
     addConference,
+    addConferenceFromPreset,
     removeConference,
     saveToAccount,
     isSaving,
@@ -106,6 +109,27 @@ function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
           >
             <Plus className="w-3.5 h-3.5" /> Add conference
           </button>
+          {PRESET_CONFERENCES.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                const v = e.target.value
+                if (v) {
+                  addConferenceFromPreset(v)
+                  e.target.value = ''
+                }
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Add from preset"
+            >
+              <option value="">From preset…</option>
+              {PRESET_CONFERENCES.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} {p.location ? `(${p.location})` : ''}
+                </option>
+              ))}
+            </select>
+          )}
           {canRemove && (
             <button
               type="button"
@@ -140,6 +164,8 @@ function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
     </div>
   )
 }
+
+const DELEGATE_SECTION_IDS = ['country', 'countdown', 'matrix', 'prep', 'sources', 'resources', 'checklist', 'links'] as const
 
 // Order: identity & timing → committees → prep → before conference → links
 const sections = [
@@ -229,7 +255,25 @@ function DelegateDashboardContent({ active, setActive }: { active: string; setAc
 export default function DelegateDashboard() {
   const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
-  const [active, setActive] = useState('country')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const hashToSection = (): string => {
+    const hash = location.hash.replace(/^#/, '')
+    return hash && DELEGATE_SECTION_IDS.includes(hash as (typeof DELEGATE_SECTION_IDS)[number]) ? hash : 'country'
+  }
+  const [active, setActive] = useState(() => hashToSection())
+
+  useEffect(() => {
+    const fromHash = hashToSection()
+    setActive((prev) => (fromHash !== prev ? fromHash : prev))
+  }, [location.hash])
+
+  useEffect(() => {
+    const target = `${location.pathname}#${active}`
+    if (location.pathname + (location.hash || '') !== target) {
+      navigate(target, { replace: true })
+    }
+  }, [active, location.pathname, location.hash, navigate])
 
   return (
     <DelegateProvider userId={userId}>

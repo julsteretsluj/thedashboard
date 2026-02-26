@@ -1,13 +1,19 @@
 import { useMemo } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
+import { MUN07_IV_ALLOCATION_COMMITTEES } from '../../constants/mun07Allocations'
+
+function getCommitteeLabel(value: string): string {
+  const opt = COMMITTEE_OPTIONS.find((o) => o.value === value)
+  return opt ? opt.label : value
+}
 
 interface Props {
   onClose?: () => void
 }
 
 export default function ChairCommitteeTopic({ onClose }: Props) {
-  const { committee, topic, universe, chairName, chairEmail, conferences, activeConferenceId, setConferenceName, setCommittee, setTopic, setUniverse, setChairName, setChairEmail } = useChair()
+  const { committee, topics, universe, chairName, chairEmail, conferences, activeConferenceId, setConferenceName, setCommittee, setTopicAtIndex, setUniverse, setChairName, setChairEmail, currentPresetId, currentPresetAllocationCommittees, setPresetAllocationCommittees } = useChair()
   const currentConf = conferences.find((c) => c.id === activeConferenceId)
 
   const selectedPreset = useMemo(() => {
@@ -85,18 +91,74 @@ export default function ChairCommitteeTopic({ onClose }: Props) {
           aria-label="Universe (optional)"
         />
       </label>
-      <label className="block" htmlFor="chair-topic">
-        <span className="text-xs text-[var(--text-muted)] block mb-1">Topic</span>
-        <input
-          id="chair-topic"
-          name="chair-topic"
-          type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="e.g. Cybersecurity and International Peace"
-          className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-        />
-      </label>
+      {currentPresetId === 'mun07-iv' && (
+        <div className="block pt-2 border-t border-[var(--border)]">
+          <span className="text-xs text-[var(--text-muted)] block mb-2">Import preset allocations for</span>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="preset-alloc-mode"
+                checked={currentPresetAllocationCommittees == null}
+                onChange={() => setPresetAllocationCommittees(undefined)}
+              />
+              <span className="text-sm text-[var(--text)]">All committees (default)</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="preset-alloc-mode"
+                checked={Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length === 0}
+                onChange={() => setPresetAllocationCommittees([])}
+              />
+              <span className="text-sm text-[var(--text)]">None (use standard UN list)</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="preset-alloc-mode"
+                checked={Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length > 0}
+                onChange={() => setPresetAllocationCommittees([...MUN07_IV_ALLOCATION_COMMITTEES])}
+              />
+              <span className="text-sm text-[var(--text)]">Selected committees</span>
+            </label>
+            {Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length > 0 && (
+              <div className="pl-6 pt-1 flex flex-wrap gap-x-4 gap-y-1">
+                {MUN07_IV_ALLOCATION_COMMITTEES.map((val) => (
+                  <label key={val} className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={currentPresetAllocationCommittees.includes(val)}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...currentPresetAllocationCommittees, val]
+                          : currentPresetAllocationCommittees.filter((c) => c !== val)
+                        setPresetAllocationCommittees(next.length > 0 ? next : [])
+                      }}
+                    />
+                    <span className="text-sm text-[var(--text)]">{getCommitteeLabel(val)}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="block">
+        <span className="text-xs text-[var(--text-muted)] block mb-1">Committee topics (up to 3)</span>
+        {[0, 1, 2].map((i) => (
+          <input
+            key={i}
+            id={`chair-topic-${i}`}
+            name={`chair-topic-${i}`}
+            type="text"
+            value={topics?.[i] ?? ''}
+            onChange={(e) => setTopicAtIndex(i, e.target.value)}
+            placeholder={i === 0 ? 'e.g. The Question of Cybersecurity and International Peace' : `Topic ${i + 1} (optional)`}
+            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] mt-2 first:mt-0"
+          />
+        ))}
+      </div>
       <div className="pt-2 border-t border-[var(--border)]">
         <h4 className="text-sm font-medium text-[var(--text)] mb-2">👤 Chair</h4>
         <label className="block mb-2" htmlFor="chair-name">

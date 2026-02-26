@@ -3,6 +3,7 @@ import { useDelegate } from '../../context/DelegateContext'
 import { Plus, Trash2, Pin } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
+import { MUN07_IV_ALLOCATION_COMMITTEES } from '../../constants/mun07Allocations'
 import { OTHER_DELEGATION_VALUE } from '../../constants/delegations'
 import { getDelegationsForCommittee } from '../../constants/committeeAllocations'
 import { getPresetDelegationFlag } from '../../constants/delegationFlags'
@@ -17,6 +18,9 @@ export default function DelegateMatrix() {
   const {
     committeeCount,
     committees,
+    presetId: currentPresetId,
+    presetAllocationCommittees: currentPresetAllocationCommittees,
+    setPresetAllocationCommittees,
     setCommitteeCount,
     setCommittees,
     committeeMatrixEntries,
@@ -79,7 +83,7 @@ export default function DelegateMatrix() {
   const entriesForCommittee = (comm: string) =>
     committeeMatrixEntries.map((entry, i) => ({ entry, i })).filter(({ entry }) => entry.committee === comm)
 
-  const delegationOptionsForCommittee = getDelegationsForCommittee(activeCommittee)
+  const delegationOptionsForCommittee = getDelegationsForCommittee(activeCommittee, currentPresetId, currentPresetAllocationCommittees)
 
   const addForTab = (comm: string) => {
     const delegation = delegationSelect === OTHER_DELEGATION_VALUE ? delegationCustom.trim() : delegationSelect
@@ -162,6 +166,59 @@ export default function DelegateMatrix() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+        {currentPresetId === 'mun07-iv' && (
+          <div className="pt-2 border-t border-[var(--border)] space-y-2">
+            <span className="text-xs text-[var(--text-muted)] block">Import preset allocations for</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="delegate-preset-alloc-mode"
+                  checked={currentPresetAllocationCommittees == null}
+                  onChange={() => setPresetAllocationCommittees(undefined)}
+                />
+                <span className="text-sm text-[var(--text)]">All committees (default)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="delegate-preset-alloc-mode"
+                  checked={Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length === 0}
+                  onChange={() => setPresetAllocationCommittees([])}
+                />
+                <span className="text-sm text-[var(--text)]">None (use standard UN list)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="delegate-preset-alloc-mode"
+                  checked={Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length > 0}
+                  onChange={() => setPresetAllocationCommittees([...MUN07_IV_ALLOCATION_COMMITTEES])}
+                />
+                <span className="text-sm text-[var(--text)]">Selected committees</span>
+              </label>
+              {Array.isArray(currentPresetAllocationCommittees) && currentPresetAllocationCommittees.length > 0 && (
+                <div className="pl-6 pt-1 flex flex-wrap gap-x-4 gap-y-1">
+                  {MUN07_IV_ALLOCATION_COMMITTEES.map((val) => (
+                    <label key={val} className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={currentPresetAllocationCommittees.includes(val)}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...currentPresetAllocationCommittees, val]
+                            : currentPresetAllocationCommittees.filter((c) => c !== val)
+                          setPresetAllocationCommittees(next.length > 0 ? next : [])
+                        }}
+                      />
+                      <span className="text-sm text-[var(--text)]">{getCommitteeLabel(val)}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
