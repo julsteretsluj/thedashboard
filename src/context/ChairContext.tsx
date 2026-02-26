@@ -115,6 +115,7 @@ type ChairContextValue = ChairState & {
   resumeSession: () => void
   setSessionName: (name: string) => void
   setSessionDurationMinutes: (minutes: number | null) => void
+  deleteSessionFromHistory: (id: string) => void
   addDelegate: (d: Omit<Delegate, 'id'>) => void
   removeDelegate: (id: string) => void
   updateDelegate: (id: string, patch: Partial<Delegate>) => void
@@ -427,6 +428,12 @@ export function ChairProvider({
   }), [updateActive])
   const setSessionName = useCallback((name: string) => updateActive((s) => ({ ...s, sessionName: name })), [updateActive])
   const setSessionDurationMinutes = useCallback((minutes: number | null) => updateActive((s) => ({ ...s, sessionDurationMinutes: minutes })), [updateActive])
+  const deleteSessionFromHistory = useCallback((id: string) => {
+    updateActive((s) => ({
+      ...s,
+      sessionRecords: (s.sessionRecords ?? []).filter((r) => r.id !== id),
+    }))
+  }, [updateActive])
   const addDelegate = useCallback((d: Omit<Delegate, 'id'>) => {
     updateActive((s) => ({ ...s, delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }] }))
   }, [updateActive])
@@ -702,6 +709,7 @@ export function ChairProvider({
     resumeSession,
     setSessionName,
     setSessionDurationMinutes,
+    deleteSessionFromHistory,
     addDelegate,
     removeDelegate,
     updateDelegate,

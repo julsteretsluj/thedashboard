@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Play, Square, Clock, Pause } from 'lucide-react'
+import { Play, Square, Clock, Pause, Trash2 } from 'lucide-react'
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -21,6 +21,7 @@ export default function ChairSession() {
     sessionRecords,
     setSessionDurationMinutes,
     setSessionName,
+    deleteSessionFromHistory,
     startSession,
     stopSession,
     pauseSession,
@@ -241,16 +242,27 @@ export default function ChairSession() {
         ) : (
           <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
             {[...sessionRecords].reverse().map((r) => (
-              <li key={r.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div>
+              <li key={r.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 group">
+                <div className="min-w-0">
                   <p className="font-medium text-[var(--text)]">{r.name || 'Unnamed session'}</p>
                   <p className="text-xs text-[var(--text-muted)]">
                     {new Date(r.startTime).toLocaleString()} — {formatDuration(r.durationSeconds)}
                   </p>
                 </div>
-                <span className="text-xs text-[var(--text-muted)] shrink-0">
-                  {formatDuration(r.durationSeconds)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {formatDuration(r.durationSeconds)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => deleteSessionFromHistory(r.id)}
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors"
+                    title="Delete session"
+                    aria-label={`Delete ${r.name || 'Unnamed session'}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
