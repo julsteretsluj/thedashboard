@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Clock, Mic, Trash2 } from 'lucide-react'
 
 const DURATION_MIN = 30
+const OVERTIME_CONCERN_THRESHOLD = 10 // seconds overtime before auto-adding a concern
 
 /**
  * Always-mounted bar showing active speaker + timer.
  * Keeps the timer running when the user is on other sections.
+ * Notes a concern when delegate speaks 10+ seconds overtime.
  */
 export default function ActiveSpeakerBar({
   onSpeakersClick,
@@ -22,7 +24,9 @@ export default function ActiveSpeakerBar({
     setActiveSpeaker,
     removeFromSpeakers,
     getDelegationEmoji,
+    addDelegateFeedback,
   } = useChair()
+  const overtimeNotedRef = useRef<string | null>(null)
 
   const [, setTick] = useState(0)
 
@@ -42,8 +46,27 @@ export default function ActiveSpeakerBar({
     : DURATION_MIN
   const remaining = activeSpeaker ? speakerTime - elapsed : 0
   const isOvertime = remaining <= 0 && activeSpeaker != null
+  const overtimeSeconds = isOvertime ? Math.floor(-remaining) : 0
   const displaySeconds = Math.max(0, Math.floor(isOvertime ? -remaining : remaining)) || 0
   const displayStr = `${Math.floor(displaySeconds / 60)}:${String(displaySeconds % 60).padStart(2, '0')} ${isOvertime ? 'overtime' : 'remaining'}`
+
+  const speechKey = activeSpeaker && startTime != null ? `${activeSpeaker.delegateId}-${startTime}` : null
+  useEffect(() => {
+    if (
+      activeSpeaker &&
+      speechKey &&
+      overtimeSeconds >= OVERTIME_CONCERN_THRESHOLD &&
+      overtimeNotedRef.current !== speechKey
+    ) {
+      overtimeNotedRef.current = speechKey
+      addDelegateFeedback(
+        activeSpeaker.delegateId,
+        'concern',
+        `Spoke ${overtimeSeconds}+ seconds overtime`
+      )
+    }
+    if (!activeSpeaker) overtimeNotedRef.current = null
+  }, [speechKey, activeSpeaker, overtimeSeconds, addDelegateFeedback])
 
   useEffect(() => {
     if (startTime == null) return

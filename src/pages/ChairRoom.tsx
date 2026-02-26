@@ -25,6 +25,8 @@ import {
   ListChecks,
   Save,
   Trophy,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -49,12 +51,15 @@ import ChairRollCall from '../components/chair/ChairRollCall'
 import ChairSession from '../components/chair/ChairSession'
 import ChairSpeakers from '../components/chair/ChairSpeakers'
 import ActiveSpeakerBar from '../components/chair/ActiveSpeakerBar'
+import ActiveSessionBar from '../components/chair/ActiveSessionBar'
+import ActiveVotingBar from '../components/chair/ActiveVotingBar'
 import ChairCrisis from '../components/chair/ChairCrisis'
 import ChairArchive from '../components/chair/ChairArchive'
 import ChairDelegateTracker from '../components/chair/ChairDelegateTracker'
 import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
 import ChairHowToGuide from '../components/ChairHowToGuide'
+import ChairSetupChecklist from '../components/chair/ChairSetupChecklist'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import Breadcrumbs from '../components/Breadcrumbs'
 
@@ -82,6 +87,8 @@ const sections = [
 
 function ChairRoomContent({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   const goToSpeakers = () => setActive('speakers')
+  const goToSession = () => setActive('session')
+  const goToVoting = () => setActive('voting')
   const [showSettings, setShowSettings] = useState(false)
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
   const { saveToAccount, isLoaded } = useChair()
@@ -148,7 +155,41 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
       </aside>
       <main className="flex-1 flex flex-col overflow-auto min-w-0">
         <div className="p-2 sm:p-3 md:p-5 flex-1 overflow-auto">
+        <ActiveSessionBar onSessionClick={goToSession} />
+        <ActiveVotingBar onVotingClick={goToVoting} />
         <ActiveSpeakerBar onSpeakersClick={goToSpeakers} />
+        <div className="flex items-center justify-between gap-2 mb-3 py-1">
+          {(() => {
+            const idx = sections.findIndex((s) => s.id === active)
+            const prev = idx > 0 ? sections[idx - 1] : null
+            const next = idx >= 0 && idx < sections.length - 1 ? sections[idx + 1] : null
+            return (
+              <>
+                <button
+                  type="button"
+                  onClick={() => prev && setActive(prev.id)}
+                  disabled={!prev}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  title={prev ? `Previous: ${prev.label}` : undefined}
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  {prev?.label ?? 'Previous'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => next && setActive(next.id)}
+                  disabled={!next}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  title={next ? `Next: ${next.label}` : undefined}
+                >
+                  {next?.label ?? 'Next'}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )
+          })()}
+        </div>
+        <ChairSetupChecklist />
         {showSettings && (
           <div className="mb-6 p-4 card-block">
             <ChairCommitteeTopic onClose={() => setShowSettings(false)} />

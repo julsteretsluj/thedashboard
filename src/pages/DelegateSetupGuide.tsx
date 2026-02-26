@@ -9,7 +9,8 @@ const DELEGATE_SETUP_STEPS = [
   { step: 4, title: 'Committee matrix', body: 'Go to Committee Matrix. Set how many committees and which ones. Add entries per committee with your name and delegation. Each delegation shows a flag emoji.' },
   { step: 5, title: 'Chair report & resources', body: 'Add handbook, position paper guidelines, and any resources from your chair. These are usually shared before the conference.' },
   { step: 6, title: 'Prep template & sources', body: 'Use the MUN Prep Template (Google Doc) to structure research, stance, position paper, and speeches. Add trusted sources and nation-specific links.' },
-  { step: 7, title: 'Checklist', body: 'Work through the Checklist: research, position paper, speeches, and materials. It follows the sections of the MUN Prep Template.' },
+  { step: 7, title: 'Compliments & feedback', body: 'During the conference, your chair may give you compliments (positive notes on speeches, diplomacy, or ideas) or concern reminders (constructive feedback). These inform grading and awards like Best Delegate.' },
+  { step: 8, title: 'Checklist', body: 'Work through the Checklist: research, position paper, speeches, and materials. It follows the sections of the MUN Prep Template.' },
 ]
 
 export default function DelegateSetupGuide() {

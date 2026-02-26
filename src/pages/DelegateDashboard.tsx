@@ -15,6 +15,8 @@ import {
   Plus,
   Save,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -35,6 +37,7 @@ import DelegateResources from '../components/delegate/DelegateResources'
 import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import DelegateHowToGuide from '../components/DelegateHowToGuide'
+import DelegateSetupChecklist from '../components/delegate/DelegateSetupChecklist'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
@@ -234,6 +237,38 @@ function DelegateDashboardContent({ active, setActive }: { active: string; setAc
         </div>
       </aside>
       <main className="flex-1 p-2 sm:p-3 md:p-5 overflow-auto min-w-0">
+        <div className="flex items-center justify-between gap-2 mb-3 py-1">
+          {(() => {
+            const idx = sections.findIndex((s) => s.id === active)
+            const prev = idx > 0 ? sections[idx - 1] : null
+            const next = idx >= 0 && idx < sections.length - 1 ? sections[idx + 1] : null
+            return (
+              <>
+                <button
+                  type="button"
+                  onClick={() => prev && setActive(prev.id)}
+                  disabled={!prev}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  title={prev ? `Previous: ${prev.label}` : undefined}
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  {prev?.label ?? 'Previous'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => next && setActive(next.id)}
+                  disabled={!next}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  title={next ? `Next: ${next.label}` : undefined}
+                >
+                  {next?.label ?? 'Next'}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )
+          })()}
+        </div>
+        <DelegateSetupChecklist />
         {active === 'country' && <DelegateCountry />}
         {active === 'matrix' && <DelegateMatrix />}
         {active === 'prep' && <DelegatePrep />}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, Vote, ExternalLink } from 'lucide-react'
-import { computePassed } from '../../constants/motionMajorities'
+import { computePassed, RESOLUTION_MAJORITY, AMENDMENT_MAJORITY } from '../../constants/motionMajorities'
 import type { Resolution, Amendment } from '../../types'
 
 function parseList(val: string): string[] {
@@ -191,8 +191,13 @@ export default function ChairResolutions() {
           </div>
         ) : (
           <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
-            {[...resolutions].reverse().map((r: Resolution) => (
-              <li key={r.id} className="px-4 py-3 flex flex-col gap-2">
+            {[...resolutions].reverse().map((r: Resolution) => {
+              const rStatus = r.votes
+                ? (r.status ?? (computePassed(r.votes.yes, r.votes.no, r.votes.abstain, 'two-thirds') ? 'passed' : 'failed'))
+                : null
+              const rBorder = rStatus === 'passed' ? 'border-l-4 border-l-[var(--success)]' : rStatus === 'failed' ? 'border-l-4 border-l-[var(--danger)]' : ''
+              return (
+              <li key={r.id} className={`px-4 py-3 flex flex-col gap-2 ${rBorder}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-[var(--text)]">{r.title}</p>
@@ -222,18 +227,15 @@ export default function ChairResolutions() {
                     {r.votes && (
                       <p className="text-xs text-[var(--text-muted)] mt-1">
                         Yes {r.votes.yes} / No {r.votes.no} / Abstain {r.votes.abstain}
-                        {(() => {
-                          const status = r.status ?? (computePassed(r.votes.yes, r.votes.no, r.votes.abstain, 'two-thirds') ? 'passed' : 'failed')
-                          return (
-                            <span className={`ml-2 font-medium ${status === 'passed' ? 'text-[var(--success)]' : status === 'failed' ? 'text-[var(--danger)]' : ''}`}>
-                              — {status === 'passed' ? 'Passed' : status === 'failed' ? 'Failed' : 'Pending'} (2/3)
-                            </span>
-                          )
-                        })()}
+                        <span className={`ml-2 font-medium ${rStatus === 'passed' ? 'text-[var(--success)]' : rStatus === 'failed' ? 'text-[var(--danger)]' : ''}`}>
+                          — {rStatus === 'passed' ? 'Passed' : rStatus === 'failed' ? 'Failed' : 'Pending'} (2/3)
+                        </span>
                       </p>
                     )}
                     {!r.votes && (
-                      <p className="text-xs text-[var(--text-muted)] mt-1">Pending — 2/3 majority required</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-1" title={RESOLUTION_MAJORITY.rule}>
+                        Pending — {RESOLUTION_MAJORITY.label} required
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -254,7 +256,7 @@ export default function ChairResolutions() {
                   </div>
                 </div>
               </li>
-            ))}
+            )})}
           </ul>
         )}
       </div>
@@ -352,8 +354,13 @@ export default function ChairResolutions() {
           </div>
         ) : (
           <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
-            {[...amendments].reverse().map((a: Amendment) => (
-              <li key={a.id} className="px-4 py-3 flex flex-col gap-2">
+            {[...amendments].reverse().map((a: Amendment) => {
+              const aStatus = a.votes
+                ? (a.status ?? (computePassed(a.votes.yes, a.votes.no, a.votes.abstain, 'simple') ? 'passed' : 'failed'))
+                : null
+              const aBorder = aStatus === 'passed' ? 'border-l-4 border-l-[var(--success)]' : aStatus === 'failed' ? 'border-l-4 border-l-[var(--danger)]' : ''
+              return (
+              <li key={a.id} className={`px-4 py-3 flex flex-col gap-2 ${aBorder}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-[var(--text)]">{a.text}</p>
@@ -383,18 +390,15 @@ export default function ChairResolutions() {
                     {a.votes && (
                       <p className="text-xs text-[var(--text-muted)] mt-1">
                         Yes {a.votes.yes} / No {a.votes.no} / Abstain {a.votes.abstain}
-                        {(() => {
-                          const status = a.status ?? (computePassed(a.votes.yes, a.votes.no, a.votes.abstain, 'simple') ? 'passed' : 'failed')
-                          return (
-                            <span className={`ml-2 font-medium ${status === 'passed' ? 'text-[var(--success)]' : status === 'failed' ? 'text-[var(--danger)]' : ''}`}>
-                              — {status === 'passed' ? 'Passed' : status === 'failed' ? 'Failed' : 'Pending'} (simple)
-                            </span>
-                          )
-                        })()}
+                        <span className={`ml-2 font-medium ${aStatus === 'passed' ? 'text-[var(--success)]' : aStatus === 'failed' ? 'text-[var(--danger)]' : ''}`}>
+                          — {aStatus === 'passed' ? 'Passed' : aStatus === 'failed' ? 'Failed' : 'Pending'} (simple)
+                        </span>
                       </p>
                     )}
                     {!a.votes && (
-                      <p className="text-xs text-[var(--text-muted)] mt-1">Pending — simple majority required</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-1" title={AMENDMENT_MAJORITY.rule}>
+                        Pending — {AMENDMENT_MAJORITY.label} required
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -415,7 +419,7 @@ export default function ChairResolutions() {
                   </div>
                 </div>
               </li>
-            ))}
+            )})}
           </ul>
         )}
       </div>

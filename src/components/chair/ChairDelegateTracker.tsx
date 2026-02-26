@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useCallback } from 'react'
+import { useState, useRef, useLayoutEffect, useCallback, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User, Star, Flag, ThumbsUp, MessageCircle } from 'lucide-react'
 import type { DelegateScore } from '../../types'
@@ -300,9 +300,11 @@ function CriteriaDropdown({
 type ViewMode = 'table' | 'per-delegate'
 
 export default function ChairDelegateTracker() {
-  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji, getFeedbackCountsByType, getDelegateFeedbackItems } = useChair()
+  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji, getFeedbackCountsByType, getDelegateFeedbackItems, addDelegateFeedback } = useChair()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [tableFeedbackFor, setTableFeedbackFor] = useState<{ delegateId: string; delegateName: string; type: 'compliment' | 'concern' } | null>(null)
+  const [tableFeedbackReason, setTableFeedbackReason] = useState('')
   const tableOpenRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
 
   const scored = delegates.map((d) => {
@@ -435,6 +437,47 @@ export default function ChairDelegateTracker() {
 
       {viewMode === 'table' ? (
         <>
+      {tableFeedbackFor && (
+        <div className="card-block p-4 border-l-4 border-[var(--accent)] bg-[var(--accent-soft)]/20 mb-4">
+          <p className="text-sm font-medium text-[var(--text)] mb-2">
+            Add {tableFeedbackFor.type === 'compliment' ? 'compliment' : 'concern'} for {tableFeedbackFor.delegateName}
+          </p>
+          <div className="flex gap-2 flex-wrap items-end">
+            <label className="flex-1 min-w-[200px]">
+              <span className="text-xs text-[var(--text-muted)] block mb-0.5">Reason (required)</span>
+              <input
+                type="text"
+                value={tableFeedbackReason}
+                onChange={(e) => setTableFeedbackReason(e.target.value)}
+                placeholder={tableFeedbackFor.type === 'compliment' ? 'e.g. Strong opening speech' : 'e.g. Reminder to use formal language'}
+                className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                autoFocus
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                if (tableFeedbackReason.trim()) {
+                  addDelegateFeedback(tableFeedbackFor.delegateId, tableFeedbackFor.type, tableFeedbackReason.trim())
+                  setTableFeedbackFor(null)
+                  setTableFeedbackReason('')
+                }
+              }}
+              disabled={!tableFeedbackReason.trim()}
+              className="px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTableFeedbackFor(null); setTableFeedbackReason('') }}
+              className="px-4 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm font-medium hover:text-[var(--text)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <section>
         <h3 className="text-base font-semibold text-[var(--text)] mb-2">Best Delegate (in-session, 48 pts)</h3>
         <div className="card-block overflow-x-auto">
@@ -491,6 +534,24 @@ export default function ChairDelegateTracker() {
                           {concerns}
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'compliment' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--success)] hover:bg-[var(--success)]/20"
+                        title="Add compliment"
+                        aria-label="Add compliment"
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'concern' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--danger)] hover:bg-[var(--danger)]/20"
+                        title="Add concern"
+                        aria-label="Add concern"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                      </button>
                     </span>
                   </td>
                   {DELEGATE_CRITERIA.map(({ key, label }) => (
@@ -568,6 +629,24 @@ export default function ChairDelegateTracker() {
                           {concerns}
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'compliment' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--success)] hover:bg-[var(--success)]/20"
+                        title="Add compliment"
+                        aria-label="Add compliment"
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'concern' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--danger)] hover:bg-[var(--danger)]/20"
+                        title="Add concern"
+                        aria-label="Add concern"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                      </button>
                     </span>
                   </td>
                   {POSITION_PAPER_CRITERIA.map(({ key, label }) => (
@@ -630,6 +709,24 @@ export default function ChairDelegateTracker() {
                           {concerns}
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'compliment' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--success)] hover:bg-[var(--success)]/20"
+                        title="Add compliment"
+                        aria-label="Add compliment"
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTableFeedbackFor({ delegateId: delegate.id, delegateName: delegate.country + (delegate.name ? ` (${delegate.name})` : ''), type: 'concern' }); setTableFeedbackReason('') }}
+                        className="p-0.5 rounded text-[var(--danger)] hover:bg-[var(--danger)]/20"
+                        title="Add concern"
+                        aria-label="Add concern"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                      </button>
                     </span>
                   </td>
                   <td className="px-2 py-2 text-right text-[var(--text-muted)]">{delegateTotal}/48</td>
@@ -733,6 +830,7 @@ export default function ChairDelegateTracker() {
           getDelegationEmoji={getDelegationEmoji}
           getFeedbackCountsByType={getFeedbackCountsByType}
           getDelegateFeedbackItems={getDelegateFeedbackItems}
+          addDelegateFeedback={addDelegateFeedback}
         />
       )}
     </div>
@@ -747,6 +845,7 @@ function PerDelegateView({
   getDelegationEmoji,
   getFeedbackCountsByType,
   getDelegateFeedbackItems,
+  addDelegateFeedback,
 }: {
   scored: { delegate: { id: string; country: string; name?: string }; score: DelegateScore; delegateTotal: number; paperTotal: number }[]
   selectedIndex: number
@@ -755,9 +854,16 @@ function PerDelegateView({
   getDelegationEmoji: (c: string) => string
   getFeedbackCountsByType: (delegateId: string) => { compliment?: number; concern?: number }
   getDelegateFeedbackItems: (delegateId: string) => { type: string; reason?: string }[]
+  addDelegateFeedback: (delegateId: string, type: 'compliment' | 'concern', reason: string) => void
 }) {
+  const [feedbackForm, setFeedbackForm] = useState<{ type: 'compliment' | 'concern' } | null>(null)
+  const [feedbackReason, setFeedbackReason] = useState('')
   const openFirstSecondRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
   const current = scored[selectedIndex]
+  useEffect(() => {
+    setFeedbackForm(null)
+    setFeedbackReason('')
+  }, [current?.delegate.id])
   if (!current) return null
 
   const { delegate, score, delegateTotal, paperTotal } = current
@@ -835,31 +941,85 @@ function PerDelegateView({
         </select>
       </div>
 
-      {(() => {
-        const feedbackItems = getDelegateFeedbackItems(delegate.id)
-        if (feedbackItems.length === 0) return null
-        return (
-          <div className="card-block p-4 border-l-4 border-[var(--brand)] bg-[var(--brand-soft)]/20">
-            <h3 className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
-              📋 Feedback reminder — use when grading
-            </h3>
-            <ul className="space-y-2 text-sm">
-              {feedbackItems.map((f, i) => {
-                const isCompliment = f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment'
-                return (
-                  <li key={i} className={`flex items-start gap-2 ${isCompliment ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-                    {isCompliment ? <ThumbsUp className="w-4 h-4 shrink-0 mt-0.5" /> : <MessageCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-                    <span>
-                      <strong>{isCompliment ? 'Compliment' : 'Concern'}:</strong>{' '}
-                      {f.reason || '(no reason recorded)'}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
+      <div className="card-block p-4 border-l-4 border-[var(--brand)] bg-[var(--brand-soft)]/20">
+        <h3 className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+          📋 Feedback — compliments & concerns
+        </h3>
+        {feedbackForm ? (
+          <div className="space-y-2">
+            <label className="block text-xs text-[var(--text-muted)]">
+              Reason for {feedbackForm.type === 'compliment' ? 'compliment' : 'concern'} (required)
+            </label>
+            <textarea
+              value={feedbackReason}
+              onChange={(e) => setFeedbackReason(e.target.value)}
+              placeholder={feedbackForm.type === 'compliment' ? 'e.g. Strong opening speech' : 'e.g. Reminder to use formal language'}
+              rows={2}
+              className="w-full px-2.5 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
+              autoFocus
+            />
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (feedbackReason.trim()) {
+                    addDelegateFeedback(delegate.id, feedbackForm.type, feedbackReason.trim())
+                    setFeedbackForm(null)
+                    setFeedbackReason('')
+                  }
+                }}
+                disabled={!feedbackReason.trim()}
+                className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFeedbackForm(null); setFeedbackReason('') }}
+                className="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs font-medium hover:text-[var(--text)]"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        )
-      })()}
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setFeedbackForm({ type: 'compliment' })}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--success)]/20 text-[var(--success)] text-xs font-medium hover:bg-[var(--success)]/30"
+            >
+              <ThumbsUp className="w-3.5 h-3.5" />
+              Give compliment
+            </button>
+            <button
+              type="button"
+              onClick={() => setFeedbackForm({ type: 'concern' })}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--danger)]/20 text-[var(--danger)] text-xs font-medium hover:bg-[var(--danger)]/30"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Give concern reminder
+            </button>
+          </div>
+        )}
+        {getDelegateFeedbackItems(delegate.id).length > 0 && (
+          <ul className="space-y-2 text-sm mt-3 pt-3 border-t border-[var(--border)]">
+            <span className="text-xs font-medium text-[var(--text-muted)] block mb-1">Reminder when grading:</span>
+            {getDelegateFeedbackItems(delegate.id).map((f, i) => {
+              const isCompliment = f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment'
+              return (
+                <li key={i} className={`flex items-start gap-2 ${isCompliment ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  {isCompliment ? <ThumbsUp className="w-4 h-4 shrink-0 mt-0.5" /> : <MessageCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+                  <span>
+                    <strong>{isCompliment ? 'Compliment' : 'Concern'}:</strong>{' '}
+                    {f.reason || '(no reason recorded)'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
 
       <section>
         <h3 className="text-sm font-semibold text-[var(--brand)] mb-2">Best Delegate (48 pts)</h3>

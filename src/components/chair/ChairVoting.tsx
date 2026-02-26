@@ -1,4 +1,5 @@
 import { useChair } from '../../context/ChairContext'
+import { getMajorityForMotion, RESOLUTION_MAJORITY, AMENDMENT_MAJORITY } from '../../constants/motionMajorities'
 import { Check, X, Minus } from 'lucide-react'
 import type { Delegate, RollCallStatus } from '../../types'
 import InfoPopover from '../InfoPopover'
@@ -27,6 +28,11 @@ export default function ChairVoting() {
   const isAmendment = !!amendmentVoteInProgress
   const voteTitle = resolutionVoteInProgress?.title ?? amendmentVoteInProgress?.text ?? voteInProgress?.text
   const onEndVote = isAmendment ? endAmendmentVote : isResolution ? endResolutionVote : endVote
+  const majorityInfo = isResolution
+    ? RESOLUTION_MAJORITY
+    : isAmendment
+      ? AMENDMENT_MAJORITY
+      : getMajorityForMotion((voteInProgress as { presetLabel?: string; type?: 'motion' | 'point' })?.presetLabel, (voteInProgress as { type?: 'motion' | 'point' })?.type)
 
   if (!activeVote) {
     return (
@@ -66,9 +72,10 @@ export default function ChairVoting() {
       <div className="accent-highlight-wave rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-soft)]/30 p-4">
         <p className="text-sm font-medium text-[var(--text)] mb-2">{isAmendment ? '📝 Amendment:' : isResolution ? '📜 Resolution:' : '📜 Motion:'}</p>
         <p className="text-[var(--text)]">{voteTitle}</p>
-        <p className="text-xs text-[var(--text-muted)] mt-1">
-          {isResolution ? '2/3 majority required' : isAmendment ? 'Simple majority required' : 'Simple majority (or 2/3 for close debate, etc.)'}
-        </p>
+        <div className="mt-1 p-2 rounded-lg bg-[var(--bg-elevated)]/80 border border-[var(--border)]">
+          <p className="text-xs font-medium text-[var(--text)]">{majorityInfo.label} required</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5" title={majorityInfo.rule}>{majorityInfo.rule}</p>
+        </div>
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <span className="text-[var(--success)]">Yes: {yes}</span>
           <span className="text-[var(--danger)]">No: {no}</span>

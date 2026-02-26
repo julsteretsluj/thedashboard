@@ -389,6 +389,7 @@ export default function ChairRoomView() {
                       className="absolute left-0 right-0 top-full mt-1 z-10 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-lg py-1 min-w-[10rem] max-w-[20rem]"
                       role="menu"
                       aria-label="Delegate actions"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {feedbackForm?.delegateId === d.id ? (
                         <div className="px-3 py-2 space-y-2 border-b border-[var(--border)]">

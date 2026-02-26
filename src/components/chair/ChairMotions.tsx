@@ -322,7 +322,7 @@ export default function ChairMotions() {
           <h3 className="text-sm font-medium text-[var(--accent)] mb-3">● Active</h3>
           <ul className="space-y-2">
             {activeMotions.map((m) => {
-              const { label: majorityLabel } = getMajorityForMotion(m.presetLabel, m.type)
+              const { label: majorityLabel, rule: majorityRule } = getMajorityForMotion(m.presetLabel, m.type)
               return (
                 <li key={m.id} className="flex items-center gap-2 flex-wrap">
                   <button
@@ -338,7 +338,7 @@ export default function ChairMotions() {
                       {m.presetLabel}
                     </span>
                   )}
-                  <span className="text-xs text-[var(--text-muted)]">({majorityLabel})</span>
+                  <span className="text-xs text-[var(--text-muted)]" title={majorityRule}>({majorityLabel})</span>
                   <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
                   {m.submitter && (
                     <span className="text-xs text-[var(--text-muted)] shrink-0">
@@ -376,11 +376,12 @@ export default function ChairMotions() {
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
           {[...pastMotions].reverse().map((m) => {
-            const { label: majorityLabel } = getMajorityForMotion(m.presetLabel, m.type)
+            const { label: majorityLabel, rule: majorityRule } = getMajorityForMotion(m.presetLabel, m.type)
             const statusLabel = m.status === 'passed' ? 'Passed' : m.status === 'failed' ? 'Failed' : m.status === 'tabled' ? 'Tabled' : 'Pending'
             const statusClass = m.status === 'passed' ? 'text-[var(--success)]' : m.status === 'failed' ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]'
+            const rowBorder = m.status === 'passed' ? 'border-l-4 border-l-[var(--success)]' : m.status === 'failed' ? 'border-l-4 border-l-[var(--danger)]' : ''
             return (
-              <li key={m.id} className="px-4 py-3 flex items-start gap-2">
+              <li key={m.id} className={`px-4 py-3 flex items-start gap-2 ${rowBorder}`}>
                 <button
                   onClick={() => starMotion(m.id)}
                   className="p-1 rounded mt-0.5 text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0"
@@ -403,7 +404,7 @@ export default function ChairMotions() {
                   <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)] flex-wrap">
                     <span>{new Date(m.timestamp).toLocaleString()}</span>
                     <span className={`font-medium ${statusClass}`}>{statusLabel}</span>
-                    {m.type === 'motion' && <span className="text-[var(--text-muted)]/80">({majorityLabel})</span>}
+                    {m.type === 'motion' && <span className="text-[var(--text-muted)]/80" title={majorityRule}>({majorityLabel})</span>}
                     {m.type === 'motion' && m.votes && (
                       <span>Yes {m.votes.yes} / No {m.votes.no} / Abstain {m.votes.abstain}</span>
                     )}
