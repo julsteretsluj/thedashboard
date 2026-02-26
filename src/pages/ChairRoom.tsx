@@ -54,6 +54,7 @@ import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
 import ChairHowToGuide from '../components/ChairHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 // Order: setup → session flow → tracking → reference
 const sections = [
@@ -75,8 +76,7 @@ const sections = [
   { id: 'links', label: '🔗 Official links', icon: LinkIcon },
 ]
 
-function ChairRoomContent() {
-  const [active, setActive] = useState('committee')
+function ChairRoomContent({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   const goToSpeakers = () => setActive('speakers')
   const [showSettings, setShowSettings] = useState(false)
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
@@ -177,7 +177,7 @@ function ChairRoomContent() {
   )
 }
 
-function ChairRoomHeader() {
+function ChairRoomHeader({ activeSection }: { activeSection: string }) {
   const {
     conferences,
     activeConferenceId,
@@ -205,6 +205,14 @@ function ChairRoomHeader() {
         <Gavel className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
       </div>
       <div className="min-w-0 flex-1">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Chair Room', href: '/chair' },
+            { label: sections.find((s) => s.id === activeSection)?.label ?? activeSection },
+          ]}
+          className="mb-1"
+        />
         <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">⚖️ Chair Room</h1>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
         {isLoaded && !isAuthenticated && (
@@ -280,11 +288,12 @@ function ChairRoomHeader() {
 export default function ChairRoom() {
   const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
+  const [active, setActive] = useState('committee')
 
   return (
     <ChairProvider userId={userId}>
-      <ChairRoomHeader />
-      <ChairRoomContent />
+      <ChairRoomHeader activeSection={active} />
+      <ChairRoomContent active={active} setActive={setActive} />
     </ChairProvider>
   )
 }

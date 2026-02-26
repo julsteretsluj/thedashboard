@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Gavel, BookOpen, ChevronRight } from 'lucide-react'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 const CHAIR_SETUP_STEPS = [
   { step: 1, title: 'Sign in (optional)', body: 'Sign in to save your committee data to your account. Your setup will persist across devices and sessions.' },
@@ -13,6 +14,13 @@ const CHAIR_SETUP_STEPS = [
 export default function ChairSetupGuide() {
   return (
     <div className="max-w-[680px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <Breadcrumbs
+        items={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Chair guide' },
+        ]}
+        className="mb-6"
+      />
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-xl bg-[var(--brand-soft)] flex items-center justify-center">
           <Gavel className="w-6 h-6 text-[var(--brand)]" />

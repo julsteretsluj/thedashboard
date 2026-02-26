@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { User, BookOpen, ChevronRight } from 'lucide-react'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 const DELEGATE_SETUP_STEPS = [
   { step: 1, title: 'Sign in (optional)', body: 'Sign in to save your conference data to your account. You can add multiple conferences and switch between them across devices.' },
@@ -14,6 +15,13 @@ const DELEGATE_SETUP_STEPS = [
 export default function DelegateSetupGuide() {
   return (
     <div className="max-w-[680px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <Breadcrumbs
+        items={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Delegate guide' },
+        ]}
+        className="mb-6"
+      />
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
           <User className="w-6 h-6 text-[var(--accent)]" />

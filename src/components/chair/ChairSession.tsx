@@ -332,6 +332,7 @@ export default function ChairSession() {
                   <span className="text-sm text-[var(--text-muted)]">minutes (countdown)</span>
                 </div>
               </div>
+              </div>
             </div>
           )}
 
@@ -343,17 +344,17 @@ export default function ChairSession() {
         </div>
       </div>
 
-      <div className="card-block overflow-hidden">
+      <div className="card-block">
         <div className="px-4 py-3 border-b border-[var(--border)]">
           <h3 className="text-sm font-medium text-[var(--text)]">📋 Session history</h3>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Click Edit to change name or duration, or Delete to remove.</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Use the pencil icon to edit name or duration, or trash icon to delete.</p>
         </div>
         {(!sessionRecords || sessionRecords.length === 0) ? (
           <div className="px-4 py-8 text-center text-[var(--text-muted)] text-sm">
             No sessions yet. Start a session above; each time you stop, it will be saved here.
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
+          <ul className="divide-y divide-[var(--border)] max-h-80 overflow-y-auto">
             {[...sessionRecords].reverse().map((r) => (
               <li key={r.id} className="px-4 py-3">
                 {editingId === r.id ? (
@@ -367,36 +368,31 @@ export default function ChairSession() {
                     onCancel={() => setEditingId(null)}
                   />
                 ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2 min-w-0">
-                      <div className="min-w-0">
-                        <p className="font-medium text-[var(--text)]">{r.name || 'Unnamed session'}</p>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {new Date(r.startTime).toLocaleString()} — {formatDuration(r.durationSeconds)}
-                        </p>
-                      </div>
-                      <span className="text-xs text-[var(--text-muted)] shrink-0">{formatDuration(r.durationSeconds)}</span>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-[var(--text)]">{r.name || 'Unnamed session'}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {new Date(r.startTime).toLocaleString()} — {formatDuration(r.durationSeconds)}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Session actions">
                       <button
                         type="button"
                         onClick={() => setEditingId(r.id)}
-                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-[var(--accent)] hover:bg-[var(--accent)]/10 border border-[var(--accent)]/40 transition-colors text-sm font-medium"
+                        className="p-2 rounded-lg text-[var(--accent)] hover:bg-[var(--accent)]/15 transition-colors"
                         title="Edit session"
                         aria-label={`Edit ${r.name || 'Unnamed session'}`}
                       >
                         <Pencil className="w-4 h-4" />
-                        Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteSessionFromHistory(r.id)}
-                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-[var(--danger)] hover:bg-[var(--danger)]/10 border border-[var(--danger)]/40 transition-colors text-sm font-medium"
+                        className="p-2 rounded-lg text-[var(--danger)] hover:bg-[var(--danger)]/15 transition-colors"
                         title="Delete session"
                         aria-label={`Delete ${r.name || 'Unnamed session'}`}
                       >
                         <Trash2 className="w-4 h-4" />
-                        Delete
                       </button>
                     </div>
                   </div>

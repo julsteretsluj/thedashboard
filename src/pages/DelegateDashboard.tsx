@@ -35,9 +35,10 @@ import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import DelegateHowToGuide from '../components/DelegateHowToGuide'
 import OfficialUnLinks from '../components/OfficialUnLinks'
+import Breadcrumbs from '../components/Breadcrumbs'
 import { User } from 'lucide-react'
 
-function DelegateDashboardHeader() {
+function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
   const {
     conferences,
     activeConferenceId,
@@ -65,6 +66,14 @@ function DelegateDashboardHeader() {
         <User className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--accent)]" />
       </div>
       <div className="min-w-0 flex-1">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Delegate Dashboard', href: '/delegate' },
+            { label: sections.find((s) => s.id === activeSection)?.label ?? activeSection },
+          ]}
+          className="mb-1"
+        />
         <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">📄 Delegate Dashboard</h1>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🌍 Country · 📊 Matrix · 📝 Prep · ✅ Checklist · ⏱️ Countdown</p>
         {isLoaded && !isAuthenticated && (
@@ -144,8 +153,7 @@ const sections = [
   { id: 'links', label: '🔗 Official links', icon: LinkIcon },
 ]
 
-function DelegateDashboardContent() {
-  const [active, setActive] = useState('country')
+function DelegateDashboardContent({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(getSidebarExpanded)
   const { saveToAccount, isLoaded } = useDelegate()
 
@@ -221,11 +229,12 @@ function DelegateDashboardContent() {
 export default function DelegateDashboard() {
   const { user } = useSupabaseAuth()
   const userId = user?.uid ?? null
+  const [active, setActive] = useState('country')
 
   return (
     <DelegateProvider userId={userId}>
-      <DelegateDashboardHeader />
-      <DelegateDashboardContent />
+      <DelegateDashboardHeader activeSection={active} />
+      <DelegateDashboardContent active={active} setActive={setActive} />
     </DelegateProvider>
   )
 }

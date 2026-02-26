@@ -33,6 +33,7 @@ import DelegateResources from '../components/delegate/DelegateResources'
 import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import PlaneTickets from '../components/PlaneTickets'
 import HelpTour, { HelpButton } from '../components/HelpTour'
+import Breadcrumbs from '../components/Breadcrumbs'
 import type { TourStep } from '../components/HelpTour'
 
 const FLIGHT_MS = 1800
@@ -339,10 +340,19 @@ function GlobeViewInner() {
         <HelpButton onClick={() => setTourOpen(true)} />
       </div>
       <HelpTour steps={TOUR_STEPS} isOpen={tourOpen} onClose={() => setTourOpen(false)} />
-      {/* Country hover panel — top-left */}
-      <div
-        data-tour="last-visited"
-        className="absolute left-4 top-4 z-30 rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg bg-[var(--bg-card)] border border-[var(--border)]"
+      {/* Breadcrumbs + Last visited — top-left */}
+      <div className="absolute left-4 top-4 z-30 flex flex-col gap-2">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Globe', href: '/globe' },
+            ...(activeSection ? [{ label: activeSection.label }] : []),
+          ]}
+          className="rounded-lg px-3 py-2 bg-[var(--bg-card)]/90 backdrop-blur border border-[var(--border)]"
+        />
+        <div
+          data-tour="last-visited"
+          className="rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg bg-[var(--bg-card)] border border-[var(--border)]"
         aria-live="polite"
       >
         <div className="flex items-center gap-2">
@@ -361,6 +371,7 @@ function GlobeViewInner() {
           >
             <Navigation className="w-4 h-4" />
           </button>
+        </div>
         </div>
       </div>
 

@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { Gavel, User, Calendar } from 'lucide-react'
 import Logo from '../components/Logo'
 import OfficialUnLinks from '../components/OfficialUnLinks'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 export default function Home() {
   return (
     <div className="max-w-[1000px] mx-auto px-3 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
+      <Breadcrumbs items={[{ label: 'Dashboard' }]} className="justify-center mb-4" />
       <Logo className="h-10 sm:h-12 md:h-14 w-auto mx-auto mb-4 sm:mb-5" />
       <h1 className="font-semibold text-2xl sm:text-3xl md:text-4xl text-[var(--text)] mb-2 sm:mb-3">
         SEAMUNs Dashboard <span className="text-[var(--brand)]">◇</span>
