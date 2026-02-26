@@ -5,6 +5,15 @@ import { loadChairData, saveChairData, migrateChairData, type ChairDataDoc, type
 
 const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
 
+export interface SessionRecord {
+  id: string
+  name: string
+  startTime: string
+  endTime: string
+  durationSeconds: number
+  totalPausedMs: number
+}
+
 export interface ChairConference {
   id: string
   name: string
@@ -20,6 +29,14 @@ interface ChairState {
   sessionStartTime: string | null
   /** Session duration in minutes. null = unlimited (count up). */
   sessionDurationMinutes: number | null
+  /** Current session display name */
+  sessionName: string
+  /** When paused (ms since epoch). null = not paused. */
+  sessionPausedAt: number | null
+  /** Total ms spent paused so far (for elapsed calc) */
+  sessionTotalPausedMs: number
+  /** Completed/archived sessions */
+  sessionRecords: SessionRecord[]
   delegates: Delegate[]
   delegateStrikes: DelegateStrike[]
   delegateFeedback: DelegateFeedback[]
@@ -55,6 +72,10 @@ const defaultState: ChairState = {
   sessionStarted: false,
   sessionStartTime: null,
   sessionDurationMinutes: null,
+  sessionName: '',
+  sessionPausedAt: null,
+  sessionTotalPausedMs: 0,
+  sessionRecords: [],
   delegates: [],
   delegateStrikes: [],
   delegateFeedback: [],
@@ -90,11 +111,14 @@ type ChairContextValue = ChairState & {
   setChairEmail: (e: string) => void
   startSession: () => void
   stopSession: () => void
+  pauseSession: () => void
+  resumeSession: () => void
+  setSessionName: (name: string) => void
   setSessionDurationMinutes: (minutes: number | null) => void
   addDelegate: (d: Omit<Delegate, 'id'>) => void
   removeDelegate: (id: string) => void
   updateDelegate: (id: string, patch: Partial<Delegate>) => void
-  addMotion: (text: string, type: 'motion' | 'point', submitter?: string) => void
+  addMotion: (text: string, type: 'motion' | 'point', submitter?: string, presetLabel?: string) => void
   starMotion: (id: string) => void
   setMotionStatus: (id: string, status: Motion['status']) => void
   startVote: (motionId: string) => void
@@ -216,6 +240,12 @@ function migrateChairConference(c: ChairConferenceDoc): ChairConference {
     resolutionVoteInProgress: null,
     amendmentVoteInProgress: null,
     sessionDurationMinutes: (c.data as { sessionDurationMinutes?: number | null }).sessionDurationMinutes ?? null,
+    sessionName: (c.data as { sessionName?: string }).sessionName ?? '',
+    sessionPausedAt: null,
+    sessionTotalPausedMs: 0,
+    sessionRecords: Array.isArray((c.data as { sessionRecords?: unknown[] }).sessionRecords)
+      ? (c.data as { sessionRecords: SessionRecord[] }).sessionRecords
+      : [],
   }
   return { id: c.id, name: c.name, data }
 }
@@ -357,8 +387,45 @@ export function ChairProvider({
   const setUniverse = useCallback((universe: string) => updateActive((s) => ({ ...s, universe })), [updateActive])
   const setChairName = useCallback((chairName: string) => updateActive((s) => ({ ...s, chairName })), [updateActive])
   const setChairEmail = useCallback((chairEmail: string) => updateActive((s) => ({ ...s, chairEmail })), [updateActive])
-  const startSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: true, sessionStartTime: new Date().toISOString() })), [updateActive])
-  const stopSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: false, sessionStartTime: null })), [updateActive])
+  const startSession = useCallback(() => updateActive((s) => ({
+    ...s,
+    sessionStarted: true,
+    sessionStartTime: new Date().toISOString(),
+    sessionPausedAt: null,
+    sessionTotalPausedMs: 0,
+  })), [updateActive])
+  const stopSession = useCallback(() => updateActive((s) => {
+    if (!s.sessionStartTime) return s
+    const endTime = new Date().toISOString()
+    const totalPaused = s.sessionTotalPausedMs + (s.sessionPausedAt ? Date.now() - s.sessionPausedAt : 0)
+    const durationSeconds = Math.floor((new Date(endTime).getTime() - new Date(s.sessionStartTime).getTime() - totalPaused) / 1000)
+    const record: SessionRecord = {
+      id: crypto.randomUUID(),
+      name: s.sessionName || `Session ${(s.sessionRecords?.length ?? 0) + 1}`,
+      startTime: s.sessionStartTime,
+      endTime,
+      durationSeconds,
+      totalPausedMs: totalPaused,
+    }
+    return {
+      ...s,
+      sessionStarted: false,
+      sessionStartTime: null,
+      sessionName: '',
+      sessionPausedAt: null,
+      sessionTotalPausedMs: 0,
+      sessionRecords: [...(s.sessionRecords ?? []), record],
+    }
+  }), [updateActive])
+  const pauseSession = useCallback(() => updateActive((s) => {
+    if (!s.sessionStarted || s.sessionPausedAt) return s
+    return { ...s, sessionPausedAt: Date.now() }
+  }), [updateActive])
+  const resumeSession = useCallback(() => updateActive((s) => {
+    if (!s.sessionStarted || !s.sessionPausedAt) return s
+    return { ...s, sessionTotalPausedMs: s.sessionTotalPausedMs + (Date.now() - s.sessionPausedAt), sessionPausedAt: null }
+  }), [updateActive])
+  const setSessionName = useCallback((name: string) => updateActive((s) => ({ ...s, sessionName: name })), [updateActive])
   const setSessionDurationMinutes = useCallback((minutes: number | null) => updateActive((s) => ({ ...s, sessionDurationMinutes: minutes })), [updateActive])
   const addDelegate = useCallback((d: Omit<Delegate, 'id'>) => {
     updateActive((s) => ({ ...s, delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }] }))
@@ -378,7 +445,7 @@ export function ChairProvider({
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
     updateActive((s) => ({ ...s, delegates: s.delegates.map((d) => (d.id === id ? { ...d, ...patch } : d)) }))
   }, [updateActive])
-  const addMotion = useCallback((text: string, type: 'motion' | 'point', submitter?: string) => {
+  const addMotion = useCallback((text: string, type: 'motion' | 'point', submitter?: string, presetLabel?: string) => {
     updateActive((s) => ({
       ...s,
       motions: [
@@ -391,6 +458,7 @@ export function ChairProvider({
           timestamp: new Date().toISOString(),
           status: 'active',
           ...(submitter?.trim() && { submitter: submitter.trim() }),
+          ...(presetLabel?.trim() && { presetLabel: presetLabel.trim() }),
         },
       ],
     }))
@@ -630,6 +698,9 @@ export function ChairProvider({
     setChairEmail,
     startSession,
     stopSession,
+    pauseSession,
+    resumeSession,
+    setSessionName,
     setSessionDurationMinutes,
     addDelegate,
     removeDelegate,

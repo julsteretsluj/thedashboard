@@ -58,6 +58,8 @@ export interface Motion {
   status: 'active' | 'passed' | 'failed' | 'tabled'
   /** Delegate/country that submitted the motion or point */
   submitter?: string
+  /** Preset name (e.g. Moderated caucus, Consultation) when created from preset */
+  presetLabel?: string
   votes?: { yes: number; no: number; abstain: number }
 }
 

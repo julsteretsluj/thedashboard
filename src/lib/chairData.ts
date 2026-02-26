@@ -10,6 +10,8 @@ export interface ChairStateDoc {
   sessionStarted: boolean
   sessionStartTime: string | null
   sessionDurationMinutes?: number | null
+  sessionName?: string
+  sessionRecords?: { id: string; name: string; startTime: string; endTime: string; durationSeconds: number; totalPausedMs: number }[]
   delegates: unknown[]
   delegateStrikes: unknown[]
   delegateFeedback: unknown[]
@@ -101,6 +103,8 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
         resolutions: Array.isArray(legacy.resolutions) ? legacy.resolutions : [],
         amendments: Array.isArray(legacy.amendments) ? legacy.amendments : [],
         delegateScores: legacy.delegateScores ?? {},
+        sessionName: '',
+        sessionRecords: [],
       }
     : {
         committee: 'UNSC',
@@ -109,6 +113,8 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
         sessionStarted: false,
         sessionStartTime: null,
         sessionDurationMinutes: null,
+        sessionName: '',
+        sessionRecords: [],
         delegates: [],
         delegateStrikes: [],
         delegateFeedback: [],

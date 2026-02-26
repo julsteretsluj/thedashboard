@@ -32,6 +32,16 @@ const PRESETS: Preset[] = [
     fields: [{ key: 'duration', label: 'Duration', placeholder: 'e.g. 5 minutes' }],
   },
   {
+    id: 'consultation',
+    label: 'Consultation',
+    type: 'motion',
+    template: (v) => `Motion for consultation for ${v.duration || '___'} on the topic of ${v.topic || '___'}`,
+    fields: [
+      { key: 'duration', label: 'Duration', placeholder: 'e.g. 10 minutes' },
+      { key: 'topic', label: 'Topic', placeholder: 'e.g. bloc positions' },
+    ],
+  },
+  {
     id: 'open-speaker-list',
     label: 'Open speaker list',
     type: 'motion',
@@ -92,7 +102,7 @@ export default function ChairMotions() {
   const submitPreset = () => {
     if (!selectedPreset) return
     const built = selectedPreset.template(presetValues)
-    addMotion(built, selectedPreset.type, submitter || undefined)
+    addMotion(built, selectedPreset.type, submitter || undefined, selectedPreset.label)
     setSelectedPreset(null)
     setPresetValues({})
     setPresetOpen(false)
@@ -166,7 +176,7 @@ export default function ChairMotions() {
             className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--accent)]"
           >
             {presetOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            Preset options
+            Presets: Moderated caucus · Unmoderated caucus · Consultation · …
           </button>
           {presetOpen && (
             <div className="mt-2 space-y-2">
@@ -243,6 +253,11 @@ export default function ChairMotions() {
                   <Star className={`w-4 h-4 ${m.starred ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
                 </button>
                 <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
+                {m.presetLabel && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">
+                    {m.presetLabel}
+                  </span>
+                )}
                 <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
                 {m.submitter && (
                   <span className="text-xs text-[var(--text-muted)] shrink-0">
@@ -287,6 +302,11 @@ export default function ChairMotions() {
               </button>
               <div className="flex-1 min-w-0">
                 <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
+                {m.presetLabel && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium ml-2">
+                    {m.presetLabel}
+                  </span>
+                )}
                 {m.submitter && (
                   <span className="text-xs text-[var(--text-muted)] ml-2">
                     {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
