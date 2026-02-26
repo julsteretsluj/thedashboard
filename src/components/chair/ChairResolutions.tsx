@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Trash2, Vote, ExternalLink } from 'lucide-react'
+import { computePassed } from '../../constants/motionMajorities'
 import type { Resolution, Amendment } from '../../types'
 
 function parseList(val: string): string[] {
@@ -221,7 +222,18 @@ export default function ChairResolutions() {
                     {r.votes && (
                       <p className="text-xs text-[var(--text-muted)] mt-1">
                         Yes {r.votes.yes} / No {r.votes.no} / Abstain {r.votes.abstain}
+                        {(() => {
+                          const status = r.status ?? (computePassed(r.votes.yes, r.votes.no, r.votes.abstain, 'two-thirds') ? 'passed' : 'failed')
+                          return (
+                            <span className={`ml-2 font-medium ${status === 'passed' ? 'text-[var(--success)]' : status === 'failed' ? 'text-[var(--danger)]' : ''}`}>
+                              — {status === 'passed' ? 'Passed' : status === 'failed' ? 'Failed' : 'Pending'} (2/3)
+                            </span>
+                          )
+                        })()}
                       </p>
+                    )}
+                    {!r.votes && (
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Pending — 2/3 majority required</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -371,7 +383,18 @@ export default function ChairResolutions() {
                     {a.votes && (
                       <p className="text-xs text-[var(--text-muted)] mt-1">
                         Yes {a.votes.yes} / No {a.votes.no} / Abstain {a.votes.abstain}
+                        {(() => {
+                          const status = a.status ?? (computePassed(a.votes.yes, a.votes.no, a.votes.abstain, 'simple') ? 'passed' : 'failed')
+                          return (
+                            <span className={`ml-2 font-medium ${status === 'passed' ? 'text-[var(--success)]' : status === 'failed' ? 'text-[var(--danger)]' : ''}`}>
+                              — {status === 'passed' ? 'Passed' : status === 'failed' ? 'Failed' : 'Pending'} (simple)
+                            </span>
+                          )
+                        })()}
                       </p>
+                    )}
+                    {!a.votes && (
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Pending — simple majority required</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">

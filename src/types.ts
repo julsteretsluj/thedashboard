@@ -35,6 +35,8 @@ export interface DelegateFeedback {
   timestamp: string
 }
 
+export type VoteStatus = 'pending' | 'passed' | 'failed'
+
 export interface Resolution {
   id: string
   title: string
@@ -43,6 +45,8 @@ export interface Resolution {
   gdocLink: string
   timestamp: string
   votes?: { yes: number; no: number; abstain: number }
+  /** Set when vote ends. Resolutions require 2/3 majority. */
+  status?: VoteStatus
 }
 
 export interface Amendment {
@@ -54,6 +58,8 @@ export interface Amendment {
   gdocLink: string
   timestamp: string
   votes?: { yes: number; no: number; abstain: number }
+  /** Set when vote ends. Amendments require simple majority. */
+  status?: VoteStatus
 }
 
 export interface Motion {

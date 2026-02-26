@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
 import { Plus, Star, Minus, ChevronDown, ChevronUp } from 'lucide-react'
+import { getMajorityForMotion } from '../../constants/motionMajorities'
 
 type PresetField = { key: string; label: string; placeholder: string }
 type Preset = {
@@ -56,6 +57,69 @@ const PRESETS: Preset[] = [
     fields: [],
   },
   {
+    id: 'close-debate',
+    label: 'Close debate',
+    type: 'motion',
+    template: () => 'Motion to close debate',
+    fields: [],
+  },
+  {
+    id: 'voting-procedure',
+    label: 'Move to voting procedure',
+    type: 'motion',
+    template: () => 'Motion to move to voting procedure',
+    fields: [],
+  },
+  {
+    id: 'set-agenda',
+    label: 'Set the agenda',
+    type: 'motion',
+    template: (v) => `Motion to set the agenda to ${v.topic || '___'}`,
+    fields: [{ key: 'topic', label: 'Topic/order', placeholder: 'e.g. Topic A first' }],
+  },
+  {
+    id: 'divide-question',
+    label: 'Divide the question',
+    type: 'motion',
+    template: (v) => `Motion to divide the question${v.clauses ? `: ${v.clauses}` : ''}`,
+    fields: [{ key: 'clauses', label: 'Clauses (optional)', placeholder: 'e.g. OP1, OP2 as separate votes' }],
+  },
+  {
+    id: 'table-resolution',
+    label: 'Table the resolution',
+    type: 'motion',
+    template: () => 'Motion to table the resolution',
+    fields: [],
+  },
+  {
+    id: 'adjourn',
+    label: 'Adjourn the meeting',
+    type: 'motion',
+    template: () => 'Motion to adjourn the meeting',
+    fields: [],
+  },
+  {
+    id: 'suspend',
+    label: 'Suspend the meeting',
+    type: 'motion',
+    template: (v) => `Motion to suspend the meeting${v.duration ? ` for ${v.duration}` : ''}`,
+    fields: [{ key: 'duration', label: 'Duration (optional)', placeholder: 'e.g. 15 minutes' }],
+  },
+  {
+    id: 'extend-debate',
+    label: 'Extend debate time',
+    type: 'motion',
+    template: (v) => `Motion to extend debate for ${v.duration || '___'}`,
+    fields: [{ key: 'duration', label: 'Additional time', placeholder: 'e.g. 5 minutes' }],
+  },
+  {
+    id: 'roll-call-vote',
+    label: 'Roll call vote',
+    type: 'motion',
+    template: () => 'Motion for a roll call vote',
+    fields: [],
+  },
+  {
     id: 'point-order',
     label: 'Point of order',
     type: 'point',
@@ -74,6 +138,20 @@ const PRESETS: Preset[] = [
     label: 'Point of personal privilege',
     type: 'point',
     template: () => 'Point of personal privilege',
+    fields: [],
+  },
+  {
+    id: 'point-parliamentary',
+    label: 'Point of parliamentary inquiry',
+    type: 'point',
+    template: () => 'Point of parliamentary inquiry',
+    fields: [],
+  },
+  {
+    id: 'right-of-reply',
+    label: 'Right of reply',
+    type: 'point',
+    template: () => 'Right of reply',
     fields: [],
   },
 ]
@@ -243,46 +321,51 @@ export default function ChairMotions() {
         <div className="accent-highlight-wave rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/30 p-4">
           <h3 className="text-sm font-medium text-[var(--accent)] mb-3">● Active</h3>
           <ul className="space-y-2">
-            {activeMotions.map((m) => (
-              <li key={m.id} className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => starMotion(m.id)}
-                  className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--accent)]"
-                  title={m.starred ? 'Unstar' : 'Star'}
-                >
-                  <Star className={`w-4 h-4 ${m.starred ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
-                </button>
-                <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
-                {m.presetLabel && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">
-                    {m.presetLabel}
-                  </span>
-                )}
-                <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
-                {m.submitter && (
-                  <span className="text-xs text-[var(--text-muted)] shrink-0">
-                    {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
-                  </span>
-                )}
-                <div className="flex gap-1">
+            {activeMotions.map((m) => {
+              const { label: majorityLabel } = getMajorityForMotion(m.presetLabel, m.type)
+              return (
+                <li key={m.id} className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => setMotionStatus(m.id, 'tabled')}
-                    className="p-1.5 rounded-lg bg-[var(--text-muted)]/20 text-[var(--text-muted)] hover:bg-[var(--text-muted)]/30"
-                    title="Tabled"
+                    onClick={() => starMotion(m.id)}
+                    className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--accent)]"
+                    title={m.starred ? 'Unstar' : 'Star'}
                   >
-                    <Minus className="w-4 h-4" />
+                    <Star className={`w-4 h-4 ${m.starred ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
                   </button>
-                  {m.type === 'motion' && (
-                    <button
-                      onClick={() => startVote(m.id)}
-                      className="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-medium"
-                    >
-                      Vote
-                    </button>
+                  <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
+                  {m.presetLabel && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">
+                      {m.presetLabel}
+                    </span>
                   )}
-                </div>
-              </li>
-            ))}
+                  <span className="text-xs text-[var(--text-muted)]">({majorityLabel})</span>
+                  <span className="text-sm text-[var(--text)] flex-1">{m.text}</span>
+                  {m.submitter && (
+                    <span className="text-xs text-[var(--text-muted)] shrink-0">
+                      {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
+                    </span>
+                  )}
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setMotionStatus(m.id, 'tabled')}
+                      className="p-1.5 rounded-lg bg-[var(--text-muted)]/20 text-[var(--text-muted)] hover:bg-[var(--text-muted)]/30"
+                      title="Tabled"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    {m.type === 'motion' && (
+                      <button
+                        onClick={() => startVote(m.id)}
+                        className="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-medium"
+                        title={`Vote — ${majorityLabel}`}
+                      >
+                        Vote
+                      </button>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
@@ -292,37 +375,43 @@ export default function ChairMotions() {
           <h3 className="text-sm font-medium text-[var(--text)]">📋 Log</h3>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-96 overflow-auto">
-          {[...pastMotions].reverse().map((m) => (
-            <li key={m.id} className="px-4 py-3 flex items-start gap-2">
-              <button
-                onClick={() => starMotion(m.id)}
-                className="p-1 rounded mt-0.5 text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0"
-              >
-                <Star className={`w-4 h-4 ${m.starred ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
-              </button>
-              <div className="flex-1 min-w-0">
-                <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
-                {m.presetLabel && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium ml-2">
-                    {m.presetLabel}
-                  </span>
-                )}
-                {m.submitter && (
-                  <span className="text-xs text-[var(--text-muted)] ml-2">
-                    {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
-                  </span>
-                )}
-                <p className="text-sm text-[var(--text)]">{m.text}</p>
-                <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)]">
-                  <span>{new Date(m.timestamp).toLocaleString()}</span>
-                  <span className="capitalize">{m.status}</span>
-                  {m.type === 'motion' && m.votes && (
-                    <span>Yes {m.votes.yes} / No {m.votes.no} / Abstain {m.votes.abstain}</span>
+          {[...pastMotions].reverse().map((m) => {
+            const { label: majorityLabel } = getMajorityForMotion(m.presetLabel, m.type)
+            const statusLabel = m.status === 'passed' ? 'Passed' : m.status === 'failed' ? 'Failed' : m.status === 'tabled' ? 'Tabled' : 'Pending'
+            const statusClass = m.status === 'passed' ? 'text-[var(--success)]' : m.status === 'failed' ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]'
+            return (
+              <li key={m.id} className="px-4 py-3 flex items-start gap-2">
+                <button
+                  onClick={() => starMotion(m.id)}
+                  className="p-1 rounded mt-0.5 text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0"
+                >
+                  <Star className={`w-4 h-4 ${m.starred ? 'fill-[var(--accent)] text-[var(--accent)]' : ''}`} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-[var(--text-muted)] uppercase">{m.type}</span>
+                  {m.presetLabel && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium ml-2">
+                      {m.presetLabel}
+                    </span>
                   )}
+                  {m.submitter && (
+                    <span className="text-xs text-[var(--text-muted)] ml-2">
+                      {getDelegationEmoji(m.submitter) || '🏳️'} {m.submitter}
+                    </span>
+                  )}
+                  <p className="text-sm text-[var(--text)]">{m.text}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)] flex-wrap">
+                    <span>{new Date(m.timestamp).toLocaleString()}</span>
+                    <span className={`font-medium ${statusClass}`}>{statusLabel}</span>
+                    {m.type === 'motion' && <span className="text-[var(--text-muted)]/80">({majorityLabel})</span>}
+                    {m.type === 'motion' && m.votes && (
+                      <span>Yes {m.votes.yes} / No {m.votes.no} / Abstain {m.votes.abstain}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       </div>
     </div>

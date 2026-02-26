@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
+import { getMajorityForMotion, computePassed } from '../constants/motionMajorities'
 import { loadChairData, saveChairData, migrateChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
 
@@ -568,10 +569,13 @@ export function ChairProvider({
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
       const abstain = Object.values(s.delegateVotes).filter((v) => v === 'abstain').length
+      const m = s.voteInProgress
+      const { type: majType } = getMajorityForMotion(m.presetLabel, m.type)
+      const passed = majType === 'chair' ? false : computePassed(yes, no, abstain, majType)
       return {
         ...s,
-        motions: s.motions.map((m) =>
-          m.id === s.voteInProgress!.id ? { ...m, votes: { yes, no, abstain }, status: yes > no ? 'passed' : 'failed' } : m
+        motions: s.motions.map((motion) =>
+          motion.id === m.id ? { ...motion, votes: { yes, no, abstain }, status: majType === 'chair' ? 'tabled' : (passed ? 'passed' : 'failed') } : motion
         ),
         voteInProgress: null,
         delegateVotes: {},
@@ -584,10 +588,11 @@ export function ChairProvider({
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
       const abstain = Object.values(s.delegateVotes).filter((v) => v === 'abstain').length
+      const passed = computePassed(yes, no, abstain, 'two-thirds')
       return {
         ...s,
         resolutions: s.resolutions.map((r) =>
-          r.id === s.resolutionVoteInProgress!.id ? { ...r, votes: { yes, no, abstain } } : r
+          r.id === s.resolutionVoteInProgress!.id ? { ...r, votes: { yes, no, abstain }, status: passed ? 'passed' : 'failed' } : r
         ),
         resolutionVoteInProgress: null,
         delegateVotes: {},
@@ -600,10 +605,11 @@ export function ChairProvider({
       const yes = Object.values(s.delegateVotes).filter((v) => v === 'yes').length
       const no = Object.values(s.delegateVotes).filter((v) => v === 'no').length
       const abstain = Object.values(s.delegateVotes).filter((v) => v === 'abstain').length
+      const passed = computePassed(yes, no, abstain, 'simple')
       return {
         ...s,
         amendments: s.amendments.map((a) =>
-          a.id === s.amendmentVoteInProgress!.id ? { ...a, votes: { yes, no, abstain } } : a
+          a.id === s.amendmentVoteInProgress!.id ? { ...a, votes: { yes, no, abstain }, status: passed ? 'passed' : 'failed' } : a
         ),
         amendmentVoteInProgress: null,
         delegateVotes: {},

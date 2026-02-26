@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useCallback } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User, Star, Flag } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User, Star, Flag, ThumbsUp, MessageCircle } from 'lucide-react'
 import type { DelegateScore } from '../../types'
 import InfoPopover from '../InfoPopover'
 
@@ -300,7 +300,7 @@ function CriteriaDropdown({
 type ViewMode = 'table' | 'per-delegate'
 
 export default function ChairDelegateTracker() {
-  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji, getFeedbackCountsByType } = useChair()
+  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji, getFeedbackCountsByType, getDelegateFeedbackItems } = useChair()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const tableOpenRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
@@ -465,8 +465,11 @@ export default function ChairDelegateTracker() {
             <tbody>
               {byCountry.map(({ delegate, score, delegateTotal }) => {
                 const feedback = getFeedbackCountsByType(delegate.id)
+                const feedbackItems = getDelegateFeedbackItems(delegate.id)
                 const compliments = feedback.compliment ?? 0
                 const concerns = feedback.concern ?? 0
+                const complimentReasons = feedbackItems.filter((f) => f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment').map((f) => f.reason || '—').join('; ')
+                const concernReasons = feedbackItems.filter((f) => f.type !== 'compliment' && String(f.type).toLowerCase() !== 'compliment').map((f) => f.reason || '—').join('; ')
                 return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-elevated)]/30">
                   <td className="sticky left-0 px-2 py-2 bg-[var(--bg-card)] z-10">
@@ -477,13 +480,13 @@ export default function ChairDelegateTracker() {
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
                     <span className="ml-1.5 inline-flex items-center gap-1">
                       {compliments > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={complimentReasons || `${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
                           <Star className="w-3.5 h-3.5 fill-current" />
                           {compliments}
                         </span>
                       )}
                       {concerns > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={concernReasons || `${concerns} concern${concerns !== 1 ? 's' : ''}`}>
                           <Flag className="w-3.5 h-3.5 fill-current" />
                           {concerns}
                         </span>
@@ -539,8 +542,11 @@ export default function ChairDelegateTracker() {
             <tbody>
               {byCountry.map(({ delegate, score, paperTotal }) => {
                 const feedback = getFeedbackCountsByType(delegate.id)
+                const feedbackItems = getDelegateFeedbackItems(delegate.id)
                 const compliments = feedback.compliment ?? 0
                 const concerns = feedback.concern ?? 0
+                const complimentReasons = feedbackItems.filter((f) => f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment').map((f) => f.reason || '—').join('; ')
+                const concernReasons = feedbackItems.filter((f) => f.type !== 'compliment' && String(f.type).toLowerCase() !== 'compliment').map((f) => f.reason || '—').join('; ')
                 return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-elevated)]/30">
                   <td className="sticky left-0 px-2 py-2 bg-[var(--bg-card)] z-10">
@@ -551,13 +557,13 @@ export default function ChairDelegateTracker() {
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
                     <span className="ml-1.5 inline-flex items-center gap-1">
                       {compliments > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={complimentReasons || `${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
                           <Star className="w-3.5 h-3.5 fill-current" />
                           {compliments}
                         </span>
                       )}
                       {concerns > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={concernReasons || `${concerns} concern${concerns !== 1 ? 's' : ''}`}>
                           <Flag className="w-3.5 h-3.5 fill-current" />
                           {concerns}
                         </span>
@@ -599,8 +605,11 @@ export default function ChairDelegateTracker() {
             <tbody>
               {byTotal.map(({ delegate, delegateTotal, paperTotal }, i) => {
                 const feedback = getFeedbackCountsByType(delegate.id)
+                const feedbackItems = getDelegateFeedbackItems(delegate.id)
                 const compliments = feedback.compliment ?? 0
                 const concerns = feedback.concern ?? 0
+                const complimentReasons = feedbackItems.filter((f) => f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment').map((f) => f.reason || '—').join('; ')
+                const concernReasons = feedbackItems.filter((f) => f.type !== 'compliment' && String(f.type).toLowerCase() !== 'compliment').map((f) => f.reason || '—').join('; ')
                 return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-elevated)]/30">
                   <td className="px-2 py-2 text-[var(--text-muted)] font-medium">{i + 1}</td>
@@ -610,13 +619,13 @@ export default function ChairDelegateTracker() {
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
                     <span className="ml-1.5 inline-flex items-center gap-1">
                       {compliments > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={complimentReasons || `${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
                           <Star className="w-3.5 h-3.5 fill-current" />
                           {compliments}
                         </span>
                       )}
                       {concerns > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={concernReasons || `${concerns} concern${concerns !== 1 ? 's' : ''}`}>
                           <Flag className="w-3.5 h-3.5 fill-current" />
                           {concerns}
                         </span>
@@ -723,6 +732,7 @@ export default function ChairDelegateTracker() {
           setDelegateScore={setDelegateScore}
           getDelegationEmoji={getDelegationEmoji}
           getFeedbackCountsByType={getFeedbackCountsByType}
+          getDelegateFeedbackItems={getDelegateFeedbackItems}
         />
       )}
     </div>
@@ -736,6 +746,7 @@ function PerDelegateView({
   setDelegateScore,
   getDelegationEmoji,
   getFeedbackCountsByType,
+  getDelegateFeedbackItems,
 }: {
   scored: { delegate: { id: string; country: string; name?: string }; score: DelegateScore; delegateTotal: number; paperTotal: number }[]
   selectedIndex: number
@@ -743,6 +754,7 @@ function PerDelegateView({
   setDelegateScore: (id: string, patch: Partial<DelegateScore>) => void
   getDelegationEmoji: (c: string) => string
   getFeedbackCountsByType: (delegateId: string) => { compliment?: number; concern?: number }
+  getDelegateFeedbackItems: (delegateId: string) => { type: string; reason?: string }[]
 }) {
   const openFirstSecondRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
   const current = scored[selectedIndex]
@@ -822,6 +834,32 @@ function PerDelegateView({
           ))}
         </select>
       </div>
+
+      {(() => {
+        const feedbackItems = getDelegateFeedbackItems(delegate.id)
+        if (feedbackItems.length === 0) return null
+        return (
+          <div className="card-block p-4 border-l-4 border-[var(--brand)] bg-[var(--brand-soft)]/20">
+            <h3 className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
+              📋 Feedback reminder — use when grading
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {feedbackItems.map((f, i) => {
+                const isCompliment = f.type === 'compliment' || String(f.type).toLowerCase() === 'compliment'
+                return (
+                  <li key={i} className={`flex items-start gap-2 ${isCompliment ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                    {isCompliment ? <ThumbsUp className="w-4 h-4 shrink-0 mt-0.5" /> : <MessageCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+                    <span>
+                      <strong>{isCompliment ? 'Compliment' : 'Concern'}:</strong>{' '}
+                      {f.reason || '(no reason recorded)'}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )
+      })()}
 
       <section>
         <h3 className="text-sm font-semibold text-[var(--brand)] mb-2">Best Delegate (48 pts)</h3>
