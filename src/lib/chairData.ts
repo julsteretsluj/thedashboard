@@ -9,6 +9,7 @@ export interface ChairStateDoc {
   universe: string
   sessionStarted: boolean
   sessionStartTime: string | null
+  sessionDurationMinutes?: number | null
   delegates: unknown[]
   delegateStrikes: unknown[]
   delegateFeedback: unknown[]
@@ -75,6 +76,7 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
         universe: typeof legacy.universe === 'string' ? legacy.universe : '',
         sessionStarted: !!legacy.sessionStarted,
         sessionStartTime: legacy.sessionStartTime ?? null,
+        sessionDurationMinutes: null,
         delegates: Array.isArray(legacy.delegates) ? legacy.delegates : [],
         delegateStrikes: Array.isArray(legacy.delegateStrikes) ? legacy.delegateStrikes : [],
         delegateFeedback: Array.isArray(legacy.delegateFeedback) ? legacy.delegateFeedback : [],
@@ -106,6 +108,7 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
         universe: '',
         sessionStarted: false,
         sessionStartTime: null,
+        sessionDurationMinutes: null,
         delegates: [],
         delegateStrikes: [],
         delegateFeedback: [],

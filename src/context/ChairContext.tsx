@@ -18,6 +18,8 @@ interface ChairState {
   universe: string
   sessionStarted: boolean
   sessionStartTime: string | null
+  /** Session duration in minutes. null = unlimited (count up). */
+  sessionDurationMinutes: number | null
   delegates: Delegate[]
   delegateStrikes: DelegateStrike[]
   delegateFeedback: DelegateFeedback[]
@@ -52,6 +54,7 @@ const defaultState: ChairState = {
   universe: '',
   sessionStarted: false,
   sessionStartTime: null,
+  sessionDurationMinutes: null,
   delegates: [],
   delegateStrikes: [],
   delegateFeedback: [],
@@ -87,6 +90,7 @@ type ChairContextValue = ChairState & {
   setChairEmail: (e: string) => void
   startSession: () => void
   stopSession: () => void
+  setSessionDurationMinutes: (minutes: number | null) => void
   addDelegate: (d: Omit<Delegate, 'id'>) => void
   removeDelegate: (id: string) => void
   updateDelegate: (id: string, patch: Partial<Delegate>) => void
@@ -211,6 +215,7 @@ function migrateChairConference(c: ChairConferenceDoc): ChairConference {
     voteInProgress: (c.data.voteInProgress as ChairState['voteInProgress']) ?? null,
     resolutionVoteInProgress: null,
     amendmentVoteInProgress: null,
+    sessionDurationMinutes: (c.data as { sessionDurationMinutes?: number | null }).sessionDurationMinutes ?? null,
   }
   return { id: c.id, name: c.name, data }
 }
@@ -354,6 +359,7 @@ export function ChairProvider({
   const setChairEmail = useCallback((chairEmail: string) => updateActive((s) => ({ ...s, chairEmail })), [updateActive])
   const startSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: true, sessionStartTime: new Date().toISOString() })), [updateActive])
   const stopSession = useCallback(() => updateActive((s) => ({ ...s, sessionStarted: false, sessionStartTime: null })), [updateActive])
+  const setSessionDurationMinutes = useCallback((minutes: number | null) => updateActive((s) => ({ ...s, sessionDurationMinutes: minutes })), [updateActive])
   const addDelegate = useCallback((d: Omit<Delegate, 'id'>) => {
     updateActive((s) => ({ ...s, delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }] }))
   }, [updateActive])
@@ -624,6 +630,7 @@ export function ChairProvider({
     setChairEmail,
     startSession,
     stopSession,
+    setSessionDurationMinutes,
     addDelegate,
     removeDelegate,
     updateDelegate,
