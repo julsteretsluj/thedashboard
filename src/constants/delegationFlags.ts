@@ -198,6 +198,132 @@ const COUNTRY_TO_ISO: Record<string, string> = {
   Zimbabwe: 'ZW',
 }
 
+/** Alternate names and common variants → ISO code. */
+const DELEGATION_ALIASES: Record<string, string> = {
+  Russia: 'RU',
+  'Russian Federation': 'RU',
+  'North Korea': 'KP',
+  DPRK: 'KP',
+  'South Korea': 'KR',
+  Korea: 'KR',
+  Taiwan: 'TW',
+  'Republic of China': 'TW',
+  Vietnam: 'VN',
+  'Viet Nam': 'VN',
+  Syria: 'SY',
+  'Syrian Arab Republic': 'SY',
+  UK: 'GB',
+  Britain: 'GB',
+  'Great Britain': 'GB',
+  England: 'GB',
+  'United Kingdom': 'GB',
+  USA: 'US',
+  America: 'US',
+  'United States': 'US',
+  UAE: 'AE',
+  Emirates: 'AE',
+  'United Arab Emirates': 'AE',
+  Tanzania: 'TZ',
+  'Ivory Coast': 'CI',
+  "Cote d'Ivoire": 'CI',
+  "Côte d'Ivoire": 'CI',
+  DRC: 'CD',
+  ROC: 'TW',
+  Czechia: 'CZ',
+  Macedonia: 'MK',
+  'North Macedonia': 'MK',
+  Swaziland: 'SZ',
+  Palestine: 'PS',
+  Vatican: 'VA',
+  'Vatican City': 'VA',
+  'Hong Kong': 'HK',
+  Macau: 'MO',
+  Macao: 'MO',
+  Kosovo: 'XK',
+  Brunei: 'BN',
+  'Brunei Darussalam': 'BN',
+  CAR: 'CF',
+  'Central African Rep': 'CF',
+  Laos: 'LA',
+  'Lao PDR': 'LA',
+  'Lao People\'s Democratic Republic': 'LA',
+  'Sri Lanka': 'LK',
+  Ceylon: 'LK',
+  Burkina: 'BF',
+  'Burkina Faso': 'BF',
+  'Cape Verde': 'CV',
+  'Cabo Verde': 'CV',
+  'São Tomé': 'ST',
+  'Sao Tome': 'ST',
+  'East Timor': 'TL',
+  'Timor Leste': 'TL',
+  Burma: 'MM',
+  Myanmar: 'MM',
+  Holland: 'NL',
+  Netherlands: 'NL',
+  Persia: 'IR',
+  Iran: 'IR',
+  Rhodesia: 'ZW',
+  Zaire: 'CD',
+  'Republic of Congo': 'CG',
+  Congo: 'CG',
+  'Republic of Ireland': 'IE',
+  'Northern Ireland': 'GB',
+  Scotland: 'GB',
+  Wales: 'GB',
+}
+
+/** USCC and similar committees: thematic emojis for party roles. */
+function getThematicEmoji(delegationName: string): string {
+  const n = delegationName.toLowerCase()
+  const rMatch = /(?:^|\s)(?:r-|republican|\(r\)|\(r\s*\))/.test(n) || n.startsWith('r-')
+  const dMatch = /(?:^|\s)(?:d-|democrat|\(d\)|\(d\s*\))/.test(n) || n.startsWith('d-')
+  const iMatch = /(?:^|\s)(?:i-|independent|\(i\)|\(i\s*\))/.test(n) || n.startsWith('i-')
+  if (rMatch) return '❤️'
+  if (dMatch) return '💙'
+  if (iMatch) return '🤍'
+  return ''
+}
+
+/** Normalize string for fuzzy match: lowercase, collapse whitespace, strip accents. */
+function normalize(s: string): string {
+  return (s ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+/** Build a lookup: normalized name → ISO. */
+function buildNormalizedLookup(): Map<string, string> {
+  const m = new Map<string, string>()
+  for (const [name, iso] of Object.entries(COUNTRY_TO_ISO)) {
+    m.set(normalize(name), iso)
+  }
+  for (const [alias, iso] of Object.entries(DELEGATION_ALIASES)) {
+    m.set(normalize(alias), iso)
+  }
+  return m
+}
+
+const NORMALIZED_TO_ISO = buildNormalizedLookup()
+
+/** Find closest country name by normalized match or substring. */
+function findClosestIso(name: string): string | null {
+  const norm = normalize(name)
+  if (!norm) return null
+  if (NORMALIZED_TO_ISO.has(norm)) return NORMALIZED_TO_ISO.get(norm) ?? null
+  for (const [key, iso] of NORMALIZED_TO_ISO) {
+    if (key.includes(norm) || norm.includes(key)) return iso
+  }
+  const words = norm.split(/\s+/).filter(Boolean)
+  for (const [key, iso] of NORMALIZED_TO_ISO) {
+    if (words.some((w) => key.includes(w) && w.length >= 3)) return iso
+  }
+  return null
+}
+
 /** Convert ISO 3166-1 alpha-2 code to flag emoji (regional indicator symbols). */
 function isoToFlagEmoji(iso: string): string {
   if (!/^[A-Z]{2}$/i.test(iso)) return ''
@@ -206,11 +332,24 @@ function isoToFlagEmoji(iso: string): string {
     .join('')
 }
 
+/** Committees that use thematic emojis (e.g. USCC party colours) instead of country flags. */
+const THEMATIC_COMMITTEES = ['USCC', 'US-Senate', 'HCC']
+
 /**
- * Get default flag emoji for a preset delegation name (UNGA member).
- * Returns empty string if not in preset list.
+ * Get default flag emoji for a delegation name.
+ * Handles: thematic (USCC), exact match, aliases, normalized match, closest match.
+ * USCC/similar: Republican=❤️, Democrat=💙, Independent=🤍.
  */
-export function getPresetDelegationFlag(delegationName: string): string {
-  const code = COUNTRY_TO_ISO[delegationName]
+export function getPresetDelegationFlag(delegationName: string, committee?: string): string {
+  if (!delegationName || typeof delegationName !== 'string') return ''
+  const trimmed = delegationName.trim()
+  if (!trimmed) return ''
+
+  if (committee && THEMATIC_COMMITTEES.includes(committee)) {
+    const thematic = getThematicEmoji(trimmed)
+    if (thematic) return thematic
+  }
+
+  const code = COUNTRY_TO_ISO[trimmed] ?? DELEGATION_ALIASES[trimmed] ?? findClosestIso(trimmed)
   return code ? isoToFlagEmoji(code) : ''
 }

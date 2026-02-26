@@ -724,7 +724,8 @@ export function ChairProvider({
     state.delegateFeedback
       .filter((f) => f.delegateId === delegateId)
       .forEach((f) => {
-        counts[f.type] = (counts[f.type] ?? 0) + 1
+        const type = f.type === 'compliment' || f.type === 'concern' ? f.type : (String(f.type).toLowerCase() === 'compliment' ? 'compliment' : 'concern')
+        counts[type] = (counts[type] ?? 0) + 1
       })
     return counts
   }, [state.delegateFeedback])
@@ -752,8 +753,8 @@ export function ChairProvider({
   const getDelegationEmoji = useCallback((delegation: string): string => {
     const override = state.delegationEmojiOverrides[delegation]
     if (override !== undefined && override !== '') return override
-    return getPresetDelegationFlag(delegation)
-  }, [state.delegationEmojiOverrides])
+    return getPresetDelegationFlag(delegation, state.committee)
+  }, [state.delegationEmojiOverrides, state.committee])
 
   const setDelegateScore = useCallback((delegateId: string, score: Partial<DelegateScore>) => {
     updateActive((s) => ({

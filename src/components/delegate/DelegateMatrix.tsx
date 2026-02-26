@@ -338,7 +338,7 @@ export default function DelegateMatrix() {
                             <td className="px-4 py-3 text-[var(--text)]">
                               <span className="inline-flex items-center gap-2">
                                 <span className="text-base shrink-0" title={entry.delegation || undefined}>
-                                  {getPresetDelegationFlag(entry.delegation || '') || '🏳️'}
+                                  {getPresetDelegationFlag(entry.delegation || '', activeCommittee) || '🏳️'}
                                 </span>
                                 {entry.delegation || '—'}
                               </span>
