@@ -349,21 +349,27 @@ export function ChairProvider({
         conferences: conferences.map((c) => ({
           id: c.id,
           name: c.name,
-          data: { ...c.data, activeSpeaker: null } as ChairConferenceDoc['data'],
+          data: {
+            ...c.data,
+            activeSpeaker: null,
+            sessionRecords: c.data.sessionRecords ?? [],
+          } as ChairConferenceDoc['data'],
         })),
         activeConferenceId: activeId ?? conferences[0]?.id ?? '',
       }
       await saveChairData(userId, payload)
       setLastSaved(new Date())
+    } catch (err) {
+      console.error('Failed to save chair data to Supabase:', err)
     } finally {
       setIsSaving(false)
     }
   }, [userId, conferences, activeId])
 
-  // Autosave to Firestore when signed in
+  // Autosave to Supabase when signed in (1s debounce — sessions and all data persist promptly)
   useEffect(() => {
     if (!userId || !isLoaded) return
-    const t = setTimeout(() => saveToAccount(), 3000)
+    const t = setTimeout(() => saveToAccount(), 1000)
     return () => clearTimeout(t)
   }, [userId, isLoaded, conferences, activeId, saveToAccount])
 
@@ -372,6 +378,16 @@ export function ChairProvider({
     if (!userId || !isLoaded) return
     const interval = setInterval(() => saveToAccount(), 5 * 60 * 1000)
     return () => clearInterval(interval)
+  }, [userId, isLoaded, saveToAccount])
+
+  // Save when user switches tab or minimizes (before potential close)
+  useEffect(() => {
+    if (!userId || !isLoaded) return
+    const handler = () => {
+      if (document.visibilityState === 'hidden') saveToAccount()
+    }
+    document.addEventListener('visibilitychange', handler)
+    return () => document.removeEventListener('visibilitychange', handler)
   }, [userId, isLoaded, saveToAccount])
 
   const updateActive = useCallback((updater: (s: ChairState) => ChairState) => {

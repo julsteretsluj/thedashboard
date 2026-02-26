@@ -157,7 +157,11 @@ export async function saveChairData(
   data: ChairDataDoc
 ): Promise<void> {
   if (!supabase) return
-  await supabase
+  const { error } = await supabase
     .from('chair_data')
-    .upsert({ user_id: userId, data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    .upsert(
+      { user_id: userId, data, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    )
+  if (error) throw new Error(`Save failed: ${error.message}`)
 }
