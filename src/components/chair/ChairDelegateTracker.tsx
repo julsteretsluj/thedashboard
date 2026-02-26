@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useCallback } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, User, Star, Flag } from 'lucide-react'
 import type { DelegateScore } from '../../types'
 import InfoPopover from '../InfoPopover'
 
@@ -300,7 +300,7 @@ function CriteriaDropdown({
 type ViewMode = 'table' | 'per-delegate'
 
 export default function ChairDelegateTracker() {
-  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji } = useChair()
+  const { delegates, setDelegateScore, getDelegateScore, getDelegationEmoji, getFeedbackCountsByType } = useChair()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const tableOpenRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
@@ -463,7 +463,11 @@ export default function ChairDelegateTracker() {
               </tr>
             </thead>
             <tbody>
-              {byCountry.map(({ delegate, score, delegateTotal }) => (
+              {byCountry.map(({ delegate, score, delegateTotal }) => {
+                const feedback = getFeedbackCountsByType(delegate.id)
+                const compliments = feedback.compliment ?? 0
+                const concerns = feedback.concern ?? 0
+                return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-elevated)]/30">
                   <td className="sticky left-0 px-2 py-2 bg-[var(--bg-card)] z-10">
                     <span className="text-lg shrink-0" title={delegate.country}>
@@ -471,6 +475,20 @@ export default function ChairDelegateTracker() {
                     </span>
                     <span className="font-medium text-[var(--text)] ml-1">{delegate.country}</span>
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
+                    <span className="ml-1.5 inline-flex items-center gap-1">
+                      {compliments > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {compliments}
+                        </span>
+                      )}
+                      {concerns > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                          <Flag className="w-3.5 h-3.5 fill-current" />
+                          {concerns}
+                        </span>
+                      )}
+                    </span>
                   </td>
                   {DELEGATE_CRITERIA.map(({ key, label }) => (
                     <td key={key} className="px-2 py-1.5">
@@ -485,7 +503,7 @@ export default function ChairDelegateTracker() {
                   ))}
                   <td className="px-2 py-2 text-right font-semibold text-[var(--brand)]">{delegateTotal}/48</td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
@@ -519,7 +537,11 @@ export default function ChairDelegateTracker() {
               </tr>
             </thead>
             <tbody>
-              {byCountry.map(({ delegate, score, paperTotal }) => (
+              {byCountry.map(({ delegate, score, paperTotal }) => {
+                const feedback = getFeedbackCountsByType(delegate.id)
+                const compliments = feedback.compliment ?? 0
+                const concerns = feedback.concern ?? 0
+                return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-elevated)]/30">
                   <td className="sticky left-0 px-2 py-2 bg-[var(--bg-card)] z-10">
                     <span className="text-lg shrink-0" title={delegate.country}>
@@ -527,6 +549,20 @@ export default function ChairDelegateTracker() {
                     </span>
                     <span className="font-medium text-[var(--text)] ml-1">{delegate.country}</span>
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
+                    <span className="ml-1.5 inline-flex items-center gap-1">
+                      {compliments > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {compliments}
+                        </span>
+                      )}
+                      {concerns > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                          <Flag className="w-3.5 h-3.5 fill-current" />
+                          {concerns}
+                        </span>
+                      )}
+                    </span>
                   </td>
                   {POSITION_PAPER_CRITERIA.map(({ key, label }) => (
                     <td key={key} className="px-2 py-1.5">
@@ -541,7 +577,7 @@ export default function ChairDelegateTracker() {
                   ))}
                   <td className="px-2 py-2 text-right font-semibold text-[var(--brand)]">{paperTotal}/40</td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
@@ -561,19 +597,37 @@ export default function ChairDelegateTracker() {
               </tr>
             </thead>
             <tbody>
-              {byTotal.map(({ delegate, delegateTotal, paperTotal }, i) => (
+              {byTotal.map(({ delegate, delegateTotal, paperTotal }, i) => {
+                const feedback = getFeedbackCountsByType(delegate.id)
+                const compliments = feedback.compliment ?? 0
+                const concerns = feedback.concern ?? 0
+                return (
                 <tr key={delegate.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-elevated)]/30">
                   <td className="px-2 py-2 text-[var(--text-muted)] font-medium">{i + 1}</td>
                   <td className="px-2 py-2">
                     <span className="text-lg shrink-0" title={delegate.country}>{getDelegationEmoji(delegate.country)}</span>
                     <span className="font-medium text-[var(--text)] ml-1">{delegate.country}</span>
                     {delegate.name && <span className="text-[var(--text-muted)] ml-1">— {delegate.name}</span>}
+                    <span className="ml-1.5 inline-flex items-center gap-1">
+                      {compliments > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {compliments}
+                        </span>
+                      )}
+                      {concerns > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                          <Flag className="w-3.5 h-3.5 fill-current" />
+                          {concerns}
+                        </span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-2 py-2 text-right text-[var(--text-muted)]">{delegateTotal}/48</td>
                   <td className="px-2 py-2 text-right text-[var(--text-muted)]">{paperTotal}/40</td>
                   <td className="px-2 py-2 text-right font-semibold text-[var(--brand)]">{delegateTotal + paperTotal}/88</td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
@@ -668,6 +722,7 @@ export default function ChairDelegateTracker() {
           onSelectIndex={setSelectedIndex}
           setDelegateScore={setDelegateScore}
           getDelegationEmoji={getDelegationEmoji}
+          getFeedbackCountsByType={getFeedbackCountsByType}
         />
       )}
     </div>
@@ -680,12 +735,14 @@ function PerDelegateView({
   onSelectIndex,
   setDelegateScore,
   getDelegationEmoji,
+  getFeedbackCountsByType,
 }: {
   scored: { delegate: { id: string; country: string; name?: string }; score: DelegateScore; delegateTotal: number; paperTotal: number }[]
   selectedIndex: number
   onSelectIndex: (i: number) => void
   setDelegateScore: (id: string, patch: Partial<DelegateScore>) => void
   getDelegationEmoji: (c: string) => string
+  getFeedbackCountsByType: (delegateId: string) => { compliment?: number; concern?: number }
 }) {
   const openFirstSecondRef = useRef<Record<string, { open: () => void; openForBand: (band: { low: number; high: number }) => void }>>({})
   const current = scored[selectedIndex]
@@ -712,7 +769,30 @@ function PerDelegateView({
           </button>
           <span className="text-lg shrink-0" title={delegate.country}>{getDelegationEmoji(delegate.country)}</span>
           <div>
-            <p className="font-semibold text-[var(--text)]">{delegate.country}{delegate.name ? ` — ${delegate.name}` : ''}</p>
+            <p className="font-semibold text-[var(--text)] flex items-center gap-2">
+              {delegate.country}{delegate.name ? ` — ${delegate.name}` : ''}
+              {(() => {
+                const feedback = getFeedbackCountsByType(delegate.id)
+                const compliments = feedback.compliment ?? 0
+                const concerns = feedback.concern ?? 0
+                return (
+                  <span className="inline-flex items-center gap-2 text-sm font-normal">
+                    {compliments > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[var(--success)]" title={`${compliments} compliment${compliments !== 1 ? 's' : ''}`}>
+                        <Star className="w-4 h-4 fill-current" />
+                        {compliments}
+                      </span>
+                    )}
+                    {concerns > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[var(--danger)]" title={`${concerns} concern${concerns !== 1 ? 's' : ''}`}>
+                        <Flag className="w-4 h-4 fill-current" />
+                        {concerns}
+                      </span>
+                    )}
+                  </span>
+                )
+              })()}
+            </p>
             <p className="text-xs text-[var(--text-muted)]">
               {selectedIndex + 1} of {scored.length} · #{rank} · D: {delegateTotal}/48 · PP: {paperTotal}/40 · Total: {total}/88
             </p>

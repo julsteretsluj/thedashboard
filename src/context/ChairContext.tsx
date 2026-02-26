@@ -157,7 +157,10 @@ type ChairContextValue = ChairState & {
   removeStrike: (delegateId: string, type: string) => void
   getStrikeCount: (delegateId: string, type: string) => number
   getStrikeCountsByType: (delegateId: string) => Record<string, number>
-  addDelegateFeedback: (delegateId: string, type: DelegateFeedbackType) => void
+  addDelegateFeedback: (delegateId: string, type: DelegateFeedbackType, reason: string) => void
+  removeDelegateFeedback: (feedbackId: string) => void
+  updateDelegateFeedback: (feedbackId: string, patch: { reason?: string }) => void
+  getDelegateFeedbackItems: (delegateId: string) => DelegateFeedback[]
   getFeedbackCountsByType: (delegateId: string) => Record<DelegateFeedbackType, number>
   toggleFlowStep: (stepId: string) => void
   isFlowStepDone: (stepId: string) => boolean
@@ -682,12 +685,39 @@ export function ChairProvider({
     })
   }, [updateActive])
 
-  const addDelegateFeedback = useCallback((delegateId: string, type: DelegateFeedbackType) => {
+  const addDelegateFeedback = useCallback((delegateId: string, type: DelegateFeedbackType, reason: string) => {
     updateActive((s) => ({
       ...s,
-      delegateFeedback: [...s.delegateFeedback, { delegateId, type, timestamp: new Date().toISOString() }],
+      delegateFeedback: [...s.delegateFeedback, { id: crypto.randomUUID(), delegateId, type, reason: reason.trim() || undefined, timestamp: new Date().toISOString() }],
     }))
   }, [updateActive])
+
+  const removeDelegateFeedback = useCallback((feedbackId: string) => {
+    updateActive((s) => ({
+      ...s,
+      delegateFeedback: s.delegateFeedback.filter((f) => {
+        const id = f.id ?? `legacy-${f.delegateId}-${f.type}-${f.timestamp}`
+        return id !== feedbackId
+      }),
+    }))
+  }, [updateActive])
+
+  const updateDelegateFeedback = useCallback((feedbackId: string, patch: { reason?: string }) => {
+    updateActive((s) => ({
+      ...s,
+      delegateFeedback: s.delegateFeedback.map((f) => {
+        const id = f.id ?? `legacy-${f.delegateId}-${f.type}-${f.timestamp}`
+        return id === feedbackId ? { ...f, ...(patch.reason !== undefined && { reason: patch.reason.trim() || undefined }) } : f
+      }),
+    }))
+  }, [updateActive])
+
+  const getDelegateFeedbackItems = useCallback((delegateId: string): DelegateFeedback[] => {
+    return state.delegateFeedback
+      .filter((f) => f.delegateId === delegateId)
+      .map((f) => ({ ...f, id: f.id ?? `legacy-${f.delegateId}-${f.type}-${f.timestamp}` }))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  }, [state.delegateFeedback])
 
   const getFeedbackCountsByType = useCallback((delegateId: string): Record<DelegateFeedbackType, number> => {
     const counts: Record<DelegateFeedbackType, number> = { compliment: 0, concern: 0 }
@@ -829,6 +859,9 @@ export function ChairProvider({
       return counts
     },
     addDelegateFeedback,
+    removeDelegateFeedback,
+    updateDelegateFeedback,
+    getDelegateFeedbackItems,
     getFeedbackCountsByType,
     toggleFlowStep,
     isFlowStepDone,

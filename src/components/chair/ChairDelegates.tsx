@@ -103,11 +103,11 @@ export default function ChairDelegates() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             👥 Delegates
             <InfoPopover title="Delegates">
-              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Use 🗳️ to revoke voting rights and 🎤 to revoke speaking rights (e.g. sanctions). Use the 😊 icon to set a custom flag/emoji for non-UN delegations (e.g. FWC). Strikes can be recorded per delegate.
+              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Icon key below each delegate: Scores (🏆), Edit (✏️), Voting (🗳️), Speaking (🎤), Emoji (😊), Strike (⚠️), Remove (🗑️). Use Voting/Speaking to revoke rights (e.g. sanctions). Use Emoji to set a custom flag for non-UN delegations (e.g. FWC).
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">
-            Add or remove delegates. Country list is tailored to this committee (e.g. UNSC shows 15 members; GA committees show all UNGA). Use 😊 to set a custom emoji for non-UN delegations.
+            Add or remove delegates. Country list is tailored to this committee (e.g. UNSC shows 15 members; GA committees show all UNGA). See the icon key below the delegate list.
           </p>
         </div>
       </div>
@@ -201,12 +201,29 @@ export default function ChairDelegates() {
       )}
 
       <div className="card-block overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--border)] flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-[var(--text-muted)]" />
-            <span className="text-sm font-medium text-[var(--text)]">👥 Current delegates ({delegates.length})</span>
-          </div>
-          {delegates.length > 0 && (
+        <div className="px-4 py-3 border-b border-[var(--border)] space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-[var(--text-muted)]" />
+              <span className="text-sm font-medium text-[var(--text)]">👥 Current delegates ({delegates.length})</span>
+              {(() => {
+                const delegatesWithStrikes = sortedDelegates.filter((d) => {
+                  const counts = getStrikeCountsByType(d.id)
+                  return Object.values(counts).reduce((a, b) => a + b, 0) > 0
+                })
+                const totalStrikes = delegatesWithStrikes.reduce((sum, d) => {
+                  const counts = getStrikeCountsByType(d.id)
+                  return sum + Object.values(counts).reduce((a, b) => a + b, 0)
+                }, 0)
+                if (delegatesWithStrikes.length === 0) return null
+                return (
+                  <span className="text-xs text-[var(--accent)] font-medium">
+                    · <AlertTriangle className="w-3 h-3 inline align-middle" /> {delegatesWithStrikes.length} with strikes ({totalStrikes} total)
+                  </span>
+                )
+              })()}
+            </div>
+            {delegates.length > 0 && (
             <>
               <label className="flex items-center gap-2 text-sm text-[var(--text-muted)] cursor-pointer select-none">
                 <input
@@ -234,6 +251,18 @@ export default function ChairDelegates() {
                 </button>
               </div>
             </>
+          )}
+          </div>
+          {delegates.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[var(--text-muted)]" role="list" aria-label="Icon key">
+              <span className="inline-flex items-center gap-1"><Trophy className="w-3 h-3" /> Scores</span>
+              <span className="inline-flex items-center gap-1"><Pencil className="w-3 h-3" /> Edit</span>
+              <span className="inline-flex items-center gap-1"><Vote className="w-3 h-3" /> Voting</span>
+              <span className="inline-flex items-center gap-1"><Mic className="w-3 h-3" /> Speaking</span>
+              <span className="inline-flex items-center gap-1"><Smile className="w-3 h-3" /> Emoji</span>
+              <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Strike</span>
+              <span className="inline-flex items-center gap-1"><Trash2 className="w-3 h-3" /> Remove</span>
+            </div>
           )}
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-[28rem] overflow-auto">
@@ -268,7 +297,10 @@ export default function ChairDelegates() {
                       </span>
                     )}
                     {totalStrikes > 0 && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-xs" title="Strikes">
+                      <span
+                        className="ml-2 inline-flex items-center gap-1 text-xs"
+                        title={Object.entries(counts).map(([t, c]) => `${t}: ${c}`).join(', ')}
+                      >
                         <AlertTriangle className={`w-3.5 h-3.5 ${hasRed ? 'text-[var(--danger)]' : 'text-[var(--accent)]'}`} />
                         {totalStrikes}
                       </span>
@@ -279,6 +311,7 @@ export default function ChairDelegates() {
                       onClick={() => setScorePopupDelegateId(scorePopupDelegateId === d.id ? null : d.id)}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--gold)] hover:bg-[var(--gold)]/10 transition-colors"
                       title="Edit scores"
+                      aria-label={`Edit scores for ${d.country}`}
                     >
                       <Trophy className="w-4 h-4" />
                     </button>
@@ -297,6 +330,7 @@ export default function ChairDelegates() {
                       }}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors"
                       title="Edit allocation, name, email"
+                      aria-label={`Edit allocation, name, email for ${d.country}`}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -306,6 +340,7 @@ export default function ChairDelegates() {
                         d.votingRightsRevoked ? 'text-[var(--danger)] bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]'
                       }`}
                       title={d.votingRightsRevoked ? 'Voting revoked — click to restore' : 'Revoke voting rights'}
+                      aria-label={d.votingRightsRevoked ? `Restore voting rights for ${d.country}` : `Revoke voting rights for ${d.country}`}
                     >
                       <Vote className="w-4 h-4" />
                     </button>
@@ -315,6 +350,7 @@ export default function ChairDelegates() {
                         d.speakingRightsRevoked ? 'text-[var(--danger)] bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]'
                       }`}
                       title={d.speakingRightsRevoked ? 'Speaking revoked — click to restore' : 'Revoke speaking rights'}
+                      aria-label={d.speakingRightsRevoked ? `Restore speaking rights for ${d.country}` : `Revoke speaking rights for ${d.country}`}
                     >
                       <Mic className="w-4 h-4" />
                     </button>
@@ -325,6 +361,7 @@ export default function ChairDelegates() {
                       }}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors"
                       title="Set custom emoji/flag for this delegation"
+                      aria-label={`Set custom emoji for ${d.country}`}
                     >
                       <Smile className="w-4 h-4" />
                     </button>
@@ -332,6 +369,7 @@ export default function ChairDelegates() {
                       onClick={() => setStrikeDelegateId(showStrikeForm ? null : d.id)}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors"
                       title="Add strike"
+                      aria-label={`Add strike for ${d.country}`}
                     >
                       <AlertTriangle className="w-4 h-4" />
                     </button>
@@ -339,6 +377,7 @@ export default function ChairDelegates() {
                       onClick={() => removeDelegate(d.id)}
                       className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] transition-colors"
                       title="Remove delegate"
+                      aria-label={`Remove ${d.country} from delegates`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

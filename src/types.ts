@@ -27,8 +27,11 @@ export interface DelegateStrike {
 export type DelegateFeedbackType = 'compliment' | 'concern'
 
 export interface DelegateFeedback {
+  id?: string
   delegateId: string
   type: DelegateFeedbackType
+  /** Reason (required when giving feedback from Digital Room). */
+  reason?: string
   timestamp: string
 }
 
