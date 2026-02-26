@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Play, Square, Clock, Pause, Trash2 } from 'lucide-react'
+import type { SessionRecord } from '../../context/ChairContext'
+import { Play, Square, Clock, Pause, Trash2, Pencil, Check, X } from 'lucide-react'
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -8,6 +9,85 @@ function formatDuration(seconds: number): string {
   const s = seconds % 60
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function SessionEditForm({
+  record,
+  presets,
+  onSave,
+  onCancel,
+}: {
+  record: SessionRecord
+  presets: string[]
+  onSave: (patch: Partial<Pick<SessionRecord, 'name' | 'durationSeconds'>>) => void
+  onCancel: () => void
+}) {
+  const [name, setName] = useState(record.name || '')
+  const [durationMinutes, setDurationMinutes] = useState(String(Math.round(record.durationSeconds / 60)))
+
+  const handleSave = () => {
+    const mins = parseInt(durationMinutes, 10)
+    const durationSeconds = Number.isNaN(mins) || mins < 1 ? record.durationSeconds : Math.min(999, Math.max(1, mins)) * 60
+    onSave({ name: name.trim() || record.name, durationSeconds })
+  }
+
+  return (
+    <div className="space-y-3 pt-1">
+      <div>
+        <span className="text-xs text-[var(--text-muted)] block mb-1">Name</span>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {presets.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setName(preset)}
+              className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                name === preset
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text)] border border-[var(--border)]'
+              }`}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Opening remarks"
+          className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+        />
+      </div>
+      <div>
+        <span className="text-xs text-[var(--text-muted)] block mb-1">Duration (minutes)</span>
+        <input
+          type="number"
+          min={1}
+          max={999}
+          value={durationMinutes}
+          onChange={(e) => setDurationMinutes(e.target.value)}
+          className="w-24 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--success)] text-white text-xs font-medium hover:opacity-90"
+        >
+          <Check className="w-3.5 h-3.5" /> Save
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs font-medium hover:text-[var(--text)] border border-[var(--border)]"
+        >
+          <X className="w-3.5 h-3.5" /> Cancel
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function ChairSession() {
@@ -22,6 +102,7 @@ export default function ChairSession() {
     setSessionDurationMinutes,
     setSessionName,
     deleteSessionFromHistory,
+    updateSessionInHistory,
     startSession,
     stopSession,
     pauseSession,
@@ -52,6 +133,9 @@ export default function ChairSession() {
   useEffect(() => {
     setDurationInput(sessionDurationMinutes != null ? String(sessionDurationMinutes) : '')
   }, [sessionDurationMinutes])
+
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const SESSION_PRESETS = ['Moderated caucus', 'Unmoderated caucus', 'Consultation']
 
   const commitDuration = () => {
     const n = parseInt(durationInput, 10)
@@ -159,7 +243,7 @@ export default function ChairSession() {
             <div className="block">
               <span className="text-xs text-[var(--text-muted)] block mb-1">Session name</span>
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                {['Moderated caucus', 'Unmoderated caucus', 'Consultation'].map((preset) => (
+                {SESSION_PRESETS.map((preset) => (
                   <button
                     key={preset}
                     type="button"
@@ -234,6 +318,7 @@ export default function ChairSession() {
       <div className="card-block overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--border)]">
           <h3 className="text-sm font-medium text-[var(--text)]">📋 Session history</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Click Edit to change name or duration, or Delete to remove.</p>
         </div>
         {(!sessionRecords || sessionRecords.length === 0) ? (
           <div className="px-4 py-8 text-center text-[var(--text-muted)] text-sm">
@@ -242,27 +327,52 @@ export default function ChairSession() {
         ) : (
           <ul className="divide-y divide-[var(--border)] max-h-80 overflow-auto">
             {[...sessionRecords].reverse().map((r) => (
-              <li key={r.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 group">
-                <div className="min-w-0">
-                  <p className="font-medium text-[var(--text)]">{r.name || 'Unnamed session'}</p>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {new Date(r.startTime).toLocaleString()} — {formatDuration(r.durationSeconds)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[var(--text-muted)]">
-                    {formatDuration(r.durationSeconds)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => deleteSessionFromHistory(r.id)}
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors"
-                    title="Delete session"
-                    aria-label={`Delete ${r.name || 'Unnamed session'}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+              <li key={r.id} className="px-4 py-3">
+                {editingId === r.id ? (
+                  <SessionEditForm
+                    record={r}
+                    presets={SESSION_PRESETS}
+                    onSave={(patch) => {
+                      updateSessionInHistory(r.id, patch)
+                      setEditingId(null)
+                    }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                ) : (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-[var(--text)]">{r.name || 'Unnamed session'}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {new Date(r.startTime).toLocaleString()} — {formatDuration(r.durationSeconds)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {formatDuration(r.durationSeconds)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(r.id)}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[var(--accent)] hover:bg-[var(--accent)]/10 border border-[var(--accent)]/30 transition-colors text-xs font-medium"
+                        title="Edit session"
+                        aria-label={`Edit ${r.name || 'Unnamed session'}`}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSessionFromHistory(r.id)}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[var(--danger)] hover:bg-[var(--danger)]/10 border border-[var(--danger)]/30 transition-colors text-xs font-medium"
+                        title="Delete session"
+                        aria-label={`Delete ${r.name || 'Unnamed session'}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

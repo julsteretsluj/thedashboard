@@ -116,6 +116,7 @@ type ChairContextValue = ChairState & {
   setSessionName: (name: string) => void
   setSessionDurationMinutes: (minutes: number | null) => void
   deleteSessionFromHistory: (id: string) => void
+  updateSessionInHistory: (id: string, patch: Partial<Pick<SessionRecord, 'name' | 'durationSeconds'>>) => void
   addDelegate: (d: Omit<Delegate, 'id'>) => void
   removeDelegate: (id: string) => void
   updateDelegate: (id: string, patch: Partial<Delegate>) => void
@@ -434,6 +435,14 @@ export function ChairProvider({
       sessionRecords: (s.sessionRecords ?? []).filter((r) => r.id !== id),
     }))
   }, [updateActive])
+  const updateSessionInHistory = useCallback((id: string, patch: Partial<Pick<SessionRecord, 'name' | 'durationSeconds'>>) => {
+    updateActive((s) => ({
+      ...s,
+      sessionRecords: (s.sessionRecords ?? []).map((r) =>
+        r.id === id ? { ...r, ...patch } : r
+      ),
+    }))
+  }, [updateActive])
   const addDelegate = useCallback((d: Omit<Delegate, 'id'>) => {
     updateActive((s) => ({ ...s, delegates: [...s.delegates, { ...d, id: crypto.randomUUID() }] }))
   }, [updateActive])
@@ -710,6 +719,7 @@ export function ChairProvider({
     setSessionName,
     setSessionDurationMinutes,
     deleteSessionFromHistory,
+    updateSessionInHistory,
     addDelegate,
     removeDelegate,
     updateDelegate,
