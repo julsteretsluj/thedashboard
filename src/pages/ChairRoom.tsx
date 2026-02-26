@@ -27,6 +27,7 @@ import {
   Trophy,
   ChevronLeft,
   ChevronRight,
+  Shuffle,
 } from 'lucide-react'
 
 const SIDEBAR_STORAGE_KEY = 'seamuns-dashboard-sidebar-expanded'
@@ -60,11 +61,12 @@ import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
 import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
 import ChairHowToGuide from '../components/ChairHowToGuide'
 import ChairSetupChecklist from '../components/chair/ChairSetupChecklist'
+import ChairRandomizer from '../components/chair/ChairRandomizer'
 import OfficialUnLinks from '../components/OfficialUnLinks'
 import Breadcrumbs from '../components/Breadcrumbs'
 
 // Order: setup → session flow → tracking → reference
-const SECTION_IDS = ['committee', 'prep', 'flow', 'delegates', 'room', 'rollcall', 'session', 'speakers', 'motions', 'resolutions', 'voting', 'score', 'crisis', 'tracker', 'archive', 'links'] as const
+const SECTION_IDS = ['committee', 'prep', 'flow', 'delegates', 'room', 'rollcall', 'session', 'speakers', 'randomizer', 'motions', 'resolutions', 'voting', 'score', 'crisis', 'tracker', 'archive', 'links'] as const
 
 const sections = [
   { id: 'committee', label: '📌 Committee & Topic', icon: BookOpen },
@@ -75,6 +77,7 @@ const sections = [
   { id: 'rollcall', label: '✅ Roll Call', icon: ListOrdered },
   { id: 'session', label: '▶️ Session', icon: Play },
   { id: 'speakers', label: '🎤 Speakers', icon: Mic },
+  { id: 'randomizer', label: '🎲 Random picker', icon: Shuffle },
   { id: 'motions', label: '📜 Motions & Points', icon: FileText },
   { id: 'resolutions', label: '📄 Resolutions', icon: ScrollText },
   { id: 'voting', label: '🗳️ Voting', icon: Vote },
@@ -207,6 +210,7 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
         {active === 'rollcall' && <ChairRollCall />}
         {active === 'session' && <ChairSession />}
         {active === 'speakers' && <ChairSpeakers />}
+        {active === 'randomizer' && <ChairRandomizer />}
         {active === 'crisis' && <ChairCrisis />}
         {active === 'tracker' && <ChairDelegateTracker />}
         {active === 'archive' && <ChairArchive />}
