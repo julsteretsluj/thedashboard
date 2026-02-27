@@ -208,10 +208,11 @@ function GlobeViewInner() {
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
   const globeContainerRef = useRef<HTMLDivElement>(null)
   const { w, h } = useWindowSize()
+  const isMobile = w < 768
   const [activeSection, setActiveSection] = useState<GlobeSection | null>(null)
   const [panelLocation, setPanelLocation] = useState<string | null>(null)
   const [roleFilter, setRoleFilter] = useState<'chair' | 'delegate'>('chair')
-  const [flyToMinimized, setFlyToMinimized] = useState(false)
+  const [flyToMinimized, setFlyToMinimized] = useState(isMobile)
   const [globeRotation, setGlobeRotation] = useState(0)
   const [lastClickedCountry, setLastClickedCountry] = useState<string | null>(null)
   const [lastClickedCoords, setLastClickedCoords] = useState<{ lat: number; lng: number } | null>(null)
@@ -222,6 +223,9 @@ function GlobeViewInner() {
   useEffect(() => {
     if (tourOpen) setFlyToMinimized(false)
   }, [tourOpen])
+  useEffect(() => {
+    setFlyToMinimized(isMobile)
+  }, [isMobile])
   const baseSections = roleFilter === 'chair' ? CHAIR_SECTIONS : DELEGATE_SECTIONS
   const sections = useMemo(
     () => [...baseSections].sort((a, b) => (isStarred(b) ? 1 : 0) - (isStarred(a) ? 1 : 0)),
@@ -331,17 +335,17 @@ function GlobeViewInner() {
   )
 
   const barHeight = 72
-  const globeHeight = Math.max(400, h - 80 - barHeight)
+  const globeHeight = Math.max(isMobile ? 320 : 400, h - 80 - barHeight)
 
   return (
     <div className="relative flex flex-col w-full h-full min-h-[500px]" style={{ height: 'calc(100vh - 5rem)' }}>
       {/* Help button — top-right */}
-      <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+      <div className="absolute right-2 sm:right-4 top-2 sm:top-4 z-30 flex items-center gap-2">
         <HelpButton onClick={() => setTourOpen(true)} />
       </div>
       <HelpTour steps={TOUR_STEPS} isOpen={tourOpen} onClose={() => setTourOpen(false)} />
       {/* Breadcrumbs + Last visited — top-left */}
-      <div className="absolute left-4 top-4 z-30 flex flex-col gap-2">
+      <div className="absolute left-2 sm:left-4 top-2 sm:top-4 z-30 flex flex-col gap-2 max-w-[calc(100%-4rem)]">
         <Breadcrumbs
           items={[
             { label: 'Dashboard', href: '/' },
@@ -375,7 +379,7 @@ function GlobeViewInner() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-row gap-4 px-4 pt-4 pb-2 min-w-0">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-3 md:gap-4 px-2 sm:px-4 pt-2 sm:pt-4 pb-2 min-w-0">
         {/* Globe */}
         <div ref={globeContainerRef} data-tour="globe" className="flex-1 min-w-0 flex items-center justify-center relative">
           <Globe
@@ -418,17 +422,22 @@ function GlobeViewInner() {
         height={globeHeight}
       />
         </div>
-        {/* Boarding passes column — no container */}
-        <div data-tour="plane-tickets" className="shrink-0 flex flex-col gap-3 self-center z-10">
-          <PlaneTickets vertical />
+        {/* Boarding passes */}
+        <div
+          data-tour="plane-tickets"
+          className={`shrink-0 z-10 ${isMobile ? 'w-full' : 'flex flex-col gap-3 self-center'}`}
+        >
+          <div className={isMobile ? 'rounded-2xl overflow-hidden glass-nav px-3 py-2' : ''}>
+            <PlaneTickets vertical={!isMobile} />
+          </div>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="shrink-0 px-4 pb-4 pt-2 z-20 flex flex-col sm:flex-row gap-3">
+      <div className="shrink-0 px-2 sm:px-4 pb-3 sm:pb-4 pt-1 sm:pt-2 z-20 flex flex-col sm:flex-row gap-2 sm:gap-3">
         {/* Fly to section */}
         <div className="rounded-2xl overflow-hidden glass-nav flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 p-3">
+          <div className="flex flex-wrap items-center gap-2 p-2.5 sm:p-3">
             <div className="flex items-center gap-2 shrink-0">
               <Compass className="w-4 h-4 text-[var(--brand)]" aria-hidden />
               <span className="text-sm font-medium text-[var(--text)]">Fly to section</span>
@@ -464,7 +473,7 @@ function GlobeViewInner() {
               <User className="w-3.5 h-3.5" /> Delegate
             </button>
             </div>
-            <div data-tour="section-tabs" className="flex flex-wrap gap-1 overflow-x-auto min-w-0">
+            <div data-tour="section-tabs" className="flex flex-wrap gap-1 overflow-x-auto min-w-0 max-h-36 sm:max-h-none">
             {sections.map((s) => (
               <div
                 key={`${s.role}-${s.id}`}
