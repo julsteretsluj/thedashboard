@@ -3,16 +3,7 @@ import { Menu } from 'lucide-react'
 import AuthSection from './AuthSection'
 import ThemeSelector from './ThemeSelector'
 import Logo from './Logo'
-
-const nav = [
-  { to: '/', label: '🌐 Dashboard' },
-  { to: '/chair', label: 'Chair' },
-  { to: '/delegate', label: 'Delegate' },
-  { to: '/globe', label: 'Globe' },
-  { to: '/about', label: 'About' },
-  { to: '/guide/chair', label: 'Chair guide' },
-  { to: '/guide/delegate', label: 'Delegate guide' },
-]
+import { NAV_ITEMS } from '../constants/navigation'
 
 export default function Layout() {
   return (
@@ -42,7 +33,7 @@ export default function Layout() {
           <div className="hidden md:flex items-center gap-1.5">
             <ThemeSelector />
             <nav className="flex items-center gap-0.5 p-0.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex-nowrap">
-              {nav.map(({ to, label }) => (
+              {NAV_ITEMS.map(({ to, label }) => (
                 <NavLink
                   key={to}
                   to={to}

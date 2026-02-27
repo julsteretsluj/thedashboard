@@ -1,15 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import Breadcrumbs from '../components/Breadcrumbs'
-
-const navItems = [
-  { to: '/', label: '🌐 Dashboard' },
-  { to: '/chair', label: 'Chair' },
-  { to: '/delegate', label: 'Delegate' },
-  { to: '/globe', label: 'Globe' },
-  { to: '/about', label: 'About' },
-  { to: '/guide/chair', label: 'Chair guide' },
-  { to: '/guide/delegate', label: 'Delegate guide' },
-]
+import { NAV_ITEMS } from '../constants/navigation'
 
 export default function MenuPage() {
   return (
@@ -22,12 +13,12 @@ export default function MenuPage() {
         className="mb-4"
       />
       <div className="card-block p-4 sm:p-6">
-        <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text)] mb-1">Menu</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-[var(--text)] mb-1">📋 Menu</h1>
         <p className="text-sm text-[var(--text-muted)] mb-4">
           Quick links to all navigation sections.
         </p>
         <nav className="flex flex-col gap-2">
-          {navItems.map(({ to, label }) => (
+          {NAV_ITEMS.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
