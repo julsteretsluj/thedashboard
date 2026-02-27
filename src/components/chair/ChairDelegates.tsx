@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useChair } from '../../context/ChairContext'
-import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Pencil, Trophy, Vote, Mic } from 'lucide-react'
+import { Plus, Trash2, User, AlertTriangle, Minus, Smile, Pencil, Trophy, Vote, Mic, Heart } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import DelegateScorePopup from './DelegateScorePopup'
 import { DEFAULT_MISBEHAVIOURS, STRIKE_THRESHOLD } from './strikeMisbehaviours'
@@ -19,6 +19,8 @@ export default function ChairDelegates() {
     addStrike,
     removeStrike,
     getStrikeCountsByType,
+    addDelegateFeedback,
+    getFeedbackCountsByType,
     getDelegationEmoji,
     setDelegationEmoji,
     setDelegateScore,
@@ -37,6 +39,8 @@ export default function ChairDelegates() {
   const [strikeDelegateId, setStrikeDelegateId] = useState<string | null>(null)
   const [customMisbehaviour, setCustomMisbehaviour] = useState('')
   const [selectedStrikeType, setSelectedStrikeType] = useState('')
+  const [complimentDelegateId, setComplimentDelegateId] = useState<string | null>(null)
+  const [complimentReason, setComplimentReason] = useState('')
   const [editingEmojiFor, setEditingEmojiFor] = useState<string | null>(null)
   const [customEmojiInput, setCustomEmojiInput] = useState('')
   const [scorePopupDelegateId, setScorePopupDelegateId] = useState<string | null>(null)
@@ -260,6 +264,7 @@ export default function ChairDelegates() {
               <span className="inline-flex items-center gap-1"><Vote className="w-3 h-3" /> Voting</span>
               <span className="inline-flex items-center gap-1"><Mic className="w-3 h-3" /> Speaking</span>
               <span className="inline-flex items-center gap-1"><Smile className="w-3 h-3" /> Emoji</span>
+              <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" /> Compliment</span>
               <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Strike</span>
               <span className="inline-flex items-center gap-1"><Trash2 className="w-3 h-3" /> Remove</span>
             </div>
@@ -271,6 +276,9 @@ export default function ChairDelegates() {
             const hasRed = Object.values(counts).some((c) => c >= STRIKE_THRESHOLD)
             const totalStrikes = Object.values(counts).reduce((a, b) => a + b, 0)
             const showStrikeForm = strikeDelegateId === d.id
+            const showComplimentForm = complimentDelegateId === d.id
+            const feedbackCounts = getFeedbackCountsByType(d.id)
+            const complimentCount = feedbackCounts.compliment ?? 0
             return (
               <li
                 key={d.id}
@@ -303,6 +311,12 @@ export default function ChairDelegates() {
                       >
                         <AlertTriangle className={`w-3.5 h-3.5 ${hasRed ? 'text-[var(--danger)]' : 'text-[var(--accent)]'}`} />
                         {totalStrikes}
+                      </span>
+                    )}
+                    {complimentCount > 0 && (
+                      <span className="ml-1 inline-flex items-center gap-1 text-xs text-[var(--success)]">
+                        <Heart className="w-3.5 h-3.5" />
+                        {complimentCount}
                       </span>
                     )}
                   </span>
@@ -353,6 +367,22 @@ export default function ChairDelegates() {
                       aria-label={d.speakingRightsRevoked ? `Restore speaking rights for ${d.country}` : `Revoke speaking rights for ${d.country}`}
                     >
                       <Mic className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (showComplimentForm) {
+                          setComplimentDelegateId(null)
+                          setComplimentReason('')
+                        } else {
+                          setComplimentDelegateId(d.id)
+                          setComplimentReason('')
+                        }
+                      }}
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--success)] hover:bg-[var(--success)]/10 transition-colors"
+                      title="Add compliment"
+                      aria-label={`Add compliment for ${d.country}`}
+                    >
+                      <Heart className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
@@ -579,6 +609,36 @@ export default function ChairDelegates() {
                         setStrikeDelegateId(null)
                         setCustomMisbehaviour('')
                         setSelectedStrikeType('')
+                      }}
+                      className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                {showComplimentForm && (
+                  <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-end">
+                    <input
+                      type="text"
+                      value={complimentReason}
+                      onChange={(e) => setComplimentReason(e.target.value)}
+                      placeholder="Reason (optional): e.g. strong speech, clear POI"
+                      className="min-w-[16rem] w-[24rem] max-w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                    />
+                    <button
+                      onClick={() => {
+                        addDelegateFeedback(d.id, 'compliment', complimentReason)
+                        setComplimentDelegateId(null)
+                        setComplimentReason('')
+                      }}
+                      className="px-3 py-2 rounded-lg bg-[var(--success)] text-white text-sm font-medium hover:opacity-90"
+                    >
+                      Add compliment
+                    </button>
+                    <button
+                      onClick={() => {
+                        setComplimentDelegateId(null)
+                        setComplimentReason('')
                       }}
                       className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
                     >
