@@ -454,8 +454,8 @@ svg[class*="lucide"],
 /* Baggage tag labels on globe — larger so entire label fits */
 .baggage-tag {
   position: relative;
-  width: max-content;
-  max-width: 14rem;
+  width: fit-content;
+  max-width: 20rem;
   min-width: 5rem;
   padding: 0.4rem 0.75rem 0.55rem;
   border-radius: 2px 2px 4px 4px;
@@ -468,9 +468,10 @@ svg[class*="lucide"],
   text-transform: uppercase;
   letter-spacing: 0.02em;
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 /* Chair: blue tint */

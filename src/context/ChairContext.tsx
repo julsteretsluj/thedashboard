@@ -2,10 +2,8 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { getMajorityForMotion, computePassed } from '../constants/motionMajorities'
-import { loadChairData, saveChairData, migrateChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
+import { loadChairData, saveChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
-
-const CHAIR_STATE_STORAGE_KEY = 'seamuns-dashboard-chair-state'
 
 export interface SessionRecord {
   id: string
@@ -221,19 +219,6 @@ function normalizeSpeakerData(
   return { speakers: speakersCleared, activeSpeaker: null, speakerDuration: dur }
 }
 
-function loadChairStateFromStorage(): ChairDataDoc | null {
-  try {
-    const raw = localStorage.getItem(CHAIR_STATE_STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown
-      return migrateChairData(parsed)
-    }
-  } catch {
-    /* ignore */
-  }
-  return null
-}
-
 function defaultChairConference(id: string): ChairConference {
   return { id, name: 'New Conference', data: { ...defaultState } }
 }
@@ -297,17 +282,8 @@ export function ChairProvider({
   children: ReactNode
   userId?: string | null
 }) {
-  const [conferences, setConferences] = useState<ChairConference[]>(() => {
-    const stored = loadChairStateFromStorage()
-    if (stored?.conferences?.length) return stored.conferences.map(migrateChairConference)
-    return [defaultChairConference(crypto.randomUUID())]
-  })
-  const [activeConferenceId, setActiveConferenceIdState] = useState<string>(() => {
-    const stored = loadChairStateFromStorage()
-    if (stored?.activeConferenceId && stored?.conferences?.some((c) => c.id === stored.activeConferenceId))
-      return stored.activeConferenceId
-    return ''
-  })
+  const [conferences, setConferences] = useState<ChairConference[]>(() => [defaultChairConference(crypto.randomUUID())])
+  const [activeConferenceId, setActiveConferenceIdState] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -333,11 +309,6 @@ export function ChairProvider({
         if (data?.conferences?.length) {
           setConferences(data.conferences.map(migrateChairConference))
           setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
-        } else {
-          const stored = loadChairStateFromStorage()
-          if (stored?.conferences?.length) {
-            saveChairData(userId, stored).catch(() => {})
-          }
         }
       })
       .catch(() => {})
@@ -346,28 +317,6 @@ export function ChairProvider({
       })
     return () => { cancelled = true }
   }, [userId])
-
-  // Persist to localStorage (debounced) — strip activeSpeaker
-  useEffect(() => {
-    const t = setTimeout(() => {
-      try {
-        const payload: ChairDataDoc = {
-          conferences: conferences.map((c) => ({
-            id: c.id,
-            name: c.name,
-            presetId: c.presetId,
-            presetAllocationCommittees: c.presetAllocationCommittees,
-            data: { ...c.data, activeSpeaker: null } as ChairConferenceDoc['data'],
-          })),
-          activeConferenceId: activeId ?? conferences[0]?.id ?? '',
-        }
-        localStorage.setItem(CHAIR_STATE_STORAGE_KEY, JSON.stringify(payload))
-      } catch {
-        /* ignore */
-      }
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [conferences, activeId])
 
   const saveToAccount = useCallback(async () => {
     if (!userId) return

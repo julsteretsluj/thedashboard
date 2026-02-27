@@ -290,12 +290,12 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
         <p className="text-xs sm:text-sm text-[var(--text-muted)] truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
         {isLoaded && !isAuthenticated && (
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Data is saved automatically to this device. Sign in to save to your account and sync across devices.
+            Sign in to save conferences to your account and sync across devices.
           </p>
         )}
         {isLoaded && isAuthenticated && (
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Data is saved automatically to this device and to your account.
+            Data is saved to your account.
           </p>
         )}
       </div>

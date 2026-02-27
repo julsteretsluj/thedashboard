@@ -10,8 +10,6 @@ import type { DelegateConference, CommitteeMatrixEntry } from '../types'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
 
-const DELEGATE_STORAGE_KEY = 'seamuns-dashboard-delegate-state'
-
 function migrateConference(c: DelegateConference): DelegateConference {
   const hasLegacy = c.committeeMatrix && Object.keys(c.committeeMatrix).length > 0
   const hasEntries = c.committeeMatrixEntries && c.committeeMatrixEntries.length > 0
@@ -81,24 +79,6 @@ function generateId() {
   return crypto.randomUUID?.() ?? `conf-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-function loadDelegateStateFromStorage(): { conferences: DelegateConference[]; activeConferenceId: string } | null {
-  try {
-    const raw = localStorage.getItem(DELEGATE_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { conferences?: unknown[]; activeConferenceId?: string }
-    if (!Array.isArray(parsed.conferences) || parsed.conferences.length === 0) return null
-    const conferences = parsed.conferences.map((c) => migrateConference(c as DelegateConference))
-    const activeConferenceId =
-      typeof parsed.activeConferenceId === 'string' && parsed.activeConferenceId
-        ? parsed.activeConferenceId
-        : conferences[0]?.id ?? ''
-    if (!activeConferenceId && conferences[0]) return { conferences, activeConferenceId: conferences[0].id }
-    return { conferences, activeConferenceId }
-  } catch {
-    return null
-  }
-}
-
 type DelegateContextValue = DelegateConference & {
   conferences: DelegateConference[]
   activeConferenceId: string
@@ -152,17 +132,8 @@ export function DelegateProvider({
   children: ReactNode
   userId?: string | null
 }) {
-  const [conferences, setConferences] = useState<DelegateConference[]>(() => {
-    const stored = loadDelegateStateFromStorage()
-    if (stored?.conferences?.length) return stored.conferences
-    return [defaultConference(generateId())]
-  })
-  const [activeConferenceId, setActiveConferenceIdState] = useState<string>(() => {
-    const stored = loadDelegateStateFromStorage()
-    if (stored?.activeConferenceId && stored?.conferences?.some((c) => c.id === stored.activeConferenceId))
-      return stored.activeConferenceId
-    return ''
-  })
+  const [conferences, setConferences] = useState<DelegateConference[]>(() => [defaultConference(generateId())])
+  const [activeConferenceId, setActiveConferenceIdState] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -176,24 +147,6 @@ export function DelegateProvider({
     }
   }, [activeId, conferences])
 
-  // Persist conference data to localStorage so refresh doesn't lose data (signed in or not)
-  useEffect(() => {
-    const t = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          DELEGATE_STORAGE_KEY,
-          JSON.stringify({
-            conferences,
-            activeConferenceId: activeId ?? conferences[0]?.id ?? '',
-          })
-        )
-      } catch {
-        /* ignore */
-      }
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [conferences, activeId])
-
   useEffect(() => {
     if (!userId) {
       setIsLoaded(true)
@@ -206,14 +159,6 @@ export function DelegateProvider({
         if (data && data.conferences.length > 0) {
           setConferences(data.conferences.map(migrateConference))
           setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
-        } else {
-          const stored = loadDelegateStateFromStorage()
-          if (stored?.conferences?.length) {
-            saveDelegateData(userId, {
-              conferences: stored.conferences,
-              activeConferenceId: stored.activeConferenceId || stored.conferences[0]?.id || '',
-            }).catch(() => {})
-          }
         }
       })
       .catch(() => {})
