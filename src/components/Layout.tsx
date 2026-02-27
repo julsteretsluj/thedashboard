@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Outlet, NavLink } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import AuthSection from './AuthSection'
 import ThemeSelector from './ThemeSelector'
 import Logo from './Logo'
@@ -16,14 +15,6 @@ const nav = [
 ]
 
 export default function Layout() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const location = useLocation()
-
-  const closeMobileNav = () => setMobileNavOpen(false)
-  useEffect(() => {
-    closeMobileNav()
-  }, [location.pathname])
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg-base)]/95 backdrop-blur-sm shadow-[0_1px_0_0_var(--border)]">
@@ -32,7 +23,6 @@ export default function Layout() {
             <NavLink
               to="/"
               className="font-semibold text-base sm:text-lg md:text-xl text-[var(--text)] hover:text-[var(--brand)] transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap min-w-0 py-1"
-              onClick={closeMobileNav}
             >
               <Logo className="h-5 sm:h-7 w-auto flex-shrink-0" />
               <span className="hidden sm:inline truncate">SEAMUNs Dashboard</span>
@@ -75,65 +65,15 @@ export default function Layout() {
           {/* Mobile: menu button */}
           <div className="flex md:hidden items-center gap-0.5">
             <ThemeSelector />
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            <NavLink
+              to="/menu"
               className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] transition-colors"
-              aria-expanded={mobileNavOpen}
-              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              aria-label="Open menu"
             >
-              {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
+              <Menu className="w-4 h-4" />
+            </NavLink>
           </div>
         </div>
-        {/* Mobile nav drawer */}
-        {mobileNavOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-40 bg-black/30 md:hidden"
-              onClick={closeMobileNav}
-              aria-hidden
-            />
-            <div
-              className="fixed top-0 right-0 bottom-0 left-0 z-50 md:hidden bg-[var(--bg-elevated)] border-l border-[var(--border)] shadow-xl overflow-y-auto pt-12"
-              role="dialog"
-              aria-label="Navigation menu"
-            >
-              <nav className="flex flex-col p-4 gap-1">
-                {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
-                  <div className="mb-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-2">
-                    <AuthSection />
-                  </div>
-                )}
-                {nav.map(({ to, label }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    onClick={closeMobileNav}
-                    className={({ isActive }) =>
-                      `px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-[var(--brand)] text-white'
-                          : 'text-[var(--text)] hover:bg-[var(--bg-card)]'
-                      }`
-                    }
-                  >
-                    {label}
-                  </NavLink>
-                ))}
-                <a
-                  href="https://seamuns.site"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={closeMobileNav}
-                  className="px-4 py-3 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--brand)] hover:bg-[var(--bg-card)]"
-                >
-                  seamuns.site →
-                </a>
-              </nav>
-            </div>
-          </>
-        )}
       </header>
       <main className="main-content flex-1 min-w-0">
         <Outlet />

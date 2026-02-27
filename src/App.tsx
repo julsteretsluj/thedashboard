@@ -8,6 +8,7 @@ import DelegateDashboard from './pages/DelegateDashboard'
 import ChairSetupGuide from './pages/ChairSetupGuide'
 import DelegateSetupGuide from './pages/DelegateSetupGuide'
 import About from './pages/About'
+import MenuPage from './pages/Menu'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="guide/chair" element={<ChairSetupGuide />} />
           <Route path="guide/delegate" element={<DelegateSetupGuide />} />
           <Route path="about" element={<About />} />
+          <Route path="menu" element={<MenuPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
