@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Globe from 'react-globe.gl'
 import type { GlobeMethods } from 'react-globe.gl'
 import { Gavel, User, Compass, ChevronDown, ChevronUp, MapPin, RotateCw, Navigation, Star } from 'lucide-react'
@@ -8,41 +8,19 @@ import { useDelegate } from '../context/DelegateContext'
 import { ChairProvider } from '../context/ChairContext'
 import { DelegateProvider } from '../context/DelegateContext'
 import { CHAIR_SECTIONS, DELEGATE_SECTIONS, ALL_SECTIONS, type GlobeSection } from '../constants/globeSections'
-import GlassPanel from '../components/GlassPanel'
-import ChairCommitteeTopic from '../components/chair/ChairCommitteeTopic'
-import ChairPrepChecklist from '../components/chair/ChairPrepChecklist'
-import ChairFlowChecklist from '../components/chair/ChairFlowChecklist'
-import ChairDelegates from '../components/chair/ChairDelegates'
-import ChairRoomView from '../components/chair/ChairRoomView'
-import ChairMotions from '../components/chair/ChairMotions'
-import ChairVoting from '../components/chair/ChairVoting'
-import ChairScore from '../components/chair/ChairScore'
-import ChairRollCall from '../components/chair/ChairRollCall'
-import ChairSession from '../components/chair/ChairSession'
-import ChairSpeakers from '../components/chair/ChairSpeakers'
-import ChairCrisis from '../components/chair/ChairCrisis'
-import ChairArchive from '../components/chair/ChairArchive'
-import ChairDelegateTracker from '../components/chair/ChairDelegateTracker'
-import OfficialUnLinks from '../components/OfficialUnLinks'
-import DelegateCountry from '../components/delegate/DelegateCountry'
-import DelegateCountdown from '../components/delegate/DelegateCountdown'
-import DelegateMatrix from '../components/delegate/DelegateMatrix'
-import DelegatePrep from '../components/delegate/DelegatePrep'
-import DelegateSources from '../components/delegate/DelegateSources'
-import DelegateResources from '../components/delegate/DelegateResources'
-import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import PlaneTickets from '../components/PlaneTickets'
 import HelpTour, { HelpButton } from '../components/HelpTour'
 import Breadcrumbs from '../components/Breadcrumbs'
 import type { TourStep } from '../components/HelpTour'
 
 const FLIGHT_MS = 1800
+const REDIRECT_AFTER_FLY_MS = 700
 
 const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="globe"]',
     title: 'Globe & pins',
-    body: 'Click any baggage-tag label on the globe to fly to that section and open its content panel. Pins show Chair (blue) and Delegate (cyan) sections.',
+    body: 'Click any baggage-tag label on the globe to fly there, then open that section on its official Chair or Delegate page. Pins show Chair (blue) and Delegate (cyan) sections.',
   },
   {
     target: '[data-tour="last-visited"]',
@@ -62,7 +40,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="section-tabs"]',
     title: 'Section tabs',
-    body: 'Click a tab to fly to that section. Star tabs to pin your favorites at the top.',
+    body: 'Click a tab to fly briefly, then open that section on its official page. Star tabs to pin your favorites at the top.',
   },
   {
     target: '[data-tour="rotation"]',
@@ -73,40 +51,6 @@ const TOUR_STEPS: TourStep[] = [
 
 const CHAIR_DEFAULT_SECTION = { id: 'session', role: 'chair' as const }
 const DELEGATE_DEFAULT_SECTION = { id: 'countdown', role: 'delegate' as const }
-
-function SectionContent({ section }: { section: GlobeSection }): ReactNode {
-  if (section.role === 'chair') {
-    switch (section.id) {
-      case 'committee': return <ChairCommitteeTopic />
-      case 'prep': return <ChairPrepChecklist />
-      case 'flow': return <ChairFlowChecklist />
-      case 'delegates': return <ChairDelegates />
-      case 'room': return <ChairRoomView />
-      case 'motions': return <ChairMotions />
-      case 'voting': return <ChairVoting />
-      case 'score': return <ChairScore />
-      case 'rollcall': return <ChairRollCall />
-      case 'session': return <ChairSession />
-      case 'speakers': return <ChairSpeakers />
-      case 'crisis': return <ChairCrisis />
-      case 'archive': return <ChairArchive />
-      case 'tracker': return <ChairDelegateTracker />
-      case 'links': return <div className="card-block p-4 sm:p-6"><OfficialUnLinks showHeading={true} /></div>
-      default: return null
-    }
-  }
-  switch (section.id) {
-    case 'country': return <DelegateCountry />
-    case 'countdown': return <DelegateCountdown />
-    case 'matrix': return <DelegateMatrix />
-    case 'prep': return <DelegatePrep />
-    case 'sources': return <DelegateSources />
-    case 'resources': return <DelegateResources />
-    case 'checklist': return <DelegateChecklist />
-    case 'links': return <div className="card-block p-4 sm:p-6"><OfficialUnLinks showHeading={true} /></div>
-    default: return null
-  }
-}
 
 function useWindowSize() {
   const [size, setSize] = useState({ w: 800, h: 600 })
@@ -205,12 +149,12 @@ async function fetchLocationLabel(lat: number, lng: number): Promise<string | nu
 
 function GlobeViewInner() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const pendingRedirectRef = useRef<number | null>(null)
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
   const globeContainerRef = useRef<HTMLDivElement>(null)
   const { w, h } = useWindowSize()
   const isMobile = w < 768
-  const [activeSection, setActiveSection] = useState<GlobeSection | null>(null)
-  const [panelLocation, setPanelLocation] = useState<string | null>(null)
   const [roleFilter, setRoleFilter] = useState<'chair' | 'delegate'>('chair')
   const [flyToMinimized, setFlyToMinimized] = useState(isMobile)
   const [globeRotation, setGlobeRotation] = useState(0)
@@ -239,7 +183,28 @@ function GlobeViewInner() {
       FLIGHT_MS
     )
     setGlobeRotation(((section.lng % 360) + 360) % 360)
-    setActiveSection(section)
+  }, [])
+
+  const openSectionPage = useCallback((section: GlobeSection) => {
+    if (pendingRedirectRef.current !== null) {
+      window.clearTimeout(pendingRedirectRef.current)
+      pendingRedirectRef.current = null
+    }
+    setRoleFilter(section.role)
+    flyTo(section)
+    const base = section.role === 'chair' ? '/chair' : '/delegate'
+    pendingRedirectRef.current = window.setTimeout(() => {
+      navigate(`${base}#${section.id}`)
+      pendingRedirectRef.current = null
+    }, REDIRECT_AFTER_FLY_MS)
+  }, [flyTo, navigate])
+
+  useEffect(() => {
+    return () => {
+      if (pendingRedirectRef.current !== null) {
+        window.clearTimeout(pendingRedirectRef.current)
+      }
+    }
   }, [])
 
   const handleRotationChange = useCallback(
@@ -268,12 +233,11 @@ function GlobeViewInner() {
       if (section) {
         setLastClickedCoords({ lat: section.lat, lng: section.lng })
         setLastClickedSection(section)
-        setRoleFilter(section.role)
-        flyTo(section)
         fetchCountryAt(section.lat, section.lng).then(setLastClickedCountry)
+        openSectionPage(section)
       }
     },
-    [flyTo]
+    [openSectionPage]
   )
 
   const goToLastVisited = useCallback(() => {
@@ -307,20 +271,6 @@ function GlobeViewInner() {
     if (start && start.trim()) setCountdownDate(start.trim())
   }, [searchParams, setCountdownDate, flyTo])
 
-  const closePanel = useCallback(() => {
-    setActiveSection(null)
-    setPanelLocation(null)
-  }, [])
-
-  useEffect(() => {
-    if (!activeSection) return
-    setPanelLocation(null)
-    const section = activeSection
-    fetchLocationLabel(section.lat, section.lng).then((label) => {
-      if (activeSection === section) setPanelLocation(label)
-    })
-  }, [activeSection])
-
   const GLOBE_IMAGE = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-day.jpg'
 
   const pointsData = useMemo(
@@ -350,7 +300,6 @@ function GlobeViewInner() {
           items={[
             { label: 'Dashboard', href: '/' },
             { label: 'Globe', href: '/globe' },
-            ...(activeSection ? [{ label: activeSection.label }] : []),
           ]}
           className="rounded-lg px-3 py-2 bg-[var(--bg-card)]/90 backdrop-blur border border-[var(--border)]"
         />
@@ -422,19 +371,21 @@ function GlobeViewInner() {
         height={globeHeight}
       />
         </div>
-        {/* Boarding passes */}
-        <div
-          data-tour="plane-tickets"
-          className={`shrink-0 z-10 ${isMobile ? 'w-full' : 'flex flex-col gap-3 self-center'}`}
-        >
-          <div className={isMobile ? 'rounded-2xl overflow-hidden glass-nav px-3 py-2' : ''}>
-            <PlaneTickets vertical={!isMobile} />
+        {/* Desktop boarding passes */}
+        {!isMobile && (
+          <div data-tour="plane-tickets" className="shrink-0 z-10 flex flex-col gap-3 self-center">
+            <PlaneTickets vertical={true} />
           </div>
-        </div>
+        )}
       </div>
 
       {/* Bottom bar */}
       <div className="shrink-0 px-2 sm:px-4 pb-3 sm:pb-4 pt-1 sm:pt-2 z-20 flex flex-col sm:flex-row gap-2 sm:gap-3">
+        {isMobile && (
+          <div data-tour="plane-tickets" className="rounded-2xl overflow-hidden glass-nav px-3 py-2.5 w-full">
+            <PlaneTickets vertical={false} />
+          </div>
+        )}
         {/* Fly to section */}
         <div className="rounded-2xl overflow-hidden glass-nav flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 p-2.5 sm:p-3">
@@ -477,15 +428,11 @@ function GlobeViewInner() {
             {sections.map((s) => (
               <div
                 key={`${s.role}-${s.id}`}
-                className={`shrink-0 flex items-center gap-0.5 px-2 py-1.5 pr-1 rounded-lg text-sm transition-colors whitespace-nowrap group/tab ${
-                  activeSection?.id === s.id && activeSection?.role === s.role
-                    ? 'bg-[var(--brand-soft)] text-[var(--text)]'
-                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-base)] hover:text-[var(--text)]'
-                }`}
+                className="shrink-0 flex items-center gap-0.5 px-2 py-1.5 pr-1 rounded-lg text-sm transition-colors whitespace-nowrap group/tab text-[var(--text-muted)] hover:bg-[var(--bg-base)] hover:text-[var(--text)]"
               >
                 <button
                   type="button"
-                  onClick={() => flyTo(s)}
+                  onClick={() => openSectionPage(s)}
                   className="text-left flex-1 min-w-0 py-0.5"
                 >
                   {s.label}
@@ -528,12 +475,6 @@ function GlobeViewInner() {
         </div>
       </div>
 
-      {/* Panel with section content */}
-      {activeSection && (
-        <GlassPanel title={activeSection.label} onClose={closePanel} location={panelLocation}>
-          <SectionContent section={activeSection} />
-        </GlassPanel>
-      )}
     </div>
   )
 }
