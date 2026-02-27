@@ -215,19 +215,19 @@ export default function ChairMotions() {
             • Point
           </button>
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 items-stretch sm:items-center">
           <input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
             placeholder={type === 'motion' ? 'e.g. Motion to open the speaker list' : 'e.g. Point of order'}
-            className="flex-1 min-w-[200px] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="w-full sm:flex-1 sm:min-w-[200px] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           />
           <select
             value={submitter}
             onChange={(e) => setSubmitter(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             title="Submitter (country)"
           >
             <option value="">No submitter</option>
@@ -241,7 +241,7 @@ export default function ChairMotions() {
           </select>
           <button
             onClick={submit}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
           >
             <Plus className="w-4 h-4" /> ➕ Add
           </button>

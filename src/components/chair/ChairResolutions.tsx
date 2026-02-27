@@ -198,7 +198,7 @@ export default function ChairResolutions() {
               const rBorder = rStatus === 'passed' ? 'border-l-4 border-l-[var(--success)]' : rStatus === 'failed' ? 'border-l-4 border-l-[var(--danger)]' : ''
               return (
               <li key={r.id} className={`px-4 py-3 flex flex-col gap-2 ${rBorder}`}>
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-[var(--text)]">{r.title}</p>
                     <div className="text-xs text-[var(--text-muted)] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
@@ -238,7 +238,7 @@ export default function ChairResolutions() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={() => startResolutionVote(r.id)}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90"
@@ -361,7 +361,7 @@ export default function ChairResolutions() {
               const aBorder = aStatus === 'passed' ? 'border-l-4 border-l-[var(--success)]' : aStatus === 'failed' ? 'border-l-4 border-l-[var(--danger)]' : ''
               return (
               <li key={a.id} className={`px-4 py-3 flex flex-col gap-2 ${aBorder}`}>
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-[var(--text)]">{a.text}</p>
                     <div className="text-xs text-[var(--text-muted)] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
@@ -401,7 +401,7 @@ export default function ChairResolutions() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={() => startAmendmentVote(a.id)}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90"

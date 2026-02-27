@@ -41,7 +41,7 @@ export default function ChairSetupGuide() {
 
       <ol className="space-y-5 list-none pl-0">
         {CHAIR_SETUP_STEPS.map(({ step, title, body }) => (
-          <li key={step} className="flex gap-4">
+          <li key={step} className="flex gap-3 sm:gap-4">
             <span
               className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] font-semibold flex items-center justify-center text-sm"
               aria-hidden
@@ -59,7 +59,7 @@ export default function ChairSetupGuide() {
       <div className="mt-10 pt-8 border-t border-[var(--border)]">
         <Link
           to="/?role=chair"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-btn)] bg-[var(--brand)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--radius-btn)] bg-[var(--brand)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
         >
           <BookOpen className="w-4 h-4" />
           Open Chair Room

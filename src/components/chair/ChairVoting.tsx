@@ -105,9 +105,9 @@ export default function ChairVoting() {
             return (
               <li
                 key={d.id}
-                className={`px-4 py-3 flex items-center justify-between ${cannotVote ? 'opacity-60' : ''}`}
+                className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${cannotVote ? 'opacity-60' : ''}`}
               >
-                <span className="text-sm text-[var(--text)] flex items-center gap-2">
+                <span className="text-sm text-[var(--text)] flex items-center gap-2 flex-wrap">
                   <span className="shrink-0">{getDelegationEmoji(d.country) || '🏳️'}</span>
                   <strong className="text-[var(--accent)]">{d.country}</strong>
                   {d.name && <span className="text-[var(--text-muted)]">{d.name}</span>}
@@ -121,7 +121,7 @@ export default function ChairVoting() {
                 {cannotVote ? (
                   <span className="text-xs text-[var(--text-muted)]">—</span>
                 ) : (
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 self-end sm:self-auto">
                     <button
                       onClick={() => recordVote(d.id, 'yes')}
                       className={`p-2 rounded-lg transition-colors ${

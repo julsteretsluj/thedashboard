@@ -89,7 +89,7 @@ export default function DateTimeFields({
           name={`${id}-time`}
           value={effectiveTime}
           onChange={handleTimeChange}
-          className={`px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] min-w-[5.5rem] ${timeSelectClassName}`}
+          className={`px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] min-w-[4.5rem] ${timeSelectClassName}`}
           aria-label={`${label} time`}
         >
           {TIME_OPTIONS.map((t) => (

@@ -127,7 +127,7 @@ export default function DelegateCountry() {
           label="Position paper deadline (date & time)"
           value={positionPaperDeadline ?? ''}
           onChange={(iso) => setPositionPaperDeadline(iso)}
-          dateInputClassName="max-w-[12rem]"
+          dateInputClassName="w-full sm:max-w-[12rem]"
         />
         {positionPaperGuidelinesUrl && (
           <a

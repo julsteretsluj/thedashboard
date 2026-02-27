@@ -132,8 +132,8 @@ export default function DelegateMatrix() {
           <div className="space-y-2">
             <span className="text-xs text-[var(--text-muted)] block">Which committees?</span>
             {Array.from({ length: committeeCountNum }, (_, i) => (
-              <div key={i} className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--text-muted)] w-20">Committee {i + 1}</span>
+              <div key={i} className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+                <span className="text-xs text-[var(--text-muted)] sm:w-20">Committee {i + 1}</span>
                 <select
                   value={
                     effectiveCommittees[i] && COMMITTEE_OPTIONS.some((o) => o.value === effectiveCommittees[i])
@@ -143,7 +143,7 @@ export default function DelegateMatrix() {
                         : ''
                   }
                   onChange={(e) => handleCommitteeChange(i, e.target.value)}
-                  className="min-w-[12rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  className="w-full sm:min-w-[12rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   aria-label={`Committee ${i + 1}`}
                 >
                   <option value="">Select…</option>
@@ -161,7 +161,7 @@ export default function DelegateMatrix() {
                     value={effectiveCommittees[i] && effectiveCommittees[i] !== OTHER_COMMITTEE_VALUE ? effectiveCommittees[i] : (customCommitteeNames[i] ?? '')}
                     onChange={(e) => handleCustomCommitteeName(i, e.target.value)}
                     placeholder="Committee name"
-                    className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                    className="w-full sm:min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   />
                 )}
               </div>
@@ -270,7 +270,7 @@ export default function DelegateMatrix() {
                 <p className="text-xs text-[var(--text-muted)]">
                   Delegation options are tailored to this committee (e.g. UNSC: 15 members; GA committees: full UNGA).
                 </p>
-                <div className="flex flex-wrap gap-2 items-end">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 items-stretch sm:items-end">
                   <span className="text-xs text-[var(--text-muted)] mr-2">➕ Add to this committee:</span>
                   <label className="flex flex-col gap-1">
                     <span className="text-xs text-[var(--text-muted)]">First name</span>
@@ -279,7 +279,7 @@ export default function DelegateMatrix() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="e.g. Alex"
-                      className="w-28 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      className="w-full sm:w-28 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
                   </label>
                   <label className="flex flex-col gap-1">
@@ -287,7 +287,7 @@ export default function DelegateMatrix() {
                     <select
                       value={delegationSelect}
                       onChange={(e) => setDelegationSelect(e.target.value)}
-                      className="min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      className="w-full sm:min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       aria-label="Delegation"
                     >
                       <option value="">Select…</option>
@@ -304,13 +304,13 @@ export default function DelegateMatrix() {
                         value={delegationCustom}
                         onChange={(e) => setDelegationCustom(e.target.value)}
                         placeholder="Delegation name"
-                        className="mt-1 min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                        className="mt-1 w-full sm:min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       />
                     )}
                   </label>
                   <button
                     onClick={() => addForTab(activeCommittee)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
                   >
                     <Plus className="w-4 h-4" /> Add
                   </button>

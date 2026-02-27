@@ -99,7 +99,7 @@ export default function DelegateChecklist() {
               {group.keys.map(({ key, label }) => (
                 <li key={key}>
                   <label
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
+                    className="flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
                   >
                     <span className="text-[var(--accent)] flex-shrink-0">
                       {checklist[key] ? (
@@ -108,7 +108,7 @@ export default function DelegateChecklist() {
                         <Square className="w-5 h-5" />
                       )}
                     </span>
-                    <span className={`text-sm text-[var(--text)] ${checklist[key] ? 'line-through text-[var(--text-muted)]' : ''}`}>
+                    <span className={`text-sm text-[var(--text)] min-w-0 ${checklist[key] ? 'line-through text-[var(--text-muted)]' : ''}`}>
                       {label}
                     </span>
                     <input

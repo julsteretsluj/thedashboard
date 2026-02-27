@@ -118,13 +118,13 @@ export default function ChairDelegates() {
 
       <div className="card-block p-4 space-y-4">
         <h3 className="text-sm font-medium text-[var(--text)]">➕ Add delegate</h3>
-        <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-end">
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[var(--text-muted)]">Country</span>
             <select
               value={countrySelect}
               onChange={(e) => setCountrySelect(e.target.value)}
-              className="min-w-[12rem] max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full sm:min-w-[12rem] sm:max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               aria-label="Country / delegation"
             >
               <option value="">— Select country —</option>
@@ -144,7 +144,7 @@ export default function ChairDelegates() {
                 value={customCountry}
                 onChange={(e) => setCustomCountry(e.target.value)}
                 placeholder="e.g. Observer State"
-                className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full sm:w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
             </label>
           )}
@@ -155,7 +155,7 @@ export default function ChairDelegates() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Delegate name"
-              className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full sm:w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -165,13 +165,13 @@ export default function ChairDelegates() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="delegate@example.com"
-              className="w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full sm:w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </label>
           <button
             onClick={addOne}
             disabled={!countryValue}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" /> Add
           </button>
@@ -453,13 +453,13 @@ export default function ChairDelegates() {
                 )}
                 {editingDelegateId === d.id && (
                   <div className="pt-2 border-t border-[var(--border)] space-y-3">
-                    <div className="flex flex-wrap gap-3 items-end">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-end">
                       <label className="flex flex-col gap-1">
                         <span className="text-xs text-[var(--text-muted)]">Allocation (country)</span>
                         <select
                           value={editCountrySelect}
                           onChange={(e) => setEditCountrySelect(e.target.value)}
-                          className="min-w-[12rem] max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                          className="w-full sm:min-w-[12rem] sm:max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         >
                           {getAllocationOptionsForCommittee(committee, delegates.filter((x) => x.id !== d.id).map((x) => x.country), currentPresetId).map((c) => (
                             <option key={c} value={c}>{c}</option>
@@ -475,7 +475,7 @@ export default function ChairDelegates() {
                             value={editCustomCountry}
                             onChange={(e) => setEditCustomCountry(e.target.value)}
                             placeholder="e.g. Observer State"
-                            className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                            className="w-full sm:w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
                           />
                         </label>
                       )}
@@ -486,7 +486,7 @@ export default function ChairDelegates() {
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           placeholder="Delegate name"
-                          className="w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                          className="w-full sm:w-40 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
                         />
                       </label>
                       <label className="flex flex-col gap-1">
@@ -496,11 +496,11 @@ export default function ChairDelegates() {
                           value={editEmail}
                           onChange={(e) => setEditEmail(e.target.value)}
                           placeholder="delegate@example.com"
-                          className="w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
+                          className="w-full sm:w-48 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm"
                         />
                       </label>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         onClick={() => {
                           const newCountry = editCountrySelect === OTHER_DELEGATION_VALUE ? editCustomCountry.trim() : editCountrySelect
@@ -514,13 +514,13 @@ export default function ChairDelegates() {
                           }
                         }}
                         disabled={!(editCountrySelect === OTHER_DELEGATION_VALUE ? editCustomCountry.trim() : editCountrySelect)}
-                        className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Apply
                       </button>
                       <button
                         onClick={() => setEditingDelegateId(null)}
-                        className="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs hover:text-[var(--text)]"
+                        className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs hover:text-[var(--text)]"
                       >
                         Cancel
                       </button>
@@ -560,7 +560,7 @@ export default function ChairDelegates() {
                   />
                 )}
                 {showStrikeForm && (
-                  <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-end">
+                  <div className="pt-2 border-t border-[var(--border)] flex flex-col sm:flex-row sm:flex-wrap gap-2 items-stretch sm:items-end">
                     <select
                       value={selectedStrikeType}
                       onChange={(e) => {
@@ -573,7 +573,7 @@ export default function ChairDelegates() {
                           setCustomMisbehaviour('')
                         }
                       }}
-                      className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     >
                       <option value="">⚠️ Select misbehaviour</option>
                       {DEFAULT_MISBEHAVIOURS.map((m) => (
@@ -587,7 +587,7 @@ export default function ChairDelegates() {
                       value={customMisbehaviour}
                       onChange={(e) => setCustomMisbehaviour(e.target.value)}
                       placeholder="Or type custom"
-                      className="w-36 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      className="w-full sm:w-36 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
                     <button
                       onClick={() => {
@@ -600,7 +600,7 @@ export default function ChairDelegates() {
                         }
                       }}
                       disabled={!customMisbehaviour.trim()}
-                      className="px-3 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Add strike (custom)
                     </button>
@@ -610,20 +610,20 @@ export default function ChairDelegates() {
                         setCustomMisbehaviour('')
                         setSelectedStrikeType('')
                       }}
-                      className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
+                      className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
                     >
                       Cancel
                     </button>
                   </div>
                 )}
                 {showComplimentForm && (
-                  <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-2 items-end">
+                  <div className="pt-2 border-t border-[var(--border)] flex flex-col sm:flex-row sm:flex-wrap gap-2 items-stretch sm:items-end">
                     <input
                       type="text"
                       value={complimentReason}
                       onChange={(e) => setComplimentReason(e.target.value)}
                       placeholder="Reason (optional): e.g. strong speech, clear POI"
-                      className="min-w-[16rem] w-[24rem] max-w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                      className="w-full sm:min-w-[16rem] sm:w-[24rem] max-w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
                     <button
                       onClick={() => {
@@ -631,7 +631,7 @@ export default function ChairDelegates() {
                         setComplimentDelegateId(null)
                         setComplimentReason('')
                       }}
-                      className="px-3 py-2 rounded-lg bg-[var(--success)] text-white text-sm font-medium hover:opacity-90"
+                      className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--success)] text-white text-sm font-medium hover:opacity-90"
                     >
                       Add compliment
                     </button>
@@ -640,7 +640,7 @@ export default function ChairDelegates() {
                         setComplimentDelegateId(null)
                         setComplimentReason('')
                       }}
-                      className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
+                      className="w-full sm:w-auto px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] text-sm"
                     >
                       Cancel
                     </button>

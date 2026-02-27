@@ -129,7 +129,7 @@ export default function DelegateSources() {
       <div className="card-block p-4 space-y-4">
         <h3 className="text-sm font-medium text-[var(--text)]">🔍 Search by key terms (topic-related)</h3>
         <p className="text-xs text-[var(--text-muted)]">Enter terms related to your topic (e.g. health, refugees, climate, economy) to see suggested sources.</p>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
@@ -206,7 +206,7 @@ export default function DelegateSources() {
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             id="sources-trusted-input"
             name="sources-trusted"
@@ -219,7 +219,7 @@ export default function DelegateSources() {
           />
           <button
             onClick={addTrusted}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
           >
             <Plus className="w-4 h-4" /> Add
           </button>
@@ -247,7 +247,7 @@ export default function DelegateSources() {
 
       <div className="card-block p-4 space-y-4">
         <h3 className="text-sm font-medium text-[var(--text)]">🌍 Nation-specific sources</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             id="sources-nation-input"
             name="sources-nation"
@@ -260,7 +260,7 @@ export default function DelegateSources() {
           />
           <button
             onClick={addNation}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
           >
             <Plus className="w-4 h-4" /> Add
           </button>

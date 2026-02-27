@@ -84,9 +84,6 @@ export default function Layout() {
             >
               {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
-            {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
-              <AuthSection />
-            )}
           </div>
         </div>
         {/* Mobile nav drawer */}
@@ -98,11 +95,16 @@ export default function Layout() {
               aria-hidden
             />
             <div
-              className="fixed top-11 right-0 bottom-0 left-0 z-50 md:hidden bg-[var(--bg-elevated)] border-l border-[var(--border)] shadow-xl overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 left-0 z-50 md:hidden bg-[var(--bg-elevated)] border-l border-[var(--border)] shadow-xl overflow-y-auto pt-12"
               role="dialog"
               aria-label="Navigation menu"
             >
               <nav className="flex flex-col p-4 gap-1">
+                {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
+                  <div className="mb-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-2">
+                    <AuthSection />
+                  </div>
+                )}
                 {nav.map(({ to, label }) => (
                   <NavLink
                     key={to}

@@ -45,14 +45,14 @@ export default function DelegateResources() {
           />
           <button
             onClick={add}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90"
           >
             <Plus className="w-4 h-4" /> Add
           </button>
         </div>
         <ul className="divide-y divide-[var(--border)] max-h-64 overflow-auto">
           {uploadedResources.map((r, i) => (
-            <li key={i} className="px-3 py-3 flex items-center justify-between gap-2">
+            <li key={i} className="px-3 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               {r.url ? (
                 <a
                   href={r.url}
@@ -75,7 +75,7 @@ export default function DelegateResources() {
               <button
                 type="button"
                 onClick={() => removeUploadedResource(i)}
-                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] flex-shrink-0"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] flex-shrink-0 self-end sm:self-auto"
                 aria-label="Remove resource"
               >
                 <Trash2 className="w-4 h-4" />

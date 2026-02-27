@@ -98,7 +98,7 @@ export default function ChairRandomizer() {
         </div>
         {randomizerMode === 'selected' && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <span className="text-xs text-[var(--text-muted)]">
                 {randomizerPool.length} selected for random pick
               </span>
@@ -141,7 +141,7 @@ export default function ChairRandomizer() {
             </ul>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-stretch sm:items-center gap-2">
           <button
             onClick={pickRandom}
             disabled={randomizerPool.length === 0}
@@ -153,14 +153,14 @@ export default function ChairRandomizer() {
             const d = delegates.find((x) => x.id === pickedDelegateId)
             if (!d) return null
             return (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                <span className="text-sm font-medium text-[var(--text)] flex items-center gap-2">
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                <span className="text-sm font-medium text-[var(--text)] flex items-center gap-2 min-w-0">
                   <span>{getDelegationEmoji(d.country) || '🏳️'}</span>
                   {d.country} {d.name ? `— ${d.name}` : ''}
                 </span>
                 <button
                   onClick={addPickedToSpeakers}
-                  className="px-2 py-1 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90"
+                  className="w-full sm:w-auto px-2 py-1 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90"
                 >
                   Add to speakers
                 </button>

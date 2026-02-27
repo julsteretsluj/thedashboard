@@ -43,7 +43,7 @@ export default function DelegateSetupGuide() {
 
       <ol className="space-y-5 list-none pl-0">
         {DELEGATE_SETUP_STEPS.map(({ step, title, body }) => (
-          <li key={step} className="flex gap-4">
+          <li key={step} className="flex gap-3 sm:gap-4">
             <span
               className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-semibold flex items-center justify-center text-sm"
               aria-hidden
@@ -61,7 +61,7 @@ export default function DelegateSetupGuide() {
       <div className="mt-10 pt-8 border-t border-[var(--border)]">
         <Link
           to="/?role=delegate"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-btn)] bg-[var(--accent)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--radius-btn)] bg-[var(--accent)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
         >
           <BookOpen className="w-4 h-4" />
           Open Delegate Dashboard

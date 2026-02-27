@@ -247,6 +247,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 @media (min-width: 768px) {
@@ -269,6 +270,31 @@ svg[class*="lucide"],
 
 #root {
   min-height: 100vh;
+  overflow-x: clip;
+}
+
+/* Mobile-safe primitives */
+.mobile-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.touch-target {
+  min-height: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
 }
 
 /* Section heading — same font as body, semibold; smaller on mobile */

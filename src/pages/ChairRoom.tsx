@@ -109,7 +109,7 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-3.5rem)] lg:min-h-[calc(100vh-4rem)]">
       <aside
-        className={`border-b lg:border-b-0 lg:border-r border-[var(--border)] bg-[var(--bg-elevated)] flex-shrink-0 overflow-x-auto overflow-y-hidden transition-[width] duration-200 ${
+        className={`hidden lg:block border-b lg:border-b-0 lg:border-r border-[var(--border)] bg-[var(--bg-elevated)] flex-shrink-0 overflow-x-auto overflow-y-hidden transition-[width] duration-200 ${
           sidebarExpanded ? 'lg:w-max lg:min-w-[11rem] lg:max-w-[14rem]' : 'lg:w-10'
         }`}
       >
@@ -158,6 +158,27 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
       </aside>
       <main className="flex-1 flex flex-col overflow-auto min-w-0">
         <div className="p-2 sm:p-3 md:p-5 flex-1 overflow-auto">
+        <div className="lg:hidden mb-3 flex items-center gap-2">
+          <select
+            value={active}
+            onChange={(e) => setActive(e.target.value)}
+            className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-sm text-[var(--text)]"
+            aria-label="Select Chair Room section"
+          >
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setShowSettings((v) => !v)}
+            className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
+          >
+            Settings
+          </button>
+        </div>
         <ActiveSessionBar onSessionClick={goToSession} />
         <ActiveVotingBar onVotingClick={goToVoting} />
         <ActiveSpeakerBar onSpeakersClick={goToSpeakers} />
@@ -176,7 +197,8 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
                   title={prev ? `Previous: ${prev.label}` : undefined}
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
-                  {prev?.label ?? 'Previous'}
+                  <span className="hidden sm:inline">{prev?.label ?? 'Previous'}</span>
+                  <span className="sm:hidden">Prev</span>
                 </button>
                 <button
                   type="button"
@@ -185,7 +207,8 @@ function ChairRoomContent({ active, setActive }: { active: string; setActive: (i
                   className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                   title={next ? `Next: ${next.label}` : undefined}
                 >
-                  {next?.label ?? 'Next'}
+                  <span className="hidden sm:inline">{next?.label ?? 'Next'}</span>
+                  <span className="sm:hidden">Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </>
@@ -263,8 +286,8 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
           ]}
           className="mb-1"
         />
-        <h1 className="page-title text-[var(--text)] whitespace-nowrap truncate">⚖️ Chair Room</h1>
-        <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-nowrap truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
+        <h1 className="page-title text-[var(--text)] truncate">⚖️ Chair Room</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-muted)] truncate">🖥️ Digital Room · 📜 Motions · 🗳️ Voting · 🎤 Speakers</p>
         {isLoaded && !isAuthenticated && (
           <p className="text-xs text-[var(--text-muted)] mt-1">
             Data is saved automatically to this device. Sign in to save to your account and sync across devices.
@@ -277,13 +300,13 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
         )}
       </div>
       {isLoaded && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <label className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
             <span className="hidden sm:inline">Conference</span>
             <select
               value={activeConferenceId}
               onChange={(e) => setActiveConference(e.target.value)}
-              className="min-w-[8rem] px-2.5 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="w-full sm:w-auto min-w-[8rem] px-2.5 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               aria-label="Select conference"
             >
               {conferences.map((c) => (
@@ -296,7 +319,7 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
           <button
             type="button"
             onClick={addConference}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
           >
             <Plus className="w-3.5 h-3.5" /> Add conference
           </button>
@@ -310,7 +333,7 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
                   e.target.value = ''
                 }
               }}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full sm:w-auto px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               aria-label="Add from preset"
             >
               <option value="">From preset…</option>
@@ -338,7 +361,7 @@ function ChairRoomHeader({ activeSection }: { activeSection: string }) {
                 type="button"
                 onClick={() => saveToAccount()}
                 disabled={isSaving}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--brand)] text-white hover:opacity-90 transition-opacity disabled:opacity-60"
               >
                 <Save className="w-3.5 h-3.5" />
                 {isSaving ? 'Saving…' : 'Save to account'}
