@@ -221,13 +221,45 @@ export default function HelpTour({ steps, onClose, isOpen }: Props) {
       {/* Fallback when target not found */}
       {step && !rect && !isMobile && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[101] w-[min(320px,calc(100vw-2rem)) rounded-xl shadow-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-          <h3 className="font-semibold text-[var(--text)] mb-2">{step.title}</h3>
-          <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-4">{step.body}</p>
-          <div className="flex justify-end gap-2">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="font-semibold text-[var(--text)]">{step.title}</h3>
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--brand)] text-white hover:opacity-90"
+              className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] transition-colors shrink-0"
+              aria-label="Close tour"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-4">{step.body}</p>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-[var(--text-muted)]">
+              {stepIndex + 1} / {steps.length}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={!canPrev}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--brand)] text-white hover:opacity-90"
+              >
+                {canNext ? 'Next' : 'Done'}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card)]"
             >
               Close
             </button>
