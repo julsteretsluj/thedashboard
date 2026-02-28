@@ -73,7 +73,7 @@ interface ChairState {
 }
 
 const defaultState: ChairState = {
-  committee: 'UNSC',
+  committee: '',
   topics: ['The Question of'],
   universe: '',
   sessionStarted: false,
@@ -220,7 +220,7 @@ function normalizeSpeakerData(
 }
 
 function defaultChairConference(id: string): ChairConference {
-  return { id, name: 'New Conference', data: { ...defaultState } }
+  return { id, name: '', data: { ...defaultState } }
 }
 
 function migrateChairConference(c: ChairConferenceDoc): ChairConference {
@@ -734,9 +734,7 @@ export function ChairProvider({
     if (!preset) return
     const id = crypto.randomUUID()
     const conf = defaultChairConference(id)
-    conf.name = preset.name
     conf.presetId = presetId
-    conf.data.committee = preset.defaultCommittee ?? preset.committees?.[0] ?? conf.data.committee
     setConferences((list) => [...list, conf])
     setActiveConferenceIdState(id)
   }, [])

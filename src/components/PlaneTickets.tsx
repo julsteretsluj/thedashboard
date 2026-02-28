@@ -4,10 +4,10 @@ import { useDelegate } from '../context/DelegateContext'
 
 function buildTicketUrl(role: 'chair' | 'delegate', start?: string): string {
   const params = new URLSearchParams()
-  params.set('role', role)
   if (start && start.trim()) params.set('start', start.trim())
   const q = params.toString()
-  return `${window.location.origin}${window.location.pathname}${q ? `?${q}` : ''}`
+  const basePath = role === 'chair' ? '/chair' : '/delegate'
+  return `${window.location.origin}${basePath}${q ? `?${q}` : ''}`
 }
 
 function BoardingPass({

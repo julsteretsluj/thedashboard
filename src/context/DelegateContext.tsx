@@ -57,7 +57,7 @@ const defaultChecklist: DelegateConference['checklist'] = {
 
 const defaultConference = (id: string): DelegateConference => ({
   id,
-  name: 'New Conference',
+  name: '',
   country: '',
   delegateEmail: '',
   stanceOverview: '',
@@ -299,15 +299,10 @@ export function DelegateProvider({
     if (!preset) return
     const id = generateId()
     const conf = defaultConference(id)
-    conf.name = preset.name
     conf.presetId = presetId
     if (preset.countdownDate) conf.countdownDate = preset.countdownDate
     if (preset.conferenceEndDate) conf.conferenceEndDate = preset.conferenceEndDate
     if (preset.positionPaperDeadline) conf.positionPaperDeadline = preset.positionPaperDeadline
-    if (preset.committees?.length) {
-      conf.committees = preset.committees
-      conf.committeeCount = preset.committees.length
-    }
     setConferences((list) => [...list, conf])
     setActiveConferenceIdState(id)
   }, [])
