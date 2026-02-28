@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Globe from 'react-globe.gl'
 import type { GlobeMethods } from 'react-globe.gl'
@@ -95,7 +95,6 @@ function useStarredSections() {
 }
 
 const GEO_CACHE = new Map<string, string | null>()
-const LOCATION_CACHE = new Map<string, string | null>()
 const geoKey = (lat: number, lng: number) => `${lat.toFixed(2)}_${lng.toFixed(2)}`
 async function fetchCountryAt(lat: number, lng: number): Promise<string | null> {
   const key = geoKey(lat, lng)
@@ -111,38 +110,6 @@ async function fetchCountryAt(lat: number, lng: number): Promise<string | null> 
     return country
   } catch {
     GEO_CACHE.set(key, null)
-    return null
-  }
-}
-
-type AddressParts = {
-  city?: string
-  town?: string
-  village?: string
-  municipality?: string
-  state?: string
-  country?: string
-}
-async function fetchLocationLabel(lat: number, lng: number): Promise<string | null> {
-  const key = geoKey(lat, lng)
-  if (LOCATION_CACHE.has(key)) return LOCATION_CACHE.get(key) ?? null
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-      { headers: { Accept: 'application/json' } }
-    )
-    const data = (await res.json()) as { address?: AddressParts }
-    const addr = data?.address
-    if (!addr?.country) {
-      LOCATION_CACHE.set(key, null)
-      return null
-    }
-    const city = addr.city ?? addr.town ?? addr.village ?? addr.municipality ?? addr.state ?? null
-    const label = city ? `${city}, ${addr.country}` : addr.country
-    LOCATION_CACHE.set(key, label)
-    return label
-  } catch {
-    LOCATION_CACHE.set(key, null)
     return null
   }
 }
