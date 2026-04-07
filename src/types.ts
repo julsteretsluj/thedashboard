@@ -118,6 +118,14 @@ export interface CommitteeMatrixEntry {
   delegation: string
 }
 
+/** Linked Google Doc for delegate prep; stored per conference with autosave. */
+export interface PrepGoogleDoc {
+  id: string
+  name: string
+  /** Pasted link (any valid Google Docs form); normalized on save in context. */
+  url: string
+}
+
 export interface DelegateConference {
   id: string
   name: string
@@ -170,4 +178,6 @@ export interface DelegateConference {
   trustedSources: string[]
   nationSources: string[]
   uploadedResources: { name: string; url?: string }[]
+  /** Named Google Docs — view embedded here; full edit opens in Google. */
+  prepGoogleDocs: PrepGoogleDoc[]
 }

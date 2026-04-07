@@ -7,11 +7,31 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { DelegateConference, CommitteeMatrixEntry } from '../types'
+import type { DelegateConference, CommitteeMatrixEntry, PrepGoogleDoc } from '../types'
+import { normalizeGoogleDocEditUrl } from '../lib/googleDocs'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
 import { hasSupabase } from '../lib/supabase'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
+
+function migratePrepGoogleDocs(raw: unknown): PrepGoogleDoc[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((x): PrepGoogleDoc | null => {
+      if (!x || typeof x !== 'object') return null
+      const o = x as Record<string, unknown>
+      const name = typeof o.name === 'string' ? o.name.trim() : ''
+      const urlRaw = typeof o.url === 'string' ? o.url.trim() : ''
+      if (!name || !urlRaw) return null
+      const normalized = normalizeGoogleDocEditUrl(urlRaw) ?? urlRaw
+      const id =
+        typeof o.id === 'string' && o.id
+          ? o.id
+          : crypto.randomUUID?.() ?? `pgd-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      return { id, name, url: normalized }
+    })
+    .filter((x): x is PrepGoogleDoc => x != null)
+}
 
 function migrateConference(c: DelegateConference): DelegateConference {
   const hasLegacy = c.committeeMatrix && Object.keys(c.committeeMatrix).length > 0
@@ -38,6 +58,7 @@ function migrateConference(c: DelegateConference): DelegateConference {
         ? { ...c.delegationEmojiOverrides }
         : {},
     checklist: { ...defaultChecklist, ...(c.checklist || {}) },
+    prepGoogleDocs: migratePrepGoogleDocs((c as { prepGoogleDocs?: unknown }).prepGoogleDocs),
   }
   return base
 }
@@ -80,6 +101,7 @@ const defaultConference = (id: string): DelegateConference => ({
   trustedSources: [],
   nationSources: [],
   uploadedResources: [],
+  prepGoogleDocs: [],
   delegationEmojiOverrides: {},
 })
 
@@ -134,6 +156,9 @@ type DelegateContextValue = DelegateConference & {
   removeNationSource: (i: number) => void
   addUploadedResource: (name: string, url?: string) => void
   removeUploadedResource: (i: number) => void
+  addPrepGoogleDoc: (name: string, url: string) => void
+  removePrepGoogleDoc: (id: string) => void
+  updatePrepGoogleDoc: (id: string, patch: Partial<Pick<PrepGoogleDoc, 'name' | 'url'>>) => void
   setDelegationEmoji: (delegation: string, emoji: string | null) => void
   getDelegationEmoji: (delegation: string, committee?: string) => string
   addConference: () => void
@@ -363,6 +388,49 @@ export function DelegateProvider({
     [updateActive]
   )
 
+  const addPrepGoogleDoc = useCallback(
+    (name: string, url: string) => {
+      const n = name.trim()
+      const normalized = normalizeGoogleDocEditUrl(url.trim())
+      if (!n || !normalized) return
+      const id = crypto.randomUUID?.() ?? `pgd-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      updateActive((c) => ({
+        ...c,
+        prepGoogleDocs: [...(c.prepGoogleDocs ?? []), { id, name: n, url: normalized }],
+      }))
+    },
+    [updateActive]
+  )
+
+  const removePrepGoogleDoc = useCallback(
+    (id: string) =>
+      updateActive((c) => ({
+        ...c,
+        prepGoogleDocs: (c.prepGoogleDocs ?? []).filter((d) => d.id !== id),
+      })),
+    [updateActive]
+  )
+
+  const updatePrepGoogleDoc = useCallback(
+    (id: string, patch: Partial<Pick<PrepGoogleDoc, 'name' | 'url'>>) => {
+      updateActive((c) => ({
+        ...c,
+        prepGoogleDocs: (c.prepGoogleDocs ?? []).map((d) => {
+          if (d.id !== id) return d
+          let next = { ...d, ...patch }
+          if (patch.url !== undefined) {
+            const norm = normalizeGoogleDocEditUrl(patch.url.trim())
+            if (norm) next = { ...next, url: norm }
+            else if (patch.url.trim() === '') next = { ...next, url: d.url }
+          }
+          if (patch.name !== undefined) next = { ...next, name: patch.name.trim() || d.name }
+          return next
+        }),
+      }))
+    },
+    [updateActive]
+  )
+
   const setDelegationEmoji = useCallback(
     (delegation: string, emoji: string | null) => {
       const key = delegation.trim()
@@ -510,6 +578,9 @@ export function DelegateProvider({
     removeNationSource,
     addUploadedResource,
     removeUploadedResource,
+    addPrepGoogleDoc,
+    removePrepGoogleDoc,
+    updatePrepGoogleDoc,
     setDelegationEmoji,
     getDelegationEmoji,
     addConference,

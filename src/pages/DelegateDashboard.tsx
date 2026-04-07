@@ -5,6 +5,7 @@ import { useSupabaseAuth } from '../context/SupabaseAuthContext'
 import {
   Globe,
   FileText,
+  FileStack,
   BookOpen,
   CheckSquare,
   Clock,
@@ -34,6 +35,7 @@ import DelegateMatrix from '../components/delegate/DelegateMatrix'
 import DelegatePrep from '../components/delegate/DelegatePrep'
 import DelegateSources from '../components/delegate/DelegateSources'
 import DelegateResources from '../components/delegate/DelegateResources'
+import DelegatePrepGoogleDocs from '../components/delegate/DelegatePrepGoogleDocs'
 import DelegateChecklist from '../components/delegate/DelegateChecklist'
 import DelegateCountdown from '../components/delegate/DelegateCountdown'
 import DelegateHowToGuide from '../components/DelegateHowToGuide'
@@ -168,7 +170,17 @@ function DelegateDashboardHeader({ activeSection }: { activeSection: string }) {
   )
 }
 
-const DELEGATE_SECTION_IDS = ['country', 'countdown', 'matrix', 'prep', 'sources', 'resources', 'checklist', 'links'] as const
+const DELEGATE_SECTION_IDS = [
+  'country',
+  'countdown',
+  'matrix',
+  'prep',
+  'prep-docs',
+  'sources',
+  'resources',
+  'checklist',
+  'links',
+] as const
 
 // Order: identity & timing → committees → prep → before conference → links
 const sections = [
@@ -176,6 +188,7 @@ const sections = [
   { id: 'countdown', label: '⏱️ Countdown', icon: Clock },
   { id: 'matrix', label: '📊 Committee Matrix', icon: Users },
   { id: 'prep', label: '📝 Prep Template', icon: FileText },
+  { id: 'prep-docs', label: '📑 Google prep docs', icon: FileStack },
   { id: 'sources', label: '🔗 Trusted & Nation Sources', icon: LinkIcon },
   { id: 'resources', label: '📚 Chair Report & Resources', icon: BookOpen },
   { id: 'checklist', label: '✅ Checklist', icon: CheckSquare },
@@ -288,6 +301,7 @@ function DelegateDashboardContent({ active, setActive }: { active: string; setAc
         {active === 'country' && <DelegateCountry />}
         {active === 'matrix' && <DelegateMatrix />}
         {active === 'prep' && <DelegatePrep />}
+        {active === 'prep-docs' && <DelegatePrepGoogleDocs />}
         {active === 'sources' && <DelegateSources />}
         {active === 'links' && (
           <div className="card-block p-4 sm:p-6">

@@ -18,6 +18,7 @@ export default function DelegateSetupChecklist() {
     trustedSources,
     nationSources,
     uploadedResources,
+    prepGoogleDocs,
   } = useDelegate()
 
   const hasConferenceName = (name?.trim().length ?? 0) > 0 && name?.trim() !== 'New Conference'
@@ -31,7 +32,8 @@ export default function DelegateSetupChecklist() {
   const hasSources =
     (trustedSources?.length ?? 0) > 0 ||
     (nationSources?.length ?? 0) > 0 ||
-    (uploadedResources?.length ?? 0) > 0
+    (uploadedResources?.length ?? 0) > 0 ||
+    (prepGoogleDocs?.length ?? 0) > 0
 
   const steps = [
     { id: 'conference', done: !!hasConferenceName, label: 'Set conference name' },
