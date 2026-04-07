@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Smile } from 'lucide-react'
 import { useDelegate } from '../../context/DelegateContext'
 import InfoPopover from '../InfoPopover'
 import DateTimeFields from '../DateTimeFields'
@@ -27,7 +28,12 @@ export default function DelegateCountry() {
     setConferenceEndDate,
     setPositionPaperDeadline,
     presetId,
+    getDelegationEmoji,
+    setDelegationEmoji,
   } = useDelegate()
+
+  const [countryFlagOpen, setCountryFlagOpen] = useState(false)
+  const [customEmojiInput, setCustomEmojiInput] = useState('')
 
   const positionPaperGuidelinesUrl = presetId
     ? PRESET_CONFERENCES.find((p) => p.id === presetId)?.positionPaperGuidelinesUrl
@@ -146,7 +152,7 @@ export default function DelegateCountry() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             🌍 Country Assignment
             <InfoPopover title="Country & Stance">
-              Enter your conference name, country assignment, optional email (e.g. for chair contact), and a brief stance overview. This is your main profile for this conference.
+              Enter your conference name, country assignment, optional email (e.g. for chair contact), and a brief stance overview. This is your main profile for this conference. Use the smile button next to your country to set a custom flag or emoji.
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">Your country and brief stance overview for this conference.</p>
@@ -180,18 +186,88 @@ export default function DelegateCountry() {
             />
           ))}
         </div>
-        <label className="block" htmlFor="stance-country">
+        <div className="block">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Country</span>
-          <input
-            id="stance-country"
-            name="country"
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder="e.g. France, United Kingdom"
-            className="w-full px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-        </label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <input
+              id="stance-country"
+              name="country"
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="e.g. France, United Kingdom"
+              className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-2xl tabular-nums" title="Delegation flag/emoji" aria-hidden>
+                {country.trim() ? getDelegationEmoji(country) || '🏳️' : '—'}
+              </span>
+              <button
+                type="button"
+                disabled={!country.trim()}
+                onClick={() => {
+                  if (!country.trim()) return
+                  if (countryFlagOpen) {
+                    setCountryFlagOpen(false)
+                    setCustomEmojiInput('')
+                  } else {
+                    setCountryFlagOpen(true)
+                    setCustomEmojiInput(getDelegationEmoji(country))
+                  }
+                }}
+                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                title="Edit flag or emoji for this country"
+                aria-label="Edit delegation flag or emoji"
+              >
+                <Smile className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          {countryFlagOpen && country.trim() && (
+            <div className="mt-3 flex flex-wrap gap-2 items-center p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <label className="text-xs text-[var(--text-muted)]">Custom emoji or flag for this delegation:</label>
+              <input
+                type="text"
+                value={customEmojiInput}
+                onChange={(e) => setCustomEmojiInput(e.target.value)}
+                placeholder="e.g. 🏴 or paste any emoji"
+                className="w-28 px-2 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text)] text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setDelegationEmoji(country.trim(), customEmojiInput.trim() || null)
+                  setCountryFlagOpen(false)
+                  setCustomEmojiInput('')
+                }}
+                className="px-2 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium"
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDelegationEmoji(country.trim(), null)
+                  setCountryFlagOpen(false)
+                  setCustomEmojiInput('')
+                }}
+                className="px-2 py-1.5 rounded-lg bg-[var(--bg-card)] text-[var(--text-muted)] text-xs border border-[var(--border)]"
+              >
+                Clear (auto flag)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCountryFlagOpen(false)
+                  setCustomEmojiInput('')
+                }}
+                className="px-2 py-1.5 rounded-lg text-[var(--text-muted)] text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
         <label className="block" htmlFor="stance-delegate-email">
           <span className="text-xs text-[var(--text-muted)] block mb-1">Your email (optional)</span>
           <input

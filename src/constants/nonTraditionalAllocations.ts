@@ -1,6 +1,6 @@
 /**
  * Allocations for non-traditional committees, guided by THAIMUN-style conference allocations.
- * Sources: regional/country lists (Arab League, EU, IOC), role-based (UKPC, Press Corps, HCC, HSOC).
+ * Sources: regional/country lists (Arab League, EU, IOC), role-based (UKPC, Press Corps, HSOC).
  */
 
 /** Arab League member states (22). */
@@ -172,31 +172,6 @@ export const PRESS_CORPS_ALLOCATION = [
   'The Washington Post (WP)',
   'Xinhua News Agency (XNA)',
   'Yonhap News Agency (YNA)',
-] as const
-
-/** Historical Crisis Committee: example role names (THAIMUN-style; chairs can add custom via Other). */
-export const HCC_ALLOCATION = [
-  'Vladimir Putin (Pres Russia)',
-  'Dmitry Medvedev (PM Russia)',
-  'Sergei Shoigu (Defence Minister)',
-  'Valery Gerasimov (Chief of Staff)',
-  'Sergey Lavrov (Foreign Min)',
-  'Oleksandr Turchynov (Acting Pres Ukraine)',
-  'Arseniy Yatsenyuk (PM Ukraine)',
-  'Barack Obama (US Pres)',
-  'John Kerry (US Sec of State)',
-  'Angela Merkel (German Chancellor)',
-  'David Cameron (PM UK)',
-  'Ban Ki-moon (UN SG)',
-  'Xi Jinping (China Pres)',
-  'Cao Cao (Wei)',
-  'Sima Yi (Wei)',
-  'Zhuge Liang (Shu)',
-  'Lin Zexu (Viceroy)',
-  'Daoguang Emperor',
-  'Viscount Melbourne (British PM)',
-  'Lord Palmerston (Foreign Secretary)',
-  'Charles Elliot (Trade Superintendent)',
 ] as const
 
 /** Historical Special Operations Committee: example role names (Korean War / Byzantine–Sassanid style). */

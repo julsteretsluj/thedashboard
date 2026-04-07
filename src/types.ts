@@ -139,6 +139,8 @@ export interface DelegateConference {
   committeeMatrix?: Record<string, string>
   /** Committee matrix: committee, first name, delegation */
   committeeMatrixEntries: CommitteeMatrixEntry[]
+  /** Custom emoji/flag per delegation name (same idea as Chair Room). */
+  delegationEmojiOverrides?: Record<string, string>
   /** Pinned committee values (max 3), shown first in tabs */
   pinnedCommittees?: string[]
   countdownDate: string

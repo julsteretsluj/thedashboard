@@ -9,6 +9,7 @@ import {
 import type { DelegateConference, CommitteeMatrixEntry } from '../types'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
+import { getPresetDelegationFlag } from '../constants/delegationFlags'
 
 function migrateConference(c: DelegateConference): DelegateConference {
   const hasLegacy = c.committeeMatrix && Object.keys(c.committeeMatrix).length > 0
@@ -30,6 +31,10 @@ function migrateConference(c: DelegateConference): DelegateConference {
         : c.committeeMatrixEntries ?? [],
     pinnedCommittees: (c.pinnedCommittees ?? []).slice(0, 3),
     committeeTopics: Array.isArray(c.committeeTopics) ? c.committeeTopics.slice(0, 3) : [],
+    delegationEmojiOverrides:
+      c.delegationEmojiOverrides && typeof c.delegationEmojiOverrides === 'object'
+        ? { ...c.delegationEmojiOverrides }
+        : {},
     checklist: { ...defaultChecklist, ...(c.checklist || {}) },
   }
   return base
@@ -73,6 +78,7 @@ const defaultConference = (id: string): DelegateConference => ({
   trustedSources: [],
   nationSources: [],
   uploadedResources: [],
+  delegationEmojiOverrides: {},
 })
 
 function generateId() {
@@ -103,6 +109,8 @@ type DelegateContextValue = DelegateConference & {
   removeNationSource: (i: number) => void
   addUploadedResource: (name: string, url?: string) => void
   removeUploadedResource: (i: number) => void
+  setDelegationEmoji: (delegation: string, emoji: string | null) => void
+  getDelegationEmoji: (delegation: string, committee?: string) => string
   addConference: () => void
   addConferenceFromPreset: (presetId: string) => void
   removeConference: (id: string) => void
@@ -288,6 +296,39 @@ export function DelegateProvider({
     [updateActive]
   )
 
+  const setDelegationEmoji = useCallback(
+    (delegation: string, emoji: string | null) => {
+      const key = delegation.trim()
+      if (!key) return
+      updateActive((c) => {
+        const next = { ...(c.delegationEmojiOverrides ?? {}) }
+        if (emoji === null || emoji === '') delete next[key]
+        else next[key] = emoji
+        return { ...c, delegationEmojiOverrides: next }
+      })
+    },
+    [updateActive]
+  )
+
+  const getDelegationEmoji = useCallback(
+    (delegation: string, committee?: string): string => {
+      const trimmed = delegation?.trim() ?? ''
+      if (!trimmed) return ''
+      const conf = conferences.find((x) => x.id === activeId)
+      if (!conf) return getPresetDelegationFlag(trimmed, committee ?? '')
+      const ov = conf.delegationEmojiOverrides ?? {}
+      const o = ov[trimmed] ?? ov[delegation]
+      if (o !== undefined && o !== '') return o
+      const comm =
+        committee ??
+        conf.pinnedCommittees?.find((x) => x?.trim()) ??
+        conf.committees?.find((x) => x?.trim()) ??
+        ''
+      return getPresetDelegationFlag(trimmed, comm)
+    },
+    [conferences, activeId]
+  )
+
   const addConference = useCallback(() => {
     const id = generateId()
     const conf = defaultConference(id)
@@ -375,6 +416,8 @@ export function DelegateProvider({
     removeNationSource,
     addUploadedResource,
     removeUploadedResource,
+    setDelegationEmoji,
+    getDelegationEmoji,
     addConference,
     addConferenceFromPreset,
     removeConference,

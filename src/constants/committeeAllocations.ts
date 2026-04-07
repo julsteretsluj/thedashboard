@@ -2,7 +2,7 @@
  * Possible participants (country/delegation allocations) per committee.
  * Used in Chair Room (add delegate) and Delegate Matrix (delegation dropdown per committee).
  * Real participants (already in the room) are merged in at runtime in Chair.
- * Non-traditional committees (Arab League, EU, IOC, UKPC, Press Corps, HCC) guided by THAIMUN-style allocations.
+ * Non-traditional committees (Arab League, EU, IOC, UKPC, Press Corps, etc.) guided by THAIMUN-style allocations. HCC has no preset list — use Other for custom roles.
  */
 import { DELEGATION_OPTIONS } from './delegations'
 import { COMMITTEE_OPTIONS } from './committees'
@@ -13,7 +13,6 @@ import {
   IOC_ALLOCATION,
   UKPC_ALLOCATION,
   PRESS_CORPS_ALLOCATION,
-  HCC_ALLOCATION,
   HSOC_ALLOCATION,
 } from './nonTraditionalAllocations'
 import { MUN07_IV_ALLOCATIONS } from './mun07Allocations'
@@ -50,7 +49,8 @@ const ALLOCATION_BY_VALUE: Record<string, readonly string[]> = {
   IOPC: IOC_ALLOCATION,
   UKPC: UKPC_ALLOCATION,
   PC: PRESS_CORPS_ALLOCATION,
-  HCC: HCC_ALLOCATION,
+  /** No preset crisis roles — chairs and delegates add delegations via Other (custom). */
+  HCC: [],
   HSOC: HSOC_ALLOCATION,
   USCC: US_SENATE_ALLOCATION_OPTIONS,
 }

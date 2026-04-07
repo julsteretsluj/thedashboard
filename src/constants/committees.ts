@@ -1,6 +1,6 @@
 /**
  * Committee options for Chair Room and Committee Matrix.
- * Non-traditional / limited-allocation committees (AL, EU, IOPC, UKPC, PC, HCC, UNSC, HSC, US-Senate) are listed first so they appear at the top of the dropdown.
+ * Non-traditional / limited-allocation committees (AL, EU, IOPC, UKPC, PC, HCC custom-only, UNSC, HSC, US-Senate) are listed first so they appear at the top of the dropdown.
  */
 const ALL_COMMITTEES = [
   { value: 'AL', label: 'AL — Arab League' },
