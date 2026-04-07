@@ -26,6 +26,34 @@ export interface ChairConference {
 
 const MAX_TOPICS = 3
 
+/** When a delegate allocation/country is renamed, move custom emoji from old keys to the new name. */
+function migrateDelegationEmojiOverrides(
+  overrides: Record<string, string>,
+  oldCountry: string,
+  newCountry: string
+): Record<string, string> {
+  const oldT = oldCountry.trim()
+  const newT = newCountry.trim()
+  if (!oldT || !newT || oldT === newT) return { ...overrides }
+  const next = { ...overrides }
+  let carried: string | undefined
+  for (const k of Object.keys(next)) {
+    if (k === oldCountry || k.trim() === oldT) {
+      carried = next[k]
+      delete next[k]
+    }
+  }
+  if (carried !== undefined && carried !== '' && next[newCountry] === undefined && next[newT] === undefined) {
+    next[newT] = carried
+  }
+  return next
+}
+
+function matchesRenamedCountry(name: string, oldCountry: string): boolean {
+  const o = oldCountry.trim()
+  return name === oldCountry || name.trim() === o
+}
+
 interface ChairState {
   committee: string
   /** Committee topics (up to 3). Replaces legacy single topic. */
@@ -462,7 +490,91 @@ export function ChairProvider({
     })
   }, [updateActive])
   const updateDelegate = useCallback((id: string, patch: Partial<Delegate>) => {
-    updateActive((s) => ({ ...s, delegates: s.delegates.map((d) => (d.id === id ? { ...d, ...patch } : d)) }))
+    updateActive((s) => {
+      const d = s.delegates.find((x) => x.id === id)
+      if (!d) return s
+
+      let delegationEmojiOverrides = { ...s.delegationEmojiOverrides }
+      let motions = s.motions
+      let resolutions = s.resolutions
+      let amendments = s.amendments
+      let speakers = s.speakers
+      let activeSpeaker = s.activeSpeaker
+
+      if (patch.country !== undefined) {
+        const oldC = d.country
+        const newC = patch.country.trim()
+        if (newC && oldC !== newC) {
+          delegationEmojiOverrides = migrateDelegationEmojiOverrides(delegationEmojiOverrides, oldC, newC)
+          motions = motions.map((m) =>
+            m.submitter && matchesRenamedCountry(m.submitter, oldC) ? { ...m, submitter: newC } : m
+          )
+          resolutions = resolutions.map((r) => ({
+            ...r,
+            mainSubmitters: r.mainSubmitters.map((x) => (matchesRenamedCountry(x, oldC) ? newC : x)),
+            coSubmitters: r.coSubmitters.map((x) => (matchesRenamedCountry(x, oldC) ? newC : x)),
+          }))
+          amendments = amendments.map((a) => ({
+            ...a,
+            submitters: a.submitters.map((x) => (matchesRenamedCountry(x, oldC) ? newC : x)),
+          }))
+        }
+        speakers = speakers.map((sp) =>
+          sp.delegateId === id
+            ? {
+                ...sp,
+                country: newC,
+                ...(patch.name !== undefined
+                  ? { name: (patch.name ?? '').trim() || newC }
+                  : {}),
+              }
+            : sp
+        )
+        if (activeSpeaker?.delegateId === id) {
+          activeSpeaker = {
+            ...activeSpeaker,
+            country: newC,
+            ...(patch.name !== undefined
+              ? { name: (patch.name ?? '').trim() || newC }
+              : {}),
+          }
+        }
+      } else if (patch.name !== undefined) {
+        const nameStr = (patch.name ?? '').trim() || undefined
+        speakers = speakers.map((sp) =>
+          sp.delegateId === id ? { ...sp, name: nameStr || sp.country } : sp
+        )
+        if (activeSpeaker?.delegateId === id) {
+          activeSpeaker = { ...activeSpeaker, name: nameStr || activeSpeaker.country }
+        }
+      }
+
+      const delegates = s.delegates.map((del) => (del.id === id ? { ...del, ...patch } : del))
+
+      const voteInProgress = s.voteInProgress
+        ? motions.find((m) => m.id === s.voteInProgress!.id) ?? s.voteInProgress
+        : null
+      const resolutionVoteInProgress = s.resolutionVoteInProgress
+        ? resolutions.find((r) => r.id === s.resolutionVoteInProgress!.id) ?? s.resolutionVoteInProgress
+        : null
+      const amendmentVoteInProgress = s.amendmentVoteInProgress
+        ? amendments.find((a) => a.id === s.amendmentVoteInProgress!.id) ?? s.amendmentVoteInProgress
+        : null
+
+      return {
+        ...s,
+        delegates,
+        delegationEmojiOverrides,
+        motions,
+        resolutions,
+        amendments,
+        speakers,
+        activeSpeaker,
+        voteInProgress,
+        resolutionVoteInProgress,
+        amendmentVoteInProgress,
+      }
+    })
   }, [updateActive])
   const addMotion = useCallback((text: string, type: 'motion' | 'point', submitter?: string, presetLabel?: string) => {
     updateActive((s) => ({

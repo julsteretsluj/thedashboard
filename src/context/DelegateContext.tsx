@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -85,6 +86,28 @@ function generateId() {
   return crypto.randomUUID?.() ?? `conf-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+function migrateDelegateEmojiOnRename(
+  map: Record<string, string>,
+  oldDelegation: string,
+  newDelegation: string
+): Record<string, string> {
+  const oldT = oldDelegation.trim()
+  const newT = newDelegation.trim()
+  if (!oldT || !newT || oldT === newT) return { ...map }
+  const next = { ...map }
+  let carried: string | undefined
+  for (const k of Object.keys(next)) {
+    if (k === oldDelegation || k.trim() === oldT) {
+      carried = next[k]
+      delete next[k]
+    }
+  }
+  if (carried !== undefined && carried !== '' && next[newDelegation] === undefined && next[newT] === undefined) {
+    next[newT] = carried
+  }
+  return next
+}
+
 type DelegateContextValue = DelegateConference & {
   conferences: DelegateConference[]
   activeConferenceId: string
@@ -96,6 +119,7 @@ type DelegateContextValue = DelegateConference & {
   setCommittees: (list: string[]) => void
   setCommitteeTopicAtIndex: (index: number, value: string) => void
   addCommitteeMatrixEntry: (entry: CommitteeMatrixEntry) => void
+  updateCommitteeMatrixEntry: (index: number, patch: Partial<CommitteeMatrixEntry>) => void
   removeCommitteeMatrixEntry: (index: number) => void
   togglePinnedCommittee: (committee: string) => void
   setPresetAllocationCommittees: (committees: string[] | undefined) => void
@@ -145,6 +169,11 @@ export function DelegateProvider({
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+
+  const conferencesRef = useRef(conferences)
+  const activeConferenceIdStateRef = useRef(activeConferenceId)
+  conferencesRef.current = conferences
+  activeConferenceIdStateRef.current = activeConferenceId
 
   const activeId = activeConferenceId || conferences[0]?.id
   const current = getCurrentConference(conferences, activeId ?? '')
@@ -219,6 +248,30 @@ export function DelegateProvider({
       })),
     [updateActive]
   )
+  const updateCommitteeMatrixEntry = useCallback(
+    (index: number, patch: Partial<CommitteeMatrixEntry>) => {
+      updateActive((c) => {
+        const entries = [...(c.committeeMatrixEntries ?? [])]
+        if (index < 0 || index >= entries.length) return c
+        const prev = entries[index]
+        let delegationEmojiOverrides = c.delegationEmojiOverrides ?? {}
+        if (
+          patch.delegation !== undefined &&
+          patch.delegation.trim() !== (prev.delegation ?? '').trim()
+        ) {
+          delegationEmojiOverrides = migrateDelegateEmojiOnRename(
+            delegationEmojiOverrides,
+            prev.delegation,
+            patch.delegation
+          )
+        }
+        entries[index] = { ...prev, ...patch }
+        return { ...c, committeeMatrixEntries: entries, delegationEmojiOverrides }
+      })
+    },
+    [updateActive]
+  )
+
   const removeCommitteeMatrixEntry = useCallback(
     (index: number) =>
       updateActive((c) => ({
@@ -375,12 +428,36 @@ export function DelegateProvider({
     }
   }, [userId, conferences, activeId])
 
+  // Flush latest delegate data on leave/hide so matrix and other edits are not lost if refresh beats the debounce.
+  useEffect(() => {
+    if (!userId || !isLoaded) return
+    const flush = () => {
+      const list = conferencesRef.current
+      const stateActive = activeConferenceIdStateRef.current
+      void saveDelegateData(userId, {
+        conferences: list,
+        activeConferenceId: stateActive || list[0]?.id || '',
+      }).catch(() => {})
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', flush)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', flush)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [userId, isLoaded])
+
   // Autosave: debounced save to account when data changes (only when signed in and after initial load)
   useEffect(() => {
     if (!userId || !isLoaded) return
     const t = setTimeout(() => {
       saveToAccount()
-    }, 3000)
+    }, 1000)
     return () => clearTimeout(t)
   }, [userId, isLoaded, conferences, activeId, saveToAccount])
 
@@ -403,6 +480,7 @@ export function DelegateProvider({
     setCommittees,
     setCommitteeTopicAtIndex,
     addCommitteeMatrixEntry,
+    updateCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
     togglePinnedCommittee,
     setPresetAllocationCommittees,

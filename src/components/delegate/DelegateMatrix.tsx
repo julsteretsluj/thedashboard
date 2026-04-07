@@ -1,6 +1,6 @@
 import { useState, useMemo, Fragment } from 'react'
 import { useDelegate } from '../../context/DelegateContext'
-import { Plus, Trash2, Pin, Smile } from 'lucide-react'
+import { Plus, Trash2, Pin, Smile, Pencil } from 'lucide-react'
 import InfoPopover from '../InfoPopover'
 import { COMMITTEE_OPTIONS, OTHER_COMMITTEE_VALUE } from '../../constants/committees'
 import { MUN07_IV_ALLOCATION_COMMITTEES } from '../../constants/mun07Allocations'
@@ -24,6 +24,7 @@ export default function DelegateMatrix() {
     setCommittees,
     committeeMatrixEntries,
     addCommitteeMatrixEntry,
+    updateCommitteeMatrixEntry,
     removeCommitteeMatrixEntry,
     pinnedCommittees = [],
     togglePinnedCommittee,
@@ -37,6 +38,10 @@ export default function DelegateMatrix() {
   const [activeCommitteeValue, setActiveCommitteeValue] = useState<string | null>(null)
   const [editingMatrixIndex, setEditingMatrixIndex] = useState<number | null>(null)
   const [matrixEmojiInput, setMatrixEmojiInput] = useState('')
+  const [editingFieldsIndex, setEditingFieldsIndex] = useState<number | null>(null)
+  const [editRowCommittee, setEditRowCommittee] = useState('')
+  const [editRowFirstName, setEditRowFirstName] = useState('')
+  const [editRowDelegation, setEditRowDelegation] = useState('')
 
   const committeeCountNum = Math.max(0, Math.min(20, committeeCount))
   const effectiveCommittees =
@@ -108,7 +113,7 @@ export default function DelegateMatrix() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             📊 Committee Matrix
             <InfoPopover title="Committee Matrix">
-              Set how many committees and which ones for this conference. Use one tab per committee to add entries: first name and delegation. Each delegation shows a flag emoji; use the smile icon on a row to override it with a custom emoji (saved with your account).
+              Set how many committees and which ones for this conference. Use one tab per committee to add entries: first name and delegation. Use the pencil on a row to edit committee, name, or delegation after saving. Each delegation shows a flag emoji; use the smile icon to override it with a custom emoji (saved with your account).
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">Set how many committees for this conference, which committees, then add delegates (first name + delegation).</p>
@@ -327,13 +332,16 @@ export default function DelegateMatrix() {
                         <th className="w-12 px-2 py-2 text-center font-medium text-[var(--text-muted)]" title="Flag / emoji">
                           Flag
                         </th>
+                        <th className="w-12 px-2 py-2 text-center font-medium text-[var(--text-muted)]" title="Edit row">
+                          Edit
+                        </th>
                         <th className="w-10 px-2 py-2" aria-label="Remove" />
                       </tr>
                     </thead>
                     <tbody>
                       {entriesForCommittee(activeCommittee).length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">
+                          <td colSpan={5} className="px-4 py-8 text-center text-[var(--text-muted)]">
                             No entries for this committee yet.
                           </td>
                         </tr>
@@ -361,6 +369,7 @@ export default function DelegateMatrix() {
                                       setEditingMatrixIndex(null)
                                       setMatrixEmojiInput('')
                                     } else {
+                                      setEditingFieldsIndex(null)
                                       setEditingMatrixIndex(i)
                                       setMatrixEmojiInput(
                                         entry.delegation.trim()
@@ -376,6 +385,32 @@ export default function DelegateMatrix() {
                                   <Smile className="w-4 h-4" />
                                 </button>
                               </td>
+                              <td className="px-2 py-3 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (editingFieldsIndex === i) {
+                                      setEditingFieldsIndex(null)
+                                    } else {
+                                      setEditingMatrixIndex(null)
+                                      setMatrixEmojiInput('')
+                                      setEditingFieldsIndex(i)
+                                      setEditRowCommittee(entry.committee)
+                                      setEditRowFirstName(entry.firstName)
+                                      setEditRowDelegation(entry.delegation)
+                                    }
+                                  }}
+                                  className={`p-1.5 rounded-lg transition-colors ${
+                                    editingFieldsIndex === i
+                                      ? 'text-[var(--accent)] bg-[var(--accent-soft)]'
+                                      : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]'
+                                  }`}
+                                  title="Edit first name, delegation, or committee"
+                                  aria-label={`Edit row for ${entry.firstName || 'entry'}`}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </td>
                               <td className="px-2 py-3">
                                 <button
                                   type="button"
@@ -387,9 +422,78 @@ export default function DelegateMatrix() {
                                 </button>
                               </td>
                             </tr>
+                            {editingFieldsIndex === i && (
+                              <tr className="border-b border-[var(--border)] bg-[var(--accent-soft)]/20">
+                                <td colSpan={5} className="px-4 py-3">
+                                  <div className="flex flex-col gap-3">
+                                    <span className="text-xs font-medium text-[var(--text)]">Edit matrix entry</span>
+                                    <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
+                                      <label className="flex flex-col gap-1 min-w-0">
+                                        <span className="text-xs text-[var(--text-muted)]">Committee</span>
+                                        <select
+                                          value={editRowCommittee}
+                                          onChange={(e) => setEditRowCommittee(e.target.value)}
+                                          className="w-full sm:min-w-[10rem] px-3 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text)] text-sm"
+                                          aria-label="Committee for this entry"
+                                        >
+                                          {tabCommittees.map((c) => (
+                                            <option key={c} value={c}>
+                                              {displayCommitteeLabel(c)}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </label>
+                                      <label className="flex flex-col gap-1 min-w-0">
+                                        <span className="text-xs text-[var(--text-muted)]">First name</span>
+                                        <input
+                                          type="text"
+                                          value={editRowFirstName}
+                                          onChange={(e) => setEditRowFirstName(e.target.value)}
+                                          className="w-full sm:w-36 px-3 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text)] text-sm"
+                                        />
+                                      </label>
+                                      <label className="flex flex-col gap-1 flex-1 min-w-0">
+                                        <span className="text-xs text-[var(--text-muted)]">Delegation (any text)</span>
+                                        <input
+                                          type="text"
+                                          value={editRowDelegation}
+                                          onChange={(e) => setEditRowDelegation(e.target.value)}
+                                          placeholder="e.g. France or custom role"
+                                          className="w-full min-w-0 px-3 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text)] text-sm"
+                                        />
+                                      </label>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      <button
+                                        type="button"
+                                        disabled={!editRowCommittee.trim()}
+                                        onClick={() => {
+                                          updateCommitteeMatrixEntry(i, {
+                                            committee: editRowCommittee.trim(),
+                                            firstName: editRowFirstName.trim(),
+                                            delegation: editRowDelegation.trim(),
+                                          })
+                                          setEditingFieldsIndex(null)
+                                        }}
+                                        className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium disabled:opacity-50"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingFieldsIndex(null)}
+                                        className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] text-xs"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
                             {editingMatrixIndex === i && entry.delegation.trim() && (
                               <tr className="border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
-                                <td colSpan={4} className="px-4 py-3">
+                                <td colSpan={5} className="px-4 py-3">
                                   <div className="flex flex-wrap gap-2 items-center">
                                     <span className="text-xs text-[var(--text-muted)]">Custom emoji for {entry.delegation.trim()}:</span>
                                     <input

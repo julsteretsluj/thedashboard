@@ -14,14 +14,16 @@ export default function ChairRandomizer() {
   const [selectedForRandomizer, setSelectedForRandomizer] = useState<Set<string>>(new Set())
 
   const eligibleForRandom = useMemo(() => {
-    return delegates.filter((d) => {
-      if (d.speakingRightsRevoked) return false
-      if (rollCallComplete) {
-        const status = d.rollCallStatus ?? (d.present ? 'present' : 'absent')
-        return status === 'present' || status === 'present-and-voting'
-      }
-      return true
-    })
+    return delegates
+      .filter((d) => {
+        if (d.speakingRightsRevoked) return false
+        if (rollCallComplete) {
+          const status = d.rollCallStatus ?? (d.present ? 'present' : 'absent')
+          return status === 'present' || status === 'present-and-voting'
+        }
+        return true
+      })
+      .sort((a, b) => a.country.localeCompare(b.country, undefined, { sensitivity: 'base' }))
   }, [delegates, rollCallComplete])
 
   const randomizerPool = useMemo(() => {

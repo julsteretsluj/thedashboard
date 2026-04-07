@@ -107,7 +107,7 @@ export default function ChairDelegates() {
           <h2 className="font-semibold text-2xl text-[var(--text)] mb-1 flex items-center gap-1.5">
             👥 Delegates
             <InfoPopover title="Delegates">
-              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate. Icon key below each delegate: Scores (🏆), Edit (✏️), Voting (🗳️), Speaking (🎤), Emoji (😊), Strike (⚠️), Remove (🗑️). Use Voting/Speaking to revoke rights (e.g. sanctions). Use Emoji to set a custom flag for non-UN delegations (e.g. FWC).
+              Add all countries in the room. Select from the UNGA dropdown or add custom. You can set a name and email per delegate, and use ✏️ Edit anytime to change allocation (pick from the list or choose Other and type a custom name), name, or email — renaming an allocation updates motions, resolutions, and speakers that used the old name. Icon key: Scores (🏆), Edit (✏️), Voting (🗳️), Speaking (🎤), Emoji (😊), Strike (⚠️), Remove (🗑️).
             </InfoPopover>
           </h2>
           <p className="text-[var(--text-muted)] text-sm">
@@ -335,7 +335,12 @@ export default function ChairDelegates() {
                           setEditingDelegateId(null)
                         } else {
                           setEditingDelegateId(d.id)
-                          const editOpts = getAllocationOptionsForCommittee(committee, delegates.filter((x) => x.id !== d.id).map((x) => x.country), currentPresetId)
+                          const editOpts = getAllocationOptionsForCommittee(
+                            committee,
+                            delegates.filter((x) => x.id !== d.id).map((x) => x.country),
+                            currentPresetId,
+                            currentPresetAllocationCommittees
+                          )
                           setEditCountrySelect(editOpts.includes(d.country) ? d.country : OTHER_DELEGATION_VALUE)
                           setEditCustomCountry(editOpts.includes(d.country) ? '' : d.country)
                           setEditName(d.name ?? '')
@@ -461,7 +466,12 @@ export default function ChairDelegates() {
                           onChange={(e) => setEditCountrySelect(e.target.value)}
                           className="w-full sm:min-w-[12rem] sm:max-w-[20rem] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         >
-                          {getAllocationOptionsForCommittee(committee, delegates.filter((x) => x.id !== d.id).map((x) => x.country), currentPresetId).map((c) => (
+                          {getAllocationOptionsForCommittee(
+                            committee,
+                            delegates.filter((x) => x.id !== d.id).map((x) => x.country),
+                            currentPresetId,
+                            currentPresetAllocationCommittees
+                          ).map((c) => (
                             <option key={c} value={c}>{c}</option>
                           ))}
                           <option value={OTHER_DELEGATION_VALUE}>— Other —</option>
@@ -500,6 +510,9 @@ export default function ChairDelegates() {
                         />
                       </label>
                     </div>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Choose a preset allocation or <strong>Other</strong> to type any custom delegation name. Applying renames updates linked session data (motions, resolutions, speakers) to the new allocation when the text changes.
+                    </p>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         onClick={() => {

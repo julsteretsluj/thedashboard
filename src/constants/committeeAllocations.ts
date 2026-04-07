@@ -57,6 +57,11 @@ const ALLOCATION_BY_VALUE: Record<string, readonly string[]> = {
 
 const FULL_UNGA = [...DELEGATION_OPTIONS]
 
+/** Case-insensitive alphabetical order for dropdowns and allocation lists. */
+function sortDelegationsAlpha(list: readonly string[]): string[] {
+  return [...list].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+}
+
 /** Known limited-allocation committee values. */
 const LIMITED_VALUES = new Set(Object.keys(ALLOCATION_BY_VALUE))
 
@@ -96,7 +101,7 @@ export function getDelegationsForCommittee(
   presetAllocationCommittees?: string[]
 ): string[] {
   if (!committeeValueOrLabel || !committeeValueOrLabel.trim()) {
-    return FULL_UNGA
+    return sortDelegationsAlpha(FULL_UNGA)
   }
   const value = toCommitteeValue(committeeValueOrLabel)
   const usePreset =
@@ -106,11 +111,11 @@ export function getDelegationsForCommittee(
     (presetAllocationCommittees == null ||
       (presetAllocationCommittees.length > 0 && presetAllocationCommittees.includes(value)))
   if (usePreset) {
-    return [...MUN07_IV_ALLOCATIONS[value]]
+    return sortDelegationsAlpha(MUN07_IV_ALLOCATIONS[value])
   }
   const limited = value ? ALLOCATION_BY_VALUE[value] : undefined
-  if (limited) return [...limited]
-  return FULL_UNGA
+  if (limited) return sortDelegationsAlpha(limited)
+  return sortDelegationsAlpha(FULL_UNGA)
 }
 
 /**
@@ -130,8 +135,8 @@ export function getAllocationOptionsForCommittee(
   const possible = getDelegationsForCommittee(committeeValueOrLabel, presetId, presetAllocationCommittees)
   const inRoomSet = new Set(alreadyInRoom)
   const possibleSet = new Set(possible)
-  const onlyInRoom = alreadyInRoom.filter((c) => !possibleSet.has(c))
-  const inRoomAndPossible = alreadyInRoom.filter((c) => possibleSet.has(c))
+  const onlyInRoom = sortDelegationsAlpha(alreadyInRoom.filter((c) => !possibleSet.has(c)))
+  const inRoomAndPossible = sortDelegationsAlpha(alreadyInRoom.filter((c) => possibleSet.has(c)))
   const notYetInRoom = possible.filter((c) => !inRoomSet.has(c))
   return [...inRoomAndPossible, ...notYetInRoom, ...onlyInRoom]
 }
