@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { RemoteDocLoad } from './remoteDocLoad'
 
 /**
  * Single chair room state (committee, delegates, motions, etc.).
@@ -149,15 +150,21 @@ export function migrateChairData(raw: unknown): ChairDataDoc {
   }
 }
 
-export async function loadChairData(userId: string): Promise<ChairDataDoc | null> {
-  if (!supabase) return null
+export async function loadChairData(userId: string): Promise<RemoteDocLoad<ChairDataDoc>> {
+  if (!supabase) return { ok: true, doc: null }
   const { data, error } = await supabase
     .from('chair_data')
     .select('data')
     .eq('user_id', userId)
     .maybeSingle()
-  if (error || !data?.data) return null
-  return migrateChairData(data.data)
+  if (error) return { ok: false, error: error.message }
+  if (!data?.data) return { ok: true, doc: null }
+  try {
+    return { ok: true, doc: migrateChairData(data.data) }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Invalid chair data in database'
+    return { ok: false, error: msg }
+  }
 }
 
 export async function saveChairData(

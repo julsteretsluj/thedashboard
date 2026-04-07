@@ -3,6 +3,7 @@ import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, 
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { getMajorityForMotion, computePassed } from '../constants/motionMajorities'
 import { loadChairData, saveChairData, type ChairDataDoc, type ChairConferenceDoc } from '../lib/chairData'
+import { hasSupabase } from '../lib/supabase'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
 
 export interface SessionRecord {
@@ -336,6 +337,8 @@ export function ChairProvider({
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  /** After a successful remote read: allows autosave. Stays false if load failed so we never overwrite server data with the empty default conference. */
+  const [persistToSupabase, setPersistToSupabase] = useState(false)
 
   const conferencesRef = useRef(conferences)
   const activeConferenceIdStateRef = useRef(activeConferenceId)
@@ -350,30 +353,41 @@ export function ChairProvider({
     if (!activeId && conferences[0]) setActiveConferenceIdState(conferences[0].id)
   }, [activeId, conferences])
 
-  // Load chair data from Firestore
+  // Load chair data from Supabase
   useEffect(() => {
     if (!userId) {
+      setPersistToSupabase(false)
       setIsLoaded(true)
       return
     }
+    setPersistToSupabase(false)
     let cancelled = false
     loadChairData(userId)
-      .then((data) => {
+      .then((result) => {
         if (cancelled) return
-        if (data?.conferences?.length) {
-          setConferences(data.conferences.map(migrateChairConference))
-          setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
+        if (!result.ok) {
+          console.error('Failed to load chair data from Supabase:', result.error)
+          setIsLoaded(true)
+          return
         }
+        setPersistToSupabase(hasSupabase)
+        if (result.doc?.conferences?.length) {
+          setConferences(result.doc.conferences.map(migrateChairConference))
+          setActiveConferenceIdState(result.doc.activeConferenceId || result.doc.conferences[0].id)
+        }
+        setIsLoaded(true)
       })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setIsLoaded(true)
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('Failed to load chair data:', e)
+          setIsLoaded(true)
+        }
       })
     return () => { cancelled = true }
   }, [userId])
 
   const saveToAccount = useCallback(async () => {
-    if (!userId) return
+    if (!userId || !persistToSupabase) return
     setIsSaving(true)
     try {
       const payload = chairConferencesToDoc(conferences, activeConferenceId)
@@ -384,11 +398,11 @@ export function ChairProvider({
     } finally {
       setIsSaving(false)
     }
-  }, [userId, conferences, activeConferenceId])
+  }, [userId, persistToSupabase, conferences, activeConferenceId])
 
   // Flush on leave/hide so Cmd+R and tab close see the latest conferences (refs = current render).
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const flush = () => {
       const list = conferencesRef.current
       const stateActive = activeConferenceIdStateRef.current
@@ -405,21 +419,21 @@ export function ChairProvider({
       window.removeEventListener('beforeunload', flush)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [userId, isLoaded])
+  }, [userId, isLoaded, persistToSupabase])
 
   // Autosave to Supabase when signed in (800ms debounce — all conference room state persists promptly)
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const t = setTimeout(() => saveToAccount(), 800)
     return () => clearTimeout(t)
-  }, [userId, isLoaded, conferences, activeId, saveToAccount])
+  }, [userId, isLoaded, persistToSupabase, conferences, activeId, saveToAccount])
 
   // Autosave every 5 minutes
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const interval = setInterval(() => saveToAccount(), 5 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [userId, isLoaded, saveToAccount])
+  }, [userId, isLoaded, persistToSupabase, saveToAccount])
 
   const updateActive = useCallback((updater: (s: ChairState) => ChairState) => {
     setConferences((list) => {

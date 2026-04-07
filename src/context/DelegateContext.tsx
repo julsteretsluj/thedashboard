@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { DelegateConference, CommitteeMatrixEntry } from '../types'
 import { loadDelegateData, saveDelegateData } from '../lib/delegateData'
+import { hasSupabase } from '../lib/supabase'
 import { PRESET_CONFERENCES } from '../constants/presetConferences'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 
@@ -169,6 +170,8 @@ export function DelegateProvider({
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  /** True only after a successful remote read; avoids overwriting server data when load fails. */
+  const [persistToSupabase, setPersistToSupabase] = useState(false)
 
   const conferencesRef = useRef(conferences)
   const activeConferenceIdStateRef = useRef(activeConferenceId)
@@ -186,21 +189,32 @@ export function DelegateProvider({
 
   useEffect(() => {
     if (!userId) {
+      setPersistToSupabase(false)
       setIsLoaded(true)
       return
     }
+    setPersistToSupabase(false)
     let cancelled = false
     loadDelegateData(userId)
-      .then((data) => {
+      .then((result) => {
         if (cancelled) return
-        if (data && data.conferences.length > 0) {
-          setConferences(data.conferences.map(migrateConference))
-          setActiveConferenceIdState(data.activeConferenceId || data.conferences[0].id)
+        if (!result.ok) {
+          console.error('Failed to load delegate data from Supabase:', result.error)
+          setIsLoaded(true)
+          return
         }
+        setPersistToSupabase(hasSupabase)
+        if (result.doc && result.doc.conferences.length > 0) {
+          setConferences(result.doc.conferences.map(migrateConference))
+          setActiveConferenceIdState(result.doc.activeConferenceId || result.doc.conferences[0].id)
+        }
+        setIsLoaded(true)
       })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setIsLoaded(true)
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('Failed to load delegate data:', e)
+          setIsLoaded(true)
+        }
       })
     return () => {
       cancelled = true
@@ -415,7 +429,7 @@ export function DelegateProvider({
   }, [])
 
   const saveToAccount = useCallback(async () => {
-    if (!userId) return
+    if (!userId || !persistToSupabase) return
     setIsSaving(true)
     try {
       await saveDelegateData(userId, {
@@ -423,14 +437,16 @@ export function DelegateProvider({
         activeConferenceId: activeId ?? conferences[0]?.id ?? '',
       })
       setLastSaved(new Date())
+    } catch (e) {
+      console.error('Failed to save delegate data to Supabase:', e)
     } finally {
       setIsSaving(false)
     }
-  }, [userId, conferences, activeId])
+  }, [userId, persistToSupabase, conferences, activeId])
 
   // Flush latest delegate data on leave/hide so matrix and other edits are not lost if refresh beats the debounce.
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const flush = () => {
       const list = conferencesRef.current
       const stateActive = activeConferenceIdStateRef.current
@@ -450,23 +466,23 @@ export function DelegateProvider({
       window.removeEventListener('beforeunload', flush)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [userId, isLoaded])
+  }, [userId, isLoaded, persistToSupabase])
 
   // Autosave: debounced save to account when data changes (only when signed in and after initial load)
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const t = setTimeout(() => {
       saveToAccount()
     }, 800)
     return () => clearTimeout(t)
-  }, [userId, isLoaded, conferences, activeId, saveToAccount])
+  }, [userId, isLoaded, persistToSupabase, conferences, activeId, saveToAccount])
 
   // Autosave every 5 minutes
   useEffect(() => {
-    if (!userId || !isLoaded) return
+    if (!userId || !isLoaded || !persistToSupabase) return
     const interval = setInterval(() => saveToAccount(), 5 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [userId, isLoaded, saveToAccount])
+  }, [userId, isLoaded, persistToSupabase, saveToAccount])
 
   const value: DelegateContextValue = {
     ...current,
