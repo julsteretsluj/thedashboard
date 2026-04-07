@@ -457,7 +457,7 @@ export function DelegateProvider({
     if (!userId || !isLoaded) return
     const t = setTimeout(() => {
       saveToAccount()
-    }, 1000)
+    }, 800)
     return () => clearTimeout(t)
   }, [userId, isLoaded, conferences, activeId, saveToAccount])
 

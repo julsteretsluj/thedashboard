@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
 import type { Delegate, DelegateStrike, DelegateFeedback, DelegateFeedbackType, Motion, Resolution, Amendment, Speaker, DelegateScore } from '../types'
 import { getPresetDelegationFlag } from '../constants/delegationFlags'
 import { getMajorityForMotion, computePassed } from '../constants/motionMajorities'
@@ -303,6 +303,27 @@ function getCurrentConference(
   return defaultChairConference(crypto.randomUUID())
 }
 
+function chairConferencesToDoc(
+  list: ChairConference[],
+  activeConferenceIdState: string
+): ChairDataDoc {
+  const resolvedActive = activeConferenceIdState || list[0]?.id || ''
+  return {
+    conferences: list.map((c) => ({
+      id: c.id,
+      name: c.name,
+      presetId: c.presetId,
+      presetAllocationCommittees: c.presetAllocationCommittees,
+      data: {
+        ...c.data,
+        activeSpeaker: null,
+        sessionRecords: c.data.sessionRecords ?? [],
+      } as ChairConferenceDoc['data'],
+    })),
+    activeConferenceId: resolvedActive,
+  }
+}
+
 export function ChairProvider({
   children,
   userId = null,
@@ -315,6 +336,11 @@ export function ChairProvider({
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+
+  const conferencesRef = useRef(conferences)
+  const activeConferenceIdStateRef = useRef(activeConferenceId)
+  conferencesRef.current = conferences
+  activeConferenceIdStateRef.current = activeConferenceId
 
   const activeId = activeConferenceId || conferences[0]?.id
   const current = getCurrentConference(conferences, activeId ?? '')
@@ -350,20 +376,7 @@ export function ChairProvider({
     if (!userId) return
     setIsSaving(true)
     try {
-      const payload: ChairDataDoc = {
-        conferences: conferences.map((c) => ({
-          id: c.id,
-          name: c.name,
-          presetId: c.presetId,
-          presetAllocationCommittees: c.presetAllocationCommittees,
-          data: {
-            ...c.data,
-            activeSpeaker: null,
-            sessionRecords: c.data.sessionRecords ?? [],
-          } as ChairConferenceDoc['data'],
-        })),
-        activeConferenceId: activeId ?? conferences[0]?.id ?? '',
-      }
+      const payload = chairConferencesToDoc(conferences, activeConferenceId)
       await saveChairData(userId, payload)
       setLastSaved(new Date())
     } catch (err) {
@@ -371,12 +384,33 @@ export function ChairProvider({
     } finally {
       setIsSaving(false)
     }
-  }, [userId, conferences, activeId])
+  }, [userId, conferences, activeConferenceId])
 
-  // Autosave to Supabase when signed in (1s debounce — sessions and all data persist promptly)
+  // Flush on leave/hide so Cmd+R and tab close see the latest conferences (refs = current render).
   useEffect(() => {
     if (!userId || !isLoaded) return
-    const t = setTimeout(() => saveToAccount(), 1000)
+    const flush = () => {
+      const list = conferencesRef.current
+      const stateActive = activeConferenceIdStateRef.current
+      void saveChairData(userId, chairConferencesToDoc(list, stateActive)).catch(() => {})
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', flush)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', flush)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [userId, isLoaded])
+
+  // Autosave to Supabase when signed in (800ms debounce — all conference room state persists promptly)
+  useEffect(() => {
+    if (!userId || !isLoaded) return
+    const t = setTimeout(() => saveToAccount(), 800)
     return () => clearTimeout(t)
   }, [userId, isLoaded, conferences, activeId, saveToAccount])
 
@@ -385,16 +419,6 @@ export function ChairProvider({
     if (!userId || !isLoaded) return
     const interval = setInterval(() => saveToAccount(), 5 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [userId, isLoaded, saveToAccount])
-
-  // Save when user switches tab or minimizes (before potential close)
-  useEffect(() => {
-    if (!userId || !isLoaded) return
-    const handler = () => {
-      if (document.visibilityState === 'hidden') saveToAccount()
-    }
-    document.addEventListener('visibilitychange', handler)
-    return () => document.removeEventListener('visibilitychange', handler)
   }, [userId, isLoaded, saveToAccount])
 
   const updateActive = useCallback((updater: (s: ChairState) => ChairState) => {
